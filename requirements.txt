@@ -4,4 +4,5 @@ Django==5.1.5
 django-htmx==1.21.0
 mysqlclient==2.2.7
 nodejs-wheel-binaries==22.13.1
+python-dotenv==1.0.1
 sqlparse==0.5.3
