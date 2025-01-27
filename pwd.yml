@@ -1,0 +1,28 @@
+services:
+  database:
+    image: mariadb:11.6.2-noble
+    networks:
+      - pedro
+    volumes:
+      - dbvol:/var/lib/mysql
+    ports:
+      - "33060:3306"
+    environment:
+      MYSQL_USER: "user"
+      MYSQL_PASSWORD: "passadmin29"
+      MYSQL_RANDOM_ROOT_PASSWORD: true
+      MYSQL_DATABASE: "django_db"
+
+  admin:
+    image: adminer
+    ports:
+      - "8081:8080"
+    networks:
+      - pedro
+
+networks:
+  pedro:
+    driver: bridge
+
+volumes:
+  dbvol:
