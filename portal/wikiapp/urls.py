@@ -4,5 +4,6 @@ from . import views
 
 app_name = "wikiapp"
 urlpatterns = [
-        path("index/", views.LoginView.as_view(), name="login")
+        path("login/", views.LoginView.as_view(), name="login"),
+        path("home/", views.HomeView.as_view(), name="home")
         ]
