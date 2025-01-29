@@ -11,8 +11,8 @@
          action="{% url 'wikiapp:login' %}"
          method="post"
          class="flex flex-col basis-64 place-content-evenly border rounded-md">
-            <div class="text-center center-content">Sign In</div> 
             {% csrf_token %}
+            <div class="text-center center-content">Sign In</div> 
             {{form}}
             <button class="rounded-full basis-1/8 bg-yellow-500">Login</button>
         </form>

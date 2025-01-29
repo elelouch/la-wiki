@@ -1,8 +1,9 @@
 from typing import final, override
 from django.http import HttpRequest
+from django.urls import reverse_lazy
 from django.shortcuts import render, redirect
 from django.views.generic.base import TemplateView
-from django.contrib.auth import models, authenticate
+from django.contrib.auth import models, authenticate, decorators, mixins, login
 
 from . import forms
 
@@ -26,6 +27,7 @@ class LoginView(TemplateView):
 
         user = authenticate(request, username= username, password=password)
         if user is not None: 
+            login(request, user)
             return redirect("wikiapp:home")
 
         form.add_error("username", "User does not exist")
@@ -33,7 +35,9 @@ class LoginView(TemplateView):
 
 
 @final
-class HomeView(TemplateView):
+class HomeView(mixins.LoginRequiredMixin, TemplateView):
+    login_url = reverse_lazy("wikiapp:login")
+    redirect_field_name="login"
     template_name = "theme/home.html"
 
     @override
