@@ -1,5 +1,6 @@
 {% extends "theme/base.html" %}
 {% load myfilters %}
+{% load i18n %}
 
 {% block title %} Login {% endblock %}
 
@@ -12,9 +13,8 @@
          method="post"
          class="flex flex-col basis-64 place-content-evenly border rounded-md">
             {% csrf_token %}
-            <div class="text-center center-content">Sign In</div> 
             {{form}}
-            <button class="rounded-full basis-1/8 bg-yellow-500">Login</button>
+            <button class="rounded-full basis-1/8 bg-yellow-500">{% translate "Log in" %}</button>
         </form>
     </div>
 </div>

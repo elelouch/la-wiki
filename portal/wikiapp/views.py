@@ -1,9 +1,9 @@
 from typing import final, override
 from django.http import HttpRequest
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, redirect
 from django.views.generic.base import TemplateView
-from django.contrib.auth import models, authenticate, decorators, mixins, login
+from django.contrib.auth import logout, models, authenticate, decorators, mixins, login
 
 from . import forms
 
@@ -30,9 +30,17 @@ class LoginView(TemplateView):
             login(request, user)
             return redirect("wikiapp:home")
 
-        form.add_error("username", "User does not exist")
+        form.add_error("username", "Credentials are wrong")
         return render(request, self.template_name, {"form": form}) 
 
+@final
+class LogoutView(TemplateView):
+    template_name = "theme/logout.html"
+
+    @override
+    def get(self,request):
+        logout(request)
+        return render(request, self.template_name)
 
 @final
 class HomeView(mixins.LoginRequiredMixin, TemplateView):

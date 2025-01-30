@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from typing import final
 from django import forms
 from django.core.validators import RegexValidator
@@ -9,17 +10,17 @@ class LoginForm (forms.Form):
     username = forms.CharField(
         label="",
         widget=forms.TextInput(attrs={
-            "placeholder":"Username",
+            "placeholder":_("User"),
             "class":"rounded-md"
             }),
-        validators=[RegexValidator(regex=username_regex,code="404", message="Enter a valid username")],
+        validators=[RegexValidator(regex=username_regex,code="404", message=_("Enter a valid username"))],
         max_length=200,
         required=True
     )
     password = forms.CharField(
         label="",
         widget=forms.PasswordInput(attrs={
-            "placeholder":"Password",
+            "placeholder":_("Password"),
             "class":"rounded-md"
             }),
         max_length=200,

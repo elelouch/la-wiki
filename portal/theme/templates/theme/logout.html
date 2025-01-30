@@ -1,0 +1,11 @@
+{% extends "theme/base.html" %}
+{% load myfilters %}
+
+{% block title %} Login {% endblock %}
+
+{% block content %}
+<div>
+    <h1>Logout</h1>
+    <a href="{% url 'wikiapp:login' %}"> Go to login page </a>
+</div>
+{% endblock %}
