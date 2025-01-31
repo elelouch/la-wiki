@@ -1,0 +1,18 @@
+<ul>
+    {% for dir in dirs %}
+    <li>
+        <a hx-trigger="click"
+            hx-get="{% url "core:folder" dir.id %}"
+            hx-swap="outerHTML">
+            {{dir.name}}
+        </a>
+    </li>
+    {% endfor %}
+    {% for file in files %}
+    <li>
+        <a>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+
