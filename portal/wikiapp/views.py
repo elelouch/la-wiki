@@ -1,9 +1,10 @@
 from typing import final, override
 from django.http import HttpRequest
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy
 from django.shortcuts import render, redirect
 from django.views.generic.base import TemplateView
-from django.contrib.auth import logout, models, authenticate, decorators, mixins, login
+from django.contrib.auth import authenticate, login, views, mixins
+from django.utils.translation import gettext_lazy as _
 
 from . import forms
 
@@ -11,13 +12,12 @@ from . import forms
 
 @final
 class LoginView(TemplateView):
-    template_name = "theme/login.html"
-
-    @override
-    def get(self, request: HttpRequest):
-        return render(request, self.template_name, {"form": forms.LoginForm()})
+    template_name = "wikiapp/login.html"
+    extra_context = {"form": forms.LoginForm()}
 
     def post(self, request: HttpRequest):
+        assert self.template_name is not None
+
         form = forms.LoginForm(request.POST)
         if not form.is_valid():
             return render(request, self.template_name, {"form": form}) 
@@ -25,29 +25,20 @@ class LoginView(TemplateView):
         username = form.cleaned_data["username"]
         password = form.cleaned_data["password"]
 
-        user = authenticate(request, username= username, password=password)
+        user = authenticate(request, username=username, password=password)
         if user is not None: 
             login(request, user)
             return redirect("wikiapp:home")
 
-        form.add_error("username", "Credentials are wrong")
+        form.add_error("username", _("Check if credentials are correct."))
         return render(request, self.template_name, {"form": form}) 
 
 @final
-class LogoutView(TemplateView):
-    template_name = "theme/logout.html"
-
-    @override
-    def get(self,request):
-        logout(request)
-        return render(request, self.template_name)
+class LogoutView(views.LogoutView):
+    template_name = "wikiapp/logout.html"
 
 @final
 class HomeView(mixins.LoginRequiredMixin, TemplateView):
     login_url = reverse_lazy("wikiapp:login")
+    template_name = "wikiapp/home.html"
     redirect_field_name="login"
-    template_name = "theme/home.html"
-
-    @override
-    def get(self, request: HttpRequest):
-        return render(request, self.template_name)

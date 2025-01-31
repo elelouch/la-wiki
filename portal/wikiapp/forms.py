@@ -13,7 +13,7 @@ class LoginForm (forms.Form):
             "placeholder":_("User"),
             "class":"rounded-md"
             }),
-        validators=[RegexValidator(regex=username_regex,code="404", message=_("Enter a valid username"))],
+        validators=[RegexValidator(regex=username_regex,code="404", message=_("User is not valid"))],
         max_length=200,
         required=True
     )

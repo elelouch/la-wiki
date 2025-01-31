@@ -9,5 +9,3 @@ def available_menus(request: HttpRequest):
         return {"available_menus": available_menus}
 
     return {}
-
-
