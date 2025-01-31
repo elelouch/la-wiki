@@ -1,7 +1,7 @@
 # pyright: reportUnknownVariableType=false
 from django.db import models
 from typing import final
-from django.contrib.auth.models import Permission, User
+from django.contrib.auth.models import User, Permission
 
 @final
 class Directory(models.Model):
@@ -13,22 +13,20 @@ class Directory(models.Model):
             null=True,
             related_name="directories"
             )
-    @final
-    class Meta:
-        permissions = [
-                ("can_write_dir", "Can write directory"),
-                ("can_read_dir", "Can read directory")
-                ]
+
+# can_read_directory
+# can_write_directory
 
 @final
-class AccessList(models.Model):
-    dir = models.ForeignKey(Directory, null=True, on_delete=models.CASCADE)
-    user = models.OneToOneField(
+class DirectoryAccessList(models.Model):
+    user = models.ForeignKey(
             User,
             null=True,
             on_delete=models.CASCADE,
-            related_name="access_list"
+            related_name="dir_access_list"
             )
+    permissions = models.ManyToManyField(Permission)
+    dir = models.ForeignKey(Directory, null=True, on_delete=models.CASCADE)
 
 @final
 class File(models.Model):
@@ -43,3 +41,14 @@ class File(models.Model):
             null=True,
             related_name="files"
             )
+
+@final
+class FileAccessList(models.Model):
+    user = models.ForeignKey(
+            User,
+            null=True,
+            on_delete=models.CASCADE,
+            related_name="file_access_list"
+            )
+    permissions = models.ManyToManyField(Permission)
+    dir = models.ForeignKey(File, null=True, on_delete=models.CASCADE)
