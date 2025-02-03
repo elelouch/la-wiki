@@ -1,9 +1,7 @@
-{% extend "wikiapp/navbar.html %}
+{% extends "wikiapp/navbar.html" %}
 
 {% block page_content %}
 <div>
-    <ul>
-
-    </ul>
+    <div hx-get="{% url 'core:folder' 0 %}" hx-swap="outerHTML"></div>
 </div>
 {% endblock %}

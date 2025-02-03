@@ -14,12 +14,15 @@ class AccessList(models.Model):
             related_name="dir_access_list"
         )
 
-@final
 class PermissionHandler(models.Model):
     access_list = models.ManyToManyField(AccessList)
 
-    def user_has_perm(self, user, perm):
-        access_list = AccessList.objects.get(user_id=user.id)
+    def user_has_perm(self, user: User, perm: str):
+        try:
+            access_list = self.access_list.get(user_id=user.id)
+        except AccessList.DoesNotExist:
+            return False
+
         if perm == 'read':
             return access_list.can_read
         if perm == 'write':
@@ -27,7 +30,7 @@ class PermissionHandler(models.Model):
         return False
 
 @final
-class Section(models.Model):
+class Section(PermissionHandler):
     name = models.CharField(max_length=256, default="")
     description = models.CharField(max_length=256, default="")
     parent = models.ForeignKey(
