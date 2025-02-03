@@ -23,7 +23,7 @@ class DirectoryView (TemplateView):
 
         context = {
                 "root_section": root_section,
-                "section": dir.sections.all(),
+                "sections": dir.sections.all(),
                 "archives": dir.archives.all()
             }
 

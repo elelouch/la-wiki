@@ -2,6 +2,14 @@
 
 {% block page_content %}
 <div>
-    <div hx-get="{% url 'core:folder' 0 %}" hx-swap="outerHTML"></div>
+    {% if user.main_section %}
+    <div hx-trigger="click"
+        hx-get="{% url 'core:section' user.main_section.id %}" 
+        hx-swap="innerHTML">
+        Click Me
+    </div>
+    {% else %}
+        <div>User does not have a section assigned</div>
+    {% endif %}
 </div>
 {% endblock %}

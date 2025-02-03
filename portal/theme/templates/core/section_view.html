@@ -1,10 +1,10 @@
 <ul>
-    {% for dir in dirs %}
+    {% for sec in sections %}
     <li>
         <a hx-trigger="click"
             hx-get="{% url "core:folder" dir.id %}"
             hx-swap="outerHTML">
-            {{dir.name}}
+            {{sec.name}}
         </a>
     </li>
     {% endfor %}
