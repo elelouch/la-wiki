@@ -1,10 +1,11 @@
 <ul>
     {% for sec in sections %}
     <li>
-        <a hx-trigger="click"
-            hx-swap="outerHTML">
+        <button hx-trigger="click"
+           hx-get="{% url 'core:section' sec.id %}"
+           hx-swap="afterend">
             {{sec.name}}
-        </a>
+        </button>
     </li>
     {% endfor %}
     {% for file in files %}

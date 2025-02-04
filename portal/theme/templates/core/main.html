@@ -2,12 +2,14 @@
 
 {% block page_content %}
 {% if user.main_section %}
-<a href="#" hx-trigger="click"
+<div hx-trigger="click"
      hx-get="{% url 'core:section' user.main_section.id %}" 
-     hx-swap="innerHTML">
-    Click Me
-</a>
+     hx-swap="afterend">
+    {{user.main_section.name}}
+</div>
 {% else %}
-<div>User does not have a section assigned</div>
+<div>
+    User does not have a section assigned
+</div>
 {% endif %}
 {% endblock %}

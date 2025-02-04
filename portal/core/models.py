@@ -1,7 +1,7 @@
 # pyright: reportUnknownVariableType=false
 from django.db import models
 from typing import final
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 
 @final
 class AccessList(models.Model):
@@ -11,25 +11,33 @@ class AccessList(models.Model):
             'User',
             null=True,
             on_delete=models.CASCADE,
-            related_name="dir_access_list"
-        )
+            related_name="access_list"
+            )
+    groups = models.ManyToManyField(
+            Group,
+            related_name="access_lists"
+            )
 
 class PermissionHandler(models.Model):
-    access_list = models.ManyToManyField(AccessList)
+    access_lists = models.ManyToManyField(AccessList)
 
     def user_has_perm(self, user, perm):
+        acls_availables = self.access_lists.filter(groups__user__id=user.id)
 
-        try:
-            access_list = self.access_list.get(user_id=user.id)
-        except AccessList.DoesNotExist:
-            return False
+        if not acls_availables:
+            try:
+                acls_availables = [self.access_lists.get(user_id=user.id)]
+            except AccessList.DoesNotExist:
+                return False
 
-        if perm == 'read':
-            return access_list.can_read
-        if perm == 'write':
-            return access_list.can_write
+        for acl in acls_availables:
+            if perm == 'read' and acl.can_read:
+                return True
+            if perm == 'write' and acl.can_write:
+                return True
+            
         return False
-        
+
 @final
 class Section(PermissionHandler):
     name = models.CharField(max_length=256, default="")
@@ -61,4 +69,4 @@ class Archive(models.Model):
             on_delete=models.CASCADE,
             null=True,
             related_name="archives"
-        )
+            )
