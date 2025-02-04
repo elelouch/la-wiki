@@ -5,5 +5,5 @@ app_name = "core"
 
 urlpatterns = [
         path("", views.WikiView.as_view(), name="home"),
-        path("section/<int:dir_id>", views.DirectoryView.as_view(), name="section"),
+        path("section/<int:section_id>/", views.DirectoryView.as_view(), name="section"),
         ]

@@ -2,7 +2,6 @@
     {% for sec in sections %}
     <li>
         <a hx-trigger="click"
-            hx-get="{% url "core:folder" dir.id %}"
             hx-swap="outerHTML">
             {{sec.name}}
         </a>

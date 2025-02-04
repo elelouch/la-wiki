@@ -1,15 +1,13 @@
 {% extends "wikiapp/navbar.html" %}
 
 {% block page_content %}
-<div>
-    {% if user.main_section %}
-    <div hx-trigger="click"
-        hx-get="{% url 'core:section' user.main_section.id %}" 
-        hx-swap="innerHTML">
-        Click Me
-    </div>
-    {% else %}
-        <div>User does not have a section assigned</div>
-    {% endif %}
-</div>
+{% if user.main_section %}
+<a href="#" hx-trigger="click"
+     hx-get="{% url 'core:section' user.main_section.id %}" 
+     hx-swap="innerHTML">
+    Click Me
+</a>
+{% else %}
+<div>User does not have a section assigned</div>
+{% endif %}
 {% endblock %}

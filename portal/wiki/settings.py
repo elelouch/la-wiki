@@ -30,8 +30,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    "wikiapp.apps.WikiappConfig",
-    "core.apps.CoreConfig",
+    # "wikiapp.apps.WikiappConfig",
+    # "core.apps.CoreConfig",
+    "core",
+    "wikiapp",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

@@ -16,11 +16,14 @@ class AccessList(models.Model):
 
 class PermissionHandler(models.Model):
     access_list = models.ManyToManyField(AccessList)
+
     def user_has_perm(self, user, perm):
+
         try:
             access_list = self.access_list.get(user_id=user.id)
         except AccessList.DoesNotExist:
             return False
+
         if perm == 'read':
             return access_list.can_read
         if perm == 'write':
