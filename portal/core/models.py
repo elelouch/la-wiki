@@ -11,7 +11,7 @@ class AccessList(models.Model):
             'User',
             null=True,
             on_delete=models.CASCADE,
-            related_name="access_list"
+            related_name="access_lists"
             )
     groups = models.ManyToManyField(
             Group,
@@ -28,6 +28,7 @@ class PermissionHandler(models.Model):
             try:
                 acls_availables = [self.access_lists.get(user_id=user.id)]
             except AccessList.DoesNotExist:
+                print("No access lists related to user groups")
                 return False
 
         for acl in acls_availables:

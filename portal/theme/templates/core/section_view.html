@@ -7,12 +7,10 @@
             {{sec.name}}
         </button>
     </li>
+    {% for arch in sec.archives.all %}
+        {{arch.name}}
     {% endfor %}
-    {% for file in files %}
-    <li>
-        <a>
-        </a>
-    </li>
+
     {% endfor %}
 </ul>
 
