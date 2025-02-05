@@ -1,15 +1,33 @@
 <ul>
     {% for sec in sections %}
     <li>
-        <button hx-trigger="click"
-           hx-get="{% url 'core:section' sec.id %}"
-           hx-swap="afterend">
+        <div hx-trigger="click"
+             hx-get="{% url 'core:section' sec.id %}"
+             hx-swap="afterend">
+
+
             {{sec.name}}
-        </button>
+
+            <button hx-get="">
+                +File
+            </button>
+
+            <button>
+                +Folder
+            </button>
+        </div>
+
+        <ul>
+            {% for arch in sec.archives.all %}
+            <li>
+                <div>
+                    <button>{{arch.name}}</button>
+                    <button>X</button>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
     </li>
-    {% for arch in sec.archives.all %}
-        {{arch.name}}
-    {% endfor %}
 
     {% endfor %}
 </ul>
