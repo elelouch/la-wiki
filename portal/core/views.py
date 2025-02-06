@@ -19,21 +19,24 @@ class SectionView (mixins.LoginRequiredMixin, TemplateView):
     @override
     def get(self, request, root_section_id):
         assert self.template_name is not None
-        root_section = None
         user = request.user
         if not root_section_id:
-            root_section = user.main_section
-            if not root_section:
-                return HttpResponseNotFound("Main section not found")
-        else :
-            # Se pueden optimizar las querys para obtener en una unica instancia todo
-            root_section = get_object_or_404(Section, pk=root_section_id)
+            return HttpResponseNotFound("Section not found")
 
+        root_section = get_object_or_404(Section, pk=root_section_id)
         sections = root_section.sections \
                 .filter(
                         Q(access_lists__groups__user__id = user.id) | Q(access_lists__user__id = user.id),
                         access_lists__can_read = True)
-        return render(request, self.template_name, {"sections": sections})
+
+        archives = root_section.archives.all()
+
+        context = {
+                "sections": sections,
+                "archives": archives
+                }
+
+        return render(request, self.template_name, context)
 
 # get/post for appending a section to a section
 class SectionModalView(mixins.LoginRequiredMixin, TemplateView):

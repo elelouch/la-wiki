@@ -1,30 +1,26 @@
 <ul>
     {% for sec in sections %}
+    <li hx-trigger="click,newSection from:body"
+        x-get="{% url 'core:section' sec.id %}"
+        hx-target="next #subsections"
+        hx-swap="outerHTML">
+
+        {{sec.name}}
+
+        <button hx-get="{% url 'core:section_modal_form' sec.id %}"
+                hx-swap="afterend">
+            +Section
+        </button>
+    </li>
+    <div id="subsections"></div>
+    {% endfor %}
+    {% for arch in archives %}
     <li>
-        <div hx-trigger="click,newSection from:body"
-             hx-get="{% url 'core:section' sec.id %}"
-             hx-swap="afterend">
-
-            {{sec.name}}
-
-            <button hx-get="{% url 'core:section_modal_form' sec.id %}"
-                    hx-swap="afterend">
-                +Section
-            </button>
-
+        <div>
+            <button>{{arch.name}}</button>
         </div>
-
-        <ul>
-            {% for arch in sec.archives.all %}
-            <li>
-                <div>
-                    <button>{{arch.name}}</button>
-                    <button>X</button>
-                </div>
-            </li>
-            {% endfor %}
-        </ul>
     </li>
     {% endfor %}
+
 </ul>
 
