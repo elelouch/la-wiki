@@ -1,0 +1,6 @@
+<form hx-post="{{request.path}}">
+    {% csrf_token %}
+    {{form}}
+    <button>Submit</button>
+    <button>Cancel</button>
+</form>

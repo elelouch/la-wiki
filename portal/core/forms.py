@@ -5,29 +5,28 @@ from django.core.validators import RegexValidator
 
 @final
 class SectionForm(forms.Form):
-    username_regex = r"^[0-9A-Za-z]{6,16}$"
     name = forms.CharField(
         label="",
         widget=forms.TextInput(attrs={
             "placeholder":_("Section Name"),
             "class":"rounded-md"
             }),
-        validators=[RegexValidator(regex=username_regex,code="404", message=_("Name is not valid"))],
+        validators=[RegexValidator(code="404", message=_("Name is not valid"))],
         max_length=200,
         required=True
     )
 
 @final
 class FileForm(forms.Form):
-    username_regex = r"^[0-9A-Za-z]{6,16}$"
-    parent_id = forms.IntegerField()
     name = forms.CharField(
         label="",
         widget=forms.TextInput(attrs={
-            "placeholder":_("Section Name"),
+            "placeholder":_("File Name"),
             "class":"rounded-md"
             }),
-        validators=[RegexValidator(regex=username_regex,code="404", message=_("Name is not valid"))],
+        validators=[RegexValidator(code="404", message=_("Name is not valid"))],
         max_length=200,
         required=True
     )
+    file = forms.FileField()
+    

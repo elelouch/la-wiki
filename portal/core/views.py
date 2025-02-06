@@ -1,5 +1,5 @@
 # pyright: reportUnknownVariableType=false
-from django.http import Http404, HttpResponseNotFound
+from django.http import Http404, HttpResponseNotFound, HttpResponse
 from django.views.generic.base import TemplateView
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import render, get_object_or_404
@@ -17,43 +17,51 @@ class SectionView (mixins.LoginRequiredMixin, TemplateView):
     redirect_field_name="login"
 
     @override
-    def get(self, request, section_id):
+    def get(self, request, root_section_id):
         assert self.template_name is not None
         root_section = None
         user = request.user
-        if not section_id:
+        if not root_section_id:
             root_section = user.main_section
             if not root_section:
-                return HttpResponseNotFound("Main section not available")
+                return HttpResponseNotFound("Main section not found")
         else :
-            root_section = get_object_or_404(Section, pk=section_id)
+            # Se pueden optimizar las querys para obtener en una unica instancia todo
+            root_section = get_object_or_404(Section, pk=root_section_id)
+
         sections = root_section.sections \
                 .filter(
                         Q(access_lists__groups__user__id = user.id) | Q(access_lists__user__id = user.id),
                         access_lists__can_read = True)
         return render(request, self.template_name, {"sections": sections})
 
-    def post(self, request, section_id):
-        section = get_object_or_404(Section, pk=section_id)
-        user = request.user
-        if section.user_has_perm(section, "write"):
-            form = request.POST
-        return render(request, self.template_name)
-
+# get/post for appending a section to a section
 class SectionModalView(mixins.LoginRequiredMixin, TemplateView):
-    template_name = "core/section_modal_form.html"   
-    extra_context = {"section_modal_form": SectionForm()}
+    template_name = "core/section_modal_form.html"
+    extra_context = {"form": SectionForm()}
 
-    def post(self, request): 
-        # gotta redirect view
-        return render(self, self.template_name)
+    def post(self, request, root_section_id): 
+        root_section = get_object_or_404(Section, pk=root_section_id)
 
+        user = request.user
+        user_can_write = root_section.user_has_perm(user, 'write')
+
+        if not user_can_write:
+            return HttpResponse("Unauthorized", status=401)
+
+        new_sec = root_section.sections.create(name = request.POST["name"])
+
+        # inherits permissions
+        new_sec.access_lists.add(*new_sec.access_lists.all())
+
+        return HttpResponse("success", headers={"HX-Trigger": "newSection"}, status = 200)
+
+# get/post for appending a file to a section
 class FileModalView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/file_modal_form.html"   
-    extra_context = {"file_modal_form": FileForm()}
+    extra_context = {"form": FileForm()}
 
-    def post(self, request): 
-        # gotta redirect view
+    def post(self, request, root_section_id): 
         return render(self, self.template_name)
 
 
