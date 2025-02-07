@@ -3,10 +3,9 @@
 {% block page_content %}
 
 {% if user.main_section %}
-<div hx-trigger="click"
+<div hx-trigger="load"
      hx-get="{% url 'core:section' user.main_section.id %}" 
      hx-swap="afterend">
-    {{user.main_section.name}}
 </div>
 
 {% else %}

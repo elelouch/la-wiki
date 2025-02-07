@@ -32,6 +32,7 @@ class SectionView (mixins.LoginRequiredMixin, TemplateView):
         archives = root_section.archives.all()
 
         context = {
+                "root_section": root_section,
                 "sections": sections,
                 "archives": archives
                 }
@@ -55,9 +56,30 @@ class SectionModalView(mixins.LoginRequiredMixin, TemplateView):
         new_sec = root_section.sections.create(name = request.POST["name"])
 
         # inherits permissions
-        new_sec.access_lists.add(*new_sec.access_lists.all())
+        new_sec.access_lists.add(*root_section.access_lists.all())
 
-        return HttpResponse("success", headers={"HX-Trigger": "newSection"}, status = 200)
+        return HttpResponse("success", 
+                            headers={
+                                "HX-Trigger": "newSection_root_" + str(root_section_id)
+                                },
+                            status = 200)
+
+    def delete(self, request, root_section_id): 
+        root_section = get_object_or_404(Section, pk=root_section_id)
+
+        user = request.user
+        user_can_write = root_section.user_has_perm(user, 'write')
+
+        if not user_can_write:
+            return HttpResponse("Unauthorized", status=401)
+
+        root_section.delete()
+
+        return HttpResponse("success", 
+                            headers={
+                                "HX-Trigger": "deleteSection_root_" + str(root_section_id)
+                                },
+                            status = 200)
 
 # get/post for appending a file to a section
 class FileModalView(mixins.LoginRequiredMixin, TemplateView):
