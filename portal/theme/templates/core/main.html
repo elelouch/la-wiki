@@ -3,11 +3,12 @@
 {% block page_content %}
 
 {% if user.main_section %}
-<div hx-trigger="load"
-     hx-get="{% url 'core:section' user.main_section.id %}" 
-     hx-swap="afterend">
-</div>
+<div class="w-1/2">
 
+</div>
+<div hx-trigger="load" hx-get="{% url 'core:children' user.main_section.id %}"
+    class="w-2/6 border border-black rounded full-rounded" hx-swap="innerHTML">
+</div>
 {% else %}
 <div>
     User does not have a section assigned

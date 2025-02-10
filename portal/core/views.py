@@ -11,7 +11,7 @@ from typing import override
 
 from .models import Section, Archive
 
-class SectionView (mixins.LoginRequiredMixin, TemplateView):
+class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_view.html"
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name="login"
@@ -22,11 +22,12 @@ class SectionView (mixins.LoginRequiredMixin, TemplateView):
         user = request.user
         if not root_section_id:
             return HttpResponseNotFound("Section not found")
-
+        # sections = root_section.sections.filter(Q(access_lists__groups__user__id = user.id))
         root_section = get_object_or_404(Section, pk=root_section_id)
-        sections = root_section.sections \
-                .filter(
-                        Q(access_lists__groups__user__id = user.id) | Q(access_lists__user__id = user.id),
+        # I want all sections where its access lists contains 
+        # corregir esta query, si tengo varias ACL la cago
+        sections = root_section.sections.filter(
+                        Q(access_lists__groups__user = user) | Q(access_lists__user = user),
                         access_lists__can_read = True)
 
         archives = root_section.archives.all()
@@ -40,7 +41,7 @@ class SectionView (mixins.LoginRequiredMixin, TemplateView):
         return render(request, self.template_name, context)
 
 # get/post for appending a section to a section
-class SectionModalView(mixins.LoginRequiredMixin, TemplateView):
+class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_modal_form.html"
     extra_context = {"form": SectionForm()}
 
@@ -64,6 +65,8 @@ class SectionModalView(mixins.LoginRequiredMixin, TemplateView):
                                 },
                             status = 200)
 
+
+class SectionView(mixins.LoginRequiredMixin, TemplateView):
     def delete(self, request, root_section_id): 
         root_section = get_object_or_404(Section, pk=root_section_id)
 
@@ -73,16 +76,17 @@ class SectionModalView(mixins.LoginRequiredMixin, TemplateView):
         if not user_can_write:
             return HttpResponse("Unauthorized", status=401)
 
+        parent_id = root_section.parent.id
         root_section.delete()
 
         return HttpResponse("success", 
                             headers={
-                                "HX-Trigger": "deleteSection_root_" + str(root_section_id)
+                                "HX-Trigger": "deletedSection_root_" + str(parent_id)
                                 },
                             status = 200)
 
 # get/post for appending a file to a section
-class FileModalView(mixins.LoginRequiredMixin, TemplateView):
+class ModalFileView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/file_modal_form.html"   
     extra_context = {"form": FileForm()}
 

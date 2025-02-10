@@ -1,0 +1,11 @@
+10/2/25
+TODO:
+- Mejorar la UI [-]
+    - Revisar tailwind
+- Revisar que el arbol se complete adecuadamente [-]
+    - Revisar altas [v]
+    - Revisar bajas [-]
+- Separacion de vistas
+    - Formulario modal [-]
+    - Vista para operar sobre las secciones [-]
+    - Vista para obtener los hijos de una seccion

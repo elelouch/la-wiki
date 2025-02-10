@@ -1,37 +1,37 @@
-<ul id="subsections_{{root_section.id}}">
+<div id="subsections_{{root_section.id}}" class="pl-3">
     {% for sec in sections %}
-    <li hx-trigger="newSection_root_{{sec.id}} from:body"
-        hx-get="{% url 'core:section' sec.id %}"
-        hx-target="#subsections_{{sec.id}}"
-        hx-swap="outerHTML">
+    <div hx-trigger="newSection_root_{{sec.id}} from:body,deletedSection_root_{{sec.id}} from:body"
+        hx-get="{% url 'core:children' sec.id %}" hx-target="#subsections_{{sec.id}}" hx-swap="outerHTML"
+        x-data="{ open: false }">
 
-        <button hx-trigger="click once"
-                hx-get="{% url 'core:section' sec.id %}"
-                hx-target="#subsections_{{sec.id}}"
-                hx-swap="outerHTML">
-            {{sec.name}}
-        </button>
+        <div class="w-1/2 border border-black flex justify-between" hx-trigger="click once"
+            hx-get="{% url 'core:children' sec.id %}" hx-target="#subsections_{{sec.id}}" hx-swap="innerHTML"
+            class="w-1/2">
 
-        <button hx-get="{% url 'core:section_modal_form' sec.id %}">
-            Add Section
-        </button>
+            <button x-on:click="open =! open">
+                {{sec.name}}
+            </button>
 
-        <button hx-trigger="click once"
-                hx-delete="{% url 'core:section_modal_form' sec.id %}"
-                hx-target="#subsections_{{sec.id}}"
-                hx-swap="delete">
-            Remove Section
-        </button>
+            <div class="w-1/4  h-200 border border-rounded flex justify-around">
+                <button hx-get="{% url 'core:modal_section' sec.id %}" class="w-2/5 border border-black rounded-full">
+                    +
+                </button>
 
-    </li>
+                <button hx-trigger="click once" hx-delete="{% url 'core:section' sec.id %}"
+                    hx-target="#subsections_{{sec.id}}" hx-swap="delete" class="w-2/5 border border-black rounded-full">
+                    -
+                </button>
+            </div>
+        </div>
 
-    <li id="subsections_{{sec.id}}"></li>
+        <div id="subsections_{{sec.id}}" x-show="open"></div>
+    </div>
     {% endfor %}
     {% for arch in archives %}
-    <li>
+    <div>
         <div>
             <button>{{arch.name}}</button>
         </div>
-    </li>
+    </div>
     {% endfor %}
-</ul>
+</div>

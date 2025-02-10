@@ -2,18 +2,22 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-        <title>{% block title %} Generic Title {% endblock %}</title>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <script src="{% static 'htmx.min.js' %}" defer></script>
-		{% tailwind_css %}
-	</head>
 
-	<body class="bg-gray-50 font-serif leading-normal tracking-normal">
-		<div class="container mx-auto">
-            {% block content %}{% endblock %}
-		</div>
-	</body>
+<head>
+	<title>{% block title %} Generic Title {% endblock %}</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<script src="{% static 'htmx.min.js' %}" defer></script>
+	<script src="{% static 'alpine.min.js' %}" defer></script>
+	{% tailwind_css %}
+</head>
+
+<body class="bg-gray-50 font-serif leading-normal tracking-normal" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+	<div class="container mx-auto">
+		{% block content %}
+		{% endblock %}
+	</div>
+</body>
+
 </html>
