@@ -1,19 +1,27 @@
 <div id="subsections_{{root_section.id}}" class="pl-3">
     {% for sec in sections %}
     <div hx-trigger="newSection_root_{{sec.id}} from:body,deletedSection_root_{{sec.id}} from:body"
-        hx-get="{% url 'core:children' sec.id %}" hx-target="#subsections_{{sec.id}}" hx-swap="outerHTML"
-        x-data="{ open: false }">
+         hx-get="{% url 'core:children' sec.id mode %}" 
+         hx-target="#subsections_{{sec.id}}" 
+         hx-swap="outerHTML"
+         x-data="{ open: false }">
 
-        <div class="w-1/2 border border-black flex justify-between" hx-trigger="click once"
-            hx-get="{% url 'core:children' sec.id %}" hx-target="#subsections_{{sec.id}}" hx-swap="innerHTML"
-            class="w-1/2">
+        <div class="w-1/2 border border-black flex justify-between" 
+             hx-trigger="click once"
+             hx-get="{% url 'core:children' sec.id mode %}" 
+             hx-target="#subsections_{{sec.id}}" 
+             hx-swap="innerHTML"
+             class="w-1/2">
 
             <button x-on:click="open =! open">
                 {{sec.name}}
             </button>
 
+            {% if mode == 'write' %}
             <div class="w-1/4  h-200 border border-rounded flex justify-around">
-                <button hx-get="{% url 'core:modal_section' sec.id %}" class="w-2/5 border border-black rounded-full">
+                <button hx-get="{% url 'core:modal_section' sec.id %}" 
+                        hx-swap="afterend"
+                    class="w-2/5 border border-black rounded-full">
                     +
                 </button>
 
@@ -22,6 +30,7 @@
                     -
                 </button>
             </div>
+            {% endif %}
         </div>
 
         <div id="subsections_{{sec.id}}" x-show="open"></div>

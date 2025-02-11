@@ -1,10 +1,15 @@
 # pyright: reportUnknownVariableType=false
+import enum
 from django.db import models
 from typing import final
 from django.contrib.auth.models import AbstractUser, Group
 
+class PermissionType(enum.Enum):
+    READ = "read"
+    WRITE = "write"
+
 @final
-class AccessList(models.Model):
+class Access(models.Model):
     can_read = models.BooleanField(default=False)
     can_write = models.BooleanField(default=False)
     user = models.ForeignKey(
@@ -13,28 +18,28 @@ class AccessList(models.Model):
             on_delete=models.CASCADE,
             related_name="access_lists"
             )
-    groups = models.ManyToManyField(
+    group = models.ForeignKey(
             Group,
-            related_name="access_lists"
+            null=True,
+            related_name="access_lists",
+            on_delete=models.CASCADE
             )
 
 class PermissionHandler(models.Model):
-    access_lists = models.ManyToManyField(AccessList)
+    access_lists = models.ManyToManyField(Access)
 
     def user_has_perm(self, user, perm):
-        acls_availables = self.access_lists.filter(groups__user__id=user.id)
+        Q = models.Q
+        acls_availables = self.access_lists \
+                .filter(Q(group__in=user.groups.all()) | Q(user=user))
 
         if not acls_availables:
-            try:
-                acls_availables = [self.access_lists.get(user_id=user.id)]
-            except AccessList.DoesNotExist:
-                print("No access lists related to user groups")
-                return False
+            return False
 
         for acl in acls_availables:
-            if perm == 'read' and acl.can_read:
+            if perm == PermissionType.READ and acl.can_read:
                 return True
-            if perm == 'write' and acl.can_write:
+            if perm == PermissionType.WRITE and acl.can_write:
                 return True
             
         return False
@@ -47,7 +52,7 @@ class Section(PermissionHandler):
             "self",
             on_delete=models.CASCADE,
             null=True,
-            related_name="sections"
+            related_name="children"
             )
 
 @final

@@ -3,15 +3,29 @@
 {% block page_content %}
 
 {% if user.main_section %}
-<div class="w-1/2">
 
+<div class="flex justify-evenly" x-data="{write: true}">
+    {% if mode == "write" %}
+    <div hx-trigger="load" 
+         hx-get="{% url 'core:children' user.main_section.id 'write' %}"
+         id="tree-view"
+        class="w-2/6 border border-black rounded full-rounded" hx-swap="innerHTML">
+    </div>
+    {% else %}
+    <div hx-trigger="load" 
+         hx-get="{% url 'core:children' user.main_section.id 'read' %}"
+         id="tree-view"
+         class="w-2/6 border border-black rounded full-rounded" hx-swap="innerHTML">
+    </div>
+    {% endif %}
+
+    <div class="w-4/6 border border-black" id="archives">
+    </div>
 </div>
-<div hx-trigger="load" hx-get="{% url 'core:children' user.main_section.id %}"
-    class="w-2/6 border border-black rounded full-rounded" hx-swap="innerHTML">
-</div>
+
 {% else %}
 <div>
-    User does not have a section assigned
+    User does not have a main section assigned
 </div>
 {% endif %}
 
