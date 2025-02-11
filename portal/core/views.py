@@ -15,25 +15,30 @@ from .models import PermissionType, Section
 class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_view.html"
     login_url = reverse_lazy("wikiapp:login")
-    redirect_field_name="login"
+    redirect_field_name = "login"
 
     @override
-    def get(self, request, root_section_id: int, mode:str):
+    def get(self, request: HttpRequest, root_section_id: int, mode:str):
         assert self.template_name is not None
         user = request.user
 
         if mode not in [perm.value for perm in PermissionType]:
-            return HttpResponseNotFound("Not valid permission mode")
+            return HttpResponse("mode not valid, must used read or write", status=400)
 
         if not root_section_id:
-            return HttpResponseNotFound("Section not found")
+            return HttpResponse("Root section must be an integer", status=400)
+
         root_section = get_object_or_404(Section, pk=root_section_id)
+
+        if not root_section.user_has_perm(user, PermissionType.READ):
+            return HttpResponse("User does not have read permission", status = 403)
+
         sections = root_section.children \
                 .filter(
                         Q(access_lists__group__user = user) | Q(access_lists__user = user),
                         access_lists__can_read = True)
 
-        if mode == PermissionType.WRITE:
+        if mode == PermissionType.WRITE.value:
             sections = sections.filter(access_lists__can_write=True)
 
         archives = root_section.archives.all()
@@ -43,7 +48,7 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
                 "sections": sections,
                 "archives": archives,
                 "mode": mode
-                }
+            }
 
         return render(request, self.template_name, context)
 
@@ -57,7 +62,7 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
         root_section = get_object_or_404(Section, pk=root_section_id)
 
         user = request.user
-        user_can_write = root_section.user_has_perm(user, 'write')
+        user_can_write = root_section.user_has_perm(user, PermissionType.WRITE)
 
         if not user_can_write:
             return HttpResponse("Unauthorized", status=401)
@@ -69,7 +74,7 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
 
         return HttpResponse("success", 
                             headers={
-                                "HX-Trigger": "newSection_root_" + str(root_section_id)
+                                "HX-Trigger": "new_section"
                                 },
                             status = 200)
 
@@ -79,7 +84,7 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         root_section = get_object_or_404(Section, pk=root_section_id)
 
         user = request.user
-        user_can_write = root_section.user_has_perm(user, 'write')
+        user_can_write = root_section.user_has_perm(user, PermissionType.WRITE)
 
         if not user_can_write:
             return HttpResponse("Unauthorized", status=401)
@@ -89,7 +94,7 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
 
         return HttpResponse("success", 
                             headers={
-                                "HX-Trigger": "deletedSection_root_" + str(parent_id)
+                                "HX-Trigger": "deleted_section"
                                 },
                             status = 200)
 
@@ -101,6 +106,12 @@ class ModalFileView(mixins.LoginRequiredMixin, TemplateView):
 
     def post(self, request, root_section_id): 
         return render(self, self.template_name)
+
+    @override
+    def dispatch(self, *args, **kwargs):
+        response = super(GetParticularUserView, self).dispatch(*args, **kwargs)
+        response['HX-Trigger'] = "modal_form"
+        return response
 
 
 @final

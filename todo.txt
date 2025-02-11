@@ -1,11 +1,17 @@
 10/2/25
 TODO:
-- Mejorar la UI [-]
+- Mejorar la UI
     - Revisar tailwind
-- Revisar que el arbol se complete adecuadamente [-]
+- Revisar que el arbol se complete adecuadamente [v]
     - Revisar altas [v]
-    - Revisar bajas [-]
+    - Revisar bajas [v]
 - Separacion de vistas
     - Formulario modal [-]
     - Vista para operar sobre las secciones [-]
-    - Vista para obtener los hijos de una seccion
+    - Vista para obtener los hijos de una seccion [v]
+
+11/2/25
+- Lectura/Escritura de la seccion root
+    - Revisar que el usuario solo pueda ver las secciones a las que tenga permiso [v]
+    - Agregar botones para poder agregar "archivos" en las secciones [-]
+

@@ -4,21 +4,36 @@
 
 {% if user.main_section %}
 
-<div class="flex justify-evenly" x-data="{write: true}">
-    {% if mode == "write" %}
-    <div hx-trigger="load" 
-         hx-get="{% url 'core:children' user.main_section.id 'write' %}"
-         id="tree-view"
-        class="w-2/6 border border-black rounded full-rounded" hx-swap="innerHTML">
-    </div>
-    {% else %}
-    <div hx-trigger="load" 
-         hx-get="{% url 'core:children' user.main_section.id 'read' %}"
-         id="tree-view"
-         class="w-2/6 border border-black rounded full-rounded" hx-swap="innerHTML">
-    </div>
-    {% endif %}
+<div class="flex justify-evenly">
+    <div class="w-2/6 flex flex-col">
+        {% if mode == "write" %}
+        <div class="w-1/4  h-200 border border-rounded flex justify-around">
+            <button hx-get="{% url 'core:modal_section' user.main_section.id %}" 
+                    hx-swap="beforend"
+                    class="w-2/5 border border-black rounded-full">
+                +
+            </button>
 
+            <button hx-trigger="click once" 
+                    hx-delete="{% url 'core:section' user.main_section.id %}"
+                    hx-target="#subsections_{{sec.id}}" 
+                    hx-swap="delete" class="w-2/5 border border-black rounded-full">
+                -
+            </button>
+        </div>
+        <div hx-trigger="load,new_section_parent_{{user.main_section.id}}" 
+             hx-get="{% url 'core:children' user.main_section.id mode %}"
+             id="tree-view"
+             class="border border-black rounded full-rounded" hx-swap="innerHTML">
+        </div>
+        {% else %}
+        <div hx-trigger="load" 
+             hx-get="{% url 'core:children' user.main_section.id mode %}"
+             id="tree-view"
+             class="border border-black rounded full-rounded" hx-swap="innerHTML">
+        </div>
+        {% endif %}
+    </div>
     <div class="w-4/6 border border-black" id="archives">
     </div>
 </div>
