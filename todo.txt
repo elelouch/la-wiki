@@ -15,3 +15,8 @@ TODO:
     - Revisar que el usuario solo pueda ver las secciones a las que tenga permiso [v]
     - Agregar botones para poder agregar "archivos" en las secciones [-]
 
+12/2/25
+- Agregar formulario a la seccion derecha [-]
+- Como hacer un formulario donde pueda indicar a que seccion agregar [-]
+- Indicar que seccion esta seleccionada actualmente
+- Agregar la opcion de agregar logos para cada "archivo" 

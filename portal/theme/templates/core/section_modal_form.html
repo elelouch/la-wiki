@@ -1,31 +1,18 @@
-<div id="default-modal" 
-     tabindex="-1">
-    <div class="relative w-full max-w-2xl max-h-full ">
-        <!-- Modal content -->
-        <div class="bg-white rounded-lg shadow-sm dark:bg-gray-700 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" >
-            <!-- Modal header -->
-            <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                    Enter a new child section
-                </h3>
-                <button 
-                    type="button" 
-                    class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" 
-                    data-modal-hide="default-modal">
-                    <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                    </svg>
-                    <span class="sr-only">Close modal</span>
-                </button>
-            </div>
-            <!-- Modal body -->
-            <form hx-post="{{request.path}}" hx-swap="delete" hx-target="this">
-                {% csrf_token %}
-                {{form}}
-                <button>Submit</button>
-                <button>Cancel</button>
-            </form>
+<!-- if x-data is not provided, x-ref doesn't work -->
+<div>
+    <!-- Modal body -->
+    <form hx-post="{{request.path}}" hx-swap="delete" hx-target="this" id="section-modal" x-ref="sectionModal"
+        class="bg-white rounded-lg shadow-sm dark:bg-gray-700" tabindex="-1" x-data="{}">
+        <div
+            class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                Enter a new child section
+            </h3>
         </div>
-    </div>
+        {% csrf_token %}
+        {{form}}
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Submit</button>
+        <button @click="$refs.sectionModal.remove()"
+            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Cancel</button>
+    </form>
 </div>
-
