@@ -4,26 +4,29 @@
 
 {% if user.main_section %}
 
-<div class="flex justify-evenly">
+<div class="flex justify-evenly"
+    x-data="{currentSectionId:0,updateCurrentSection(id){classBackground='bg-blue-500';section = document.querySelector('#subsections_' + id);section.classList.remove(classBackground);currentSectionId = id;section = document.querySelector('#subsections_' + id);section.classList.add(classBackground);}}">
     <div class="w-2/6 flex flex-col">
         <div class="w-1/4  h-200 border border-rounded flex justify-around">
-            <button hx-get="{% url 'core:modal_section' user.main_section.id %}" hx-swap="beforend"
-                class="w-2/5 border border-black rounded-full">
+            <!-- USE CURRENTID TO ADD THE MODAL FORM TO THE WITH THE ADD BUTTON -->
+            <button class="w-2/5 border border-black rounded-full" hx-trigger="click"
+                hx-get="{% url 'core:modal_section' %}" hx-target="#writable-section">
                 +
             </button>
 
+            <!-- IMPLEMENTAR LOGICA PARA MANTENER UNA SECCION SELECCIONADA, valga la redundancia -->
             <button hx-trigger="click once" hx-delete="{% url 'core:section' user.main_section.id %}"
                 hx-target="#subsections_{{sec.id}}" hx-swap="delete" class="w-2/5 border border-black rounded-full">
                 -
             </button>
+
         </div>
-        <div hx-trigger="load,new_section_parent_{{user.main_section.id}}"
+        <div hx-trigger="load,new_section_parent_{{user.main_section.id}} from:body"
             hx-get="{% url 'core:children' user.main_section.id mode %}" id="tree-view"
             class="border border-black rounded full-rounded" hx-swap="innerHTML">
         </div>
     </div>
-    <div class="w-4/6 border border-black" id="writtable-section">
-    </div>
+    <div class="w-4/6 border border-black" id="writable-section"></div>
 </div>
 
 {% else %}

@@ -5,6 +5,15 @@ from django.core.validators import RegexValidator
 
 @final
 class SectionForm(forms.Form):
+    id = forms.IntegerField(
+        label="",
+        widget=forms.NumberInput(
+            attrs={
+                "class":"hidden",
+                "x-ref":"sectionFormId"
+            }
+        )
+    )
     name = forms.CharField(
         label="",
         widget=forms.TextInput(attrs={

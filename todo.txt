@@ -1,3 +1,8 @@
+Objetivos grandes:
+- Numeros de internos 
+- PERFILES CON NOTIFICACIONES sobre un pasante por ejemplo
+- Explorador tipo VSCODE con archivos y un buscador de archivos
+
 10/2/25
 TODO:
 - Mejorar la UI
@@ -6,7 +11,7 @@ TODO:
     - Revisar altas [v]
     - Revisar bajas [v]
 - Separacion de vistas
-    - Formulario modal [-]
+    - Formulario modal [v]
     - Vista para operar sobre las secciones [-]
     - Vista para obtener los hijos de una seccion [v]
 
@@ -20,3 +25,7 @@ TODO:
 - Como hacer un formulario donde pueda indicar a que seccion agregar [-]
 - Indicar que seccion esta seleccionada actualmente
 - Agregar la opcion de agregar logos para cada "archivo" 
+
+13/2/25
+- Agregar el seleccionado de secciones
+- Indicar que seccion esta seleccionado

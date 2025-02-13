@@ -10,6 +10,6 @@ urlpatterns = [
         path("write/", views.WikiViewWrite.as_view(), name="wiki_write"),
         path("section/<int:root_section_id>/<str:mode>/children", views.ChildrenView.as_view(), name="children"),
         path("section/<int:root_section_id>/section", views.SectionView.as_view(), name="section"), 
-        path("section/<int:root_section_id>/section/modal", views.ModalSectionView.as_view(), name="modal_section"), 
+        path("section/modal", views.ModalSectionView.as_view(), name="modal_section"), 
         path("section/<int:root_section_id>/file/modal", views.ModalFileView.as_view(), name="modal_file"), 
         ]

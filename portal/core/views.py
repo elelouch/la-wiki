@@ -36,7 +36,7 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
             sections = sections.filter(access_lists__can_write=True)
         archives = root_section.archives.all()
         context = {
-                "root_section": root_section,
+                "parent": root_section,
                 "sections": sections,
                 "archives": archives,
                 "mode": mode
@@ -50,7 +50,9 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_modal_form.html"
     extra_context = {"form": SectionForm()}
 
-    def post(self, request: HttpRequest, root_section_id: int): 
+    def post(self, request: HttpRequest): 
+        root_section_id = int(request.POST["id"])
+
         root_section = get_object_or_404(Section, pk=root_section_id)
         user = request.user
         user_can_write = root_section.user_has_perm(user, PermissionType.WRITE)
