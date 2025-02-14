@@ -27,7 +27,6 @@ class Access(models.Model):
 
 class PermissionHandler(models.Model):
     access_lists = models.ManyToManyField(Access)
-
     def user_has_perm(self, user, perm):
         Q = models.Q
         acls_availables = self.access_lists \
@@ -54,6 +53,9 @@ class Section(PermissionHandler):
             null=True,
             related_name="children"
             )
+
+    def __str__(self):
+        return self.name
 
 @final
 class User(AbstractUser):

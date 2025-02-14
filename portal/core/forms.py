@@ -38,4 +38,3 @@ class FileForm(forms.Form):
         required=True
     )
     file = forms.FileField()
-    

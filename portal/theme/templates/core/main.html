@@ -5,7 +5,7 @@
 {% if user.main_section %}
 
 <div class="flex justify-evenly"
-    x-data="{currentSectionId:0,updateCurrentSection(id){classBackground='bg-blue-500';section = document.querySelector('#subsections_' + id);section.classList.remove(classBackground);currentSectionId = id;section = document.querySelector('#subsections_' + id);section.classList.add(classBackground);}}">
+    x-data="{currentSectionId:0, selectedclasses:'bg-blue-500'}">
     <div class="w-2/6 flex flex-col">
         <div class="w-1/4  h-200 border border-rounded flex justify-around">
             <!-- USE CURRENTID TO ADD THE MODAL FORM TO THE WITH THE ADD BUTTON -->

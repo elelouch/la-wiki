@@ -41,7 +41,6 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
                 "archives": archives,
                 "mode": mode
             }
-
         return render(request, self.template_name, context)
 
 # get/post for appending a section to a section
@@ -49,10 +48,11 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
 class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_modal_form.html"
     extra_context = {"form": SectionForm()}
-
     def post(self, request: HttpRequest): 
         root_section_id = int(request.POST["id"])
-
+        if not root_section_id:
+            user = request.user
+            root_section_id = user.main_section.id
         root_section = get_object_or_404(Section, pk=root_section_id)
         user = request.user
         user_can_write = root_section.user_has_perm(user, PermissionType.WRITE)

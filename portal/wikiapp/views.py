@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.views.generic.base import TemplateView
 from django.contrib.auth import authenticate, login, views, mixins
 from django.utils.translation import gettext_lazy as _
-
+from core.models import User
 from . import forms
 
 # Create your views here.
@@ -34,11 +34,24 @@ class LoginView(TemplateView):
         return render(request, self.template_name, {"form": form}) 
 
 @final
-class LogoutView(views.LogoutView):
-    template_name = "wikiapp/logout.html"
-
-@final
 class HomeView(mixins.LoginRequiredMixin, TemplateView):
     login_url = reverse_lazy("wikiapp:login")
     template_name = "wikiapp/home.html"
     redirect_field_name="login"
+
+@final
+class LogoutView(views.LogoutView):
+    template_name = "wikiapp/logout.html"
+    next_page = reverse_lazy("wikiapp:login")
+
+@final
+class UserFormView(mixins.LoginRequiredMixin, TemplateView):
+    template_name = "core/user_profile.html"   
+    extra_context = {"form": forms.UserForm()}
+
+    def post(self, request: HttpRequest):
+        user = User(**request.POST)
+        if not user.id:
+            return HttpResponse("Id is not valid", status = 401)
+
+        return redirect(request, self.template_name)

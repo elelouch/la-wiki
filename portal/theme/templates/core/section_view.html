@@ -1,9 +1,8 @@
 <div id="subsections_{{parent.id}}" class="pl-3" x-data="{ open: false }">
-
     {% for sec in sections %}
     <div hx-trigger="click once,new_section,deleted_section,new_section_parent_{{sec.id}} from:body"
         hx-get="{% url 'core:children' sec.id mode %}" hx-target="#subsections_{{sec.id}}" hx-swap="innerHTML">
-        <button @click="open = !open; updateCurrentSection({{parent.id}})">
+        <button @click="open = !open; currentSectionId = {{sec.id}}" :class="currentSectionId === {{sec.id}} && selectedclasses">
             {{sec.name}}
         </button>
     </div>
