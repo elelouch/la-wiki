@@ -61,7 +61,7 @@ class Section(PermissionHandler):
 class User(AbstractUser):
     main_section = models.ForeignKey(
             Section,
-            on_delete=models.CASCADE,
+            on_delete=models.SET_NULL,
             null=True
             )
 

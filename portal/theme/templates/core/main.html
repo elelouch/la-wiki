@@ -4,8 +4,9 @@
 
 {% if user.main_section %}
 
+<!-- $watch, is expecting an x-data property to be updated, when it is update -->
 <div class="flex justify-evenly"
-    x-data="{currentSectionId:0, selectedclasses:'bg-blue-500'}">
+     x-data="{currentSectionId:0, selectedclasses:'bg-blue-500'}" x-init="$watch('currentSectionId', val => {htmx.process($refs.deleteButton)})">
     <div class="w-2/6 flex flex-col">
         <div class="w-1/4  h-200 border border-rounded flex justify-around">
             <!-- USE CURRENTID TO ADD THE MODAL FORM TO THE WITH THE ADD BUTTON -->
@@ -14,9 +15,9 @@
                 +
             </button>
 
-            <!-- IMPLEMENTAR LOGICA PARA MANTENER UNA SECCION SELECCIONADA, valga la redundancia -->
-            <button hx-trigger="click once" hx-delete="{% url 'core:section' user.main_section.id %}"
-                hx-target="#subsections_{{sec.id}}" hx-swap="delete" class="w-2/5 border border-black rounded-full">
+            <!-- Tengo que encontrar como utilizar la seccion actualmente seleccionada junto a htmx-->
+            <button hx-trigger="click" :hx-delete="'/wiki/section/' + currentSectionId"  x-ref="deleteButton" hx-swap="none"
+                class="w-2/5 border border-black rounded-full">
                 -
             </button>
 

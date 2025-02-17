@@ -2,6 +2,7 @@ Objetivos grandes:
 - Numeros de internos 
 - PERFILES CON NOTIFICACIONES sobre un pasante, por ejemplo
 - Explorador tipo VSCODE con archivos y un buscador de archivos
+- Revisar los estilos
 
 10/2/25
 TODO:
@@ -23,7 +24,7 @@ TODO:
 12/2/25
 - Agregar formulario a la seccion derecha [v]
 - Como hacer un formulario donde pueda indicar a que seccion agregar [-]
-- Indicar que seccion esta seleccionada actualmente []
+- Indicar que seccion esta seleccionada actualmente [-] 
 - Agregar la opcion de agregar logos para cada "archivo" 
 
 13/2/25
@@ -32,7 +33,7 @@ TODO:
 
 16/2/25
 - Las subsecciones hermanas comparten un mismo open. Revisar esto. [v]
-- Revisar el borrado 
+- Revisar el borrado de secciones. Este debe apuntar correctamente a la seccion seleccionada. [-]
 - Agregar que al clickear afuera del arbol, se deseleccione la seccion. [-]
 - Informarse respecto al guardado de archivos usando Django. [-]
-- Revisar el alta. [-]
+- Revisar el alta de usuarios, crear una especie de perfil. [-]

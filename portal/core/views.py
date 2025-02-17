@@ -76,7 +76,7 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         if not user_can_write:
             return HttpResponse("Unauthorized", status=401)
         root_section.delete()
-        return HttpResponse("success", headers={"HX-Trigger": "deleted_section"},status = 200)
+        return HttpResponse("Success", headers={"HX-Trigger": "deleted_section"}, status = 200)
 
 # get/post for appending a file to a section
 @final
