@@ -1,20 +1,18 @@
-<div id="subsections_{{parent.id}}" class="pl-3" x-data="{ open: false }">
+<div id="subsections_{{parent.id}}" class="pl-3"  >
     {% for sec in sections %}
-    <div hx-trigger="click once,new_section,deleted_section,new_section_parent_{{sec.id}} from:body"
-        hx-get="{% url 'core:children' sec.id mode %}" hx-target="#subsections_{{sec.id}}" hx-swap="innerHTML">
+    <div hx-trigger="click once,new_section,deleted_section,new_section_parent_{{sec.id}} from:body" x-data="{ open: false }"
+         hx-get="{% url 'core:children' sec.id mode %}" hx-target="#subsections_{{sec.id}}" hx-swap="innerHTML">
         <button @click="open = !open; currentSectionId = {{sec.id}}" :class="currentSectionId === {{sec.id}} && selectedclasses">
             {{sec.name}}
         </button>
-    </div>
-
-    <div id="subsections_{{sec.id}}" x-show="open"></div>
-    {% endfor %}
-
-    {% for arch in archives %}
-    <div>
+        <div id="subsections_{{sec.id}}" x-show="open"></div>
+        {% for arch in archives %}
         <div>
-            <button>{{arch.name}}</button>
+            <div>
+                <button>{{arch.name}}</button>
+            </div>
         </div>
+        {% endfor %}
     </div>
     {% endfor %}
 </div>
