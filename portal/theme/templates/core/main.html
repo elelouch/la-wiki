@@ -6,7 +6,9 @@
 
 <!-- $watch, is expecting an x-data property to be updated, when it is update -->
 <div class="flex justify-evenly"
-     x-data="{currentSectionId:0, selectedclasses:'bg-blue-500'}" x-init="$watch('currentSectionId', val => {htmx.process($refs.deleteButton)})">
+     x-data="{currentSectionId:0, selectedclasses:'bg-blue-500'}" 
+     x-init="$watch('currentSectionId', val => htmx.process($refs.deleteButton))"
+     @click.outside="currentSectionId = 0">
     <div class="w-2/6 flex flex-col">
         <div class="w-1/4  h-200 border border-rounded flex justify-around">
             <!-- USE CURRENTID TO ADD THE MODAL FORM TO THE WITH THE ADD BUTTON -->

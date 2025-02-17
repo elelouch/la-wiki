@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.urls import reverse_lazy
 from .forms import SectionForm, FileForm
 from typing import override, final
+from django.conf import settings
 
 from .models import PermissionType, Section
 
@@ -19,6 +20,7 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
 
     @override
     def get(self, request: HttpRequest, root_section_id: int, mode:str):
+        print(settings.BASE_DIR)
         assert self.template_name is not None
         user = request.user
         if mode not in [perm.value for perm in PermissionType]:
@@ -63,7 +65,7 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
         new_sec.access_lists.add(*root_section.access_lists.all())
         return HttpResponse(
             "success", 
-            headers={"HX-Trigger": "new_section," + "new_section_parent_" + str(root_section_id)},
+            headers={"HX-Trigger": "new_section_parent_" + str(root_section_id)},
             status = 200
         )
     
@@ -76,7 +78,10 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         if not user_can_write:
             return HttpResponse("Unauthorized", status=401)
         root_section.delete()
-        return HttpResponse("Success", headers={"HX-Trigger": "deleted_section"}, status = 200)
+        return HttpResponse(
+                "Success",
+                headers={"HX-Trigger": "deleted_section_parent_" + str(root_section.parent.id)},
+                status = 200)
 
 # get/post for appending a file to a section
 @final

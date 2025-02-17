@@ -1,6 +1,7 @@
 <div id="subsections_{{parent.id}}" class="pl-3"  >
     {% for sec in sections %}
-    <div hx-trigger="click once,new_section,deleted_section,new_section_parent_{{sec.id}} from:body" x-data="{ open: false }"
+    <!-- Debo actualizar el padre en lugar de el hijo, a la hora del borrado -->
+    <div hx-trigger="click once,deleted_section_parent_{{sec.id}} from:body,new_section_parent_{{sec.id}} from:body" x-data="{ open: false }"
          hx-get="{% url 'core:children' sec.id mode %}" hx-target="#subsections_{{sec.id}}" hx-swap="innerHTML">
         <button @click="open = !open; currentSectionId = {{sec.id}}" :class="currentSectionId === {{sec.id}} && selectedclasses">
             {{sec.name}}

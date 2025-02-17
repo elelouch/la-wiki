@@ -33,7 +33,10 @@ TODO:
 
 16/2/25
 - Las subsecciones hermanas comparten un mismo open. Revisar esto. [v]
-- Revisar el borrado de secciones. Este debe apuntar correctamente a la seccion seleccionada. [-]
-- Agregar que al clickear afuera del arbol, se deseleccione la seccion. [-]
+- Revisar el borrado de secciones. Este debe apuntar correctamente a la seccion seleccionada. [v]
+- Agregar que al clickear afuera del arbol, se deseleccione la seccion. [v]
 - Informarse respecto al guardado de archivos usando Django. [-]
+- Intentar meter logica para guardar archivos. [-]
+
+17/2/25
 - Revisar el alta de usuarios, crear una especie de perfil. [-]
