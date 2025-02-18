@@ -1,4 +1,4 @@
-from typing import final, override
+from typing import final
 from django.http import HttpRequest
 from django.urls import reverse_lazy
 from django.shortcuts import render, redirect

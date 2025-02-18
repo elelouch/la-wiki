@@ -7,13 +7,13 @@
             {{sec.name}}
         </button>
         <div id="subsections_{{sec.id}}" x-show="open"></div>
-        {% for arch in archives %}
+    </div>
+    {% endfor %}
+    {% for arch in archives %}
+    <div>
         <div>
-            <div>
-                <button>{{arch.name}}</button>
-            </div>
+            <button>{{arch.name}}</button>
         </div>
-        {% endfor %}
     </div>
     {% endfor %}
 </div>

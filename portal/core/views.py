@@ -7,7 +7,7 @@ from django.contrib.auth import mixins
 from django.db.models import Q
 from django.urls import reverse_lazy
 from .forms import SectionForm, FileForm
-from typing import override, final
+from typing import final
 from django.conf import settings
 
 from .models import PermissionType, Section
@@ -18,9 +18,7 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name = "login"
 
-    @override
     def get(self, request: HttpRequest, root_section_id: int, mode:str):
-        print(settings.BASE_DIR)
         assert self.template_name is not None
         user = request.user
         if mode not in [perm.value for perm in PermissionType]:
@@ -90,15 +88,7 @@ class ModalFileView(mixins.LoginRequiredMixin, TemplateView):
     extra_context = {"form": FileForm()}
 
 @final
-class WikiViewRead (mixins.LoginRequiredMixin, TemplateView):
+class WikiView (mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/main.html"
     login_url = reverse_lazy("wikiapp:login")
-    extra_context = {"mode": PermissionType.READ.value}
-    redirect_field_name="login"
-
-@final
-class WikiViewWrite (mixins.LoginRequiredMixin, TemplateView):
-    template_name = "core/main.html"
-    login_url = reverse_lazy("wikiapp:login")
-    extra_context = {"mode": PermissionType.WRITE.value}
     redirect_field_name="login"

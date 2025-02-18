@@ -39,4 +39,5 @@ TODO:
 - Intentar meter logica para guardar archivos. [-]
 
 17/2/25
+- Intentar subir un archivo [-] 
 - Revisar el alta de usuarios, crear una especie de perfil. [-]

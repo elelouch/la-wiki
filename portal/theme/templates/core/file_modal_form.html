@@ -1,6 +1,20 @@
-<form hx-post="{{request.path}}" >
-    {% csrf_token %}
-    {{form}}
-    <button>Submit</button>
-    <button>Cancel</button>
-</form>
+<!-- if x-data is not provided, x-ref doesn't work -->
+<div>
+    <!-- Modal body -->
+    <form hx-post="{{request.path}}" hx-swap="delete" hx-target="this" id="section-modal" x-ref="fileModal"
+        class="bg-white rounded-lg shadow-sm dark:bg-gray-700" tabindex="-1">
+        <div
+            class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                Upload a file
+            </h3>
+        </div>
+        {% csrf_token %}
+        {{form}}
+        <!-- form value available on the core/forms.py file -->
+        <button @click="$refs.sectionFormId.value = currentSectionId"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Submit</button>
+        <button @click="$refs.fileModal.remove()"
+            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Cancel</button>
+    </form>
+</div>

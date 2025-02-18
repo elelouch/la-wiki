@@ -79,4 +79,5 @@ class Archive(models.Model):
             null=True,
             related_name="archives"
             )
-    file = models.FileField(upload_to=settings.BASE_DIR / "core" / "uploads", default=None)
+    # setup name if necessary through file.name (must specify the path)
+    file = models.FileField(upload_to="uploads", default=None)

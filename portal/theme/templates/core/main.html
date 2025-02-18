@@ -14,13 +14,21 @@
             <!-- USE CURRENTID TO ADD THE MODAL FORM TO THE WITH THE ADD BUTTON -->
             <button class="w-2/5 border border-black rounded-full" hx-trigger="click"
                 hx-get="{% url 'core:modal_section' %}" hx-target="#writable-section">
-                +
+                + Sec
             </button>
 
             <!-- Tengo que encontrar como utilizar la seccion actualmente seleccionada junto a htmx-->
             <button hx-trigger="click" :hx-delete="'/wiki/section/' + currentSectionId"  x-ref="deleteButton" hx-swap="none"
                 class="w-2/5 border border-black rounded-full">
-                -
+                - Sec
+            </button>
+
+            <button 
+                class="w-2/5 border border-black rounded-full" 
+                hx-trigger="click" 
+                hx-get="{% url 'core:modal_file'%}" 
+                hx-target="#writable-section">
+                + File
             </button>
 
         </div>
