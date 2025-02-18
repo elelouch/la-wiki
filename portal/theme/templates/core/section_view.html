@@ -14,7 +14,7 @@
     {% for arch in archives %}
     <div>
         <div>
-            <button hx-trigger="click" hx-get="{% url 'core:archive' arch.id %}" x-target="#writable-section" x-swap="innerHTML">
+            <button hx-trigger="click" hx-get="{% url 'core:archive' arch.name|add:arch.extension %}" x-target="#writable-section" x-swap="innerHTML">
                 {{arch.name}}{{arch.extension}}
             </button>
         </div>

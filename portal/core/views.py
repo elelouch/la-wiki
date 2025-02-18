@@ -3,12 +3,15 @@ from django.http import HttpRequest, HttpResponseNotFound, HttpResponse
 from django.views.generic.base import TemplateView
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import render, get_object_or_404
+from django.utils.decorators import method_decorator
 from django.contrib.auth import mixins
 from django.db.models import Q
 from django.urls import reverse_lazy
 from .forms import SectionForm, FileForm
 from typing import final
 from django.conf import settings
+from django.views.decorators.clickjacking import xframe_options_sameorigin
+
 import os
 
 from .models import PermissionType, Section, Archive
@@ -118,6 +121,8 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name="login"
 
-    def get(self, request: HttpRequest, file_id: int):
-        arch = Archive.objects.get(pk=file_id)
-        return render(request, self.template_name, {arch: arch})
+    @method_decorator(xframe_options_sameorigin)
+    def get(self, request: HttpRequest, filename: str):
+        name, extension = os.path.splitext(filename)
+        arch = Archive.objects.get(name = name, extension = extension)
+        return render(request, self.template_name, {"arch": arch, "file": arch.file})
