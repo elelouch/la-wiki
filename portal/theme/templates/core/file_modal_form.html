@@ -2,6 +2,7 @@
 <div>
     <!-- Modal body -->
     <form hx-post="{{request.path}}" hx-swap="delete" hx-target="this" id="section-modal" x-ref="fileModal"
+        enctype="multipart/form-data"
         class="bg-white rounded-lg shadow-sm dark:bg-gray-700" tabindex="-1">
         <div
             class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">

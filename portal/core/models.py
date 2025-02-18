@@ -69,10 +69,10 @@ class User(AbstractUser):
 @final
 class Archive(models.Model):
     name = models.CharField(max_length=256)
-    description = models.CharField(max_length=256)
+    description = models.CharField(max_length=256, default = "")
     references = models.ManyToManyField("self")
-    extension = models.CharField(max_length=12)
-    last_time_modified = models.DateField()
+    extension = models.CharField(max_length=12, default = "")
+    last_time_modified = models.DateField(auto_now_add=True)
     section = models.ForeignKey(
             Section, 
             on_delete=models.CASCADE,
@@ -80,4 +80,4 @@ class Archive(models.Model):
             related_name="archives"
             )
     # setup name if necessary through file.name (must specify the path)
-    file = models.FileField(upload_to="uploads", default=None)
+    file = models.FileField(upload_to="uploads", blank=True)

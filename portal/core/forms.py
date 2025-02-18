@@ -27,14 +27,13 @@ class SectionForm(forms.Form):
 
 @final
 class FileForm(forms.Form):
-    name = forms.CharField(
+    id = forms.IntegerField(
         label="",
-        widget=forms.TextInput(attrs={
-            "placeholder":_("File Name"),
-            "class":"rounded-md"
-            }),
-        validators=[RegexValidator(code="404", message=_("Name is not valid"))],
-        max_length=200,
-        required=True
+        widget=forms.NumberInput(
+            attrs={
+                "class":"hidden",
+                "x-ref":"sectionFormId"
+            }
+        )
     )
-    file = forms.FileField()
+    file = forms.FileField(label="")

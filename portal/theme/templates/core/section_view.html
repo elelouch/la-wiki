@@ -2,17 +2,21 @@
     {% for sec in sections %}
     <!-- Debo actualizar el padre en lugar de el hijo, a la hora del borrado -->
     <div hx-trigger="click once,deleted_section_parent_{{sec.id}} from:body,new_section_parent_{{sec.id}} from:body" x-data="{ open: false }"
-         hx-get="{% url 'core:children' sec.id mode %}" hx-target="#subsections_{{sec.id}}" hx-swap="innerHTML">
+         hx-get="{% url 'core:children' sec.id %}" hx-target="#subsections_{{sec.id}}" hx-swap="innerHTML">
+
         <button @click="open = !open; currentSectionId = {{sec.id}}" :class="currentSectionId === {{sec.id}} && selectedclasses">
             {{sec.name}}
         </button>
+
         <div id="subsections_{{sec.id}}" x-show="open"></div>
     </div>
     {% endfor %}
     {% for arch in archives %}
     <div>
         <div>
-            <button>{{arch.name}}</button>
+            <button hx-trigger="click" hx-get="{% url 'core:archive' arch.id %}" x-target="#writable-section" x-swap="innerHTML">
+                {{arch.name}}{{arch.extension}}
+            </button>
         </div>
     </div>
     {% endfor %}

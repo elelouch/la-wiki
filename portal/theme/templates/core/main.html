@@ -33,7 +33,7 @@
 
         </div>
         <div hx-trigger="load,new_section_parent_{{user.main_section.id}} from:body"
-            hx-get="{% url 'core:children' user.main_section.id mode %}" id="tree-view"
+            hx-get="{% url 'core:children' user.main_section.id %}" id="tree-view"
             class="border border-black rounded full-rounded" hx-swap="innerHTML">
         </div>
     </div>
