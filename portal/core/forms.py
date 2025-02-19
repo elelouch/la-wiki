@@ -36,4 +36,4 @@ class FileForm(forms.Form):
             }
         )
     )
-    file = forms.FileField(label="")
+    file = forms.FileField(label="", required=True)

@@ -6,14 +6,11 @@ from django.utils.translation import gettext_lazy as _
 from django.shortcuts import render, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.contrib.auth import mixins
-from django.db.models import Q
 from django.urls import reverse_lazy
 from .forms import SectionForm, FileForm
 from typing import final
 from django.conf import settings
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-
-import os
 
 from .models import PermissionType, Section, Archive
 
@@ -31,15 +28,11 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
         root_section = get_object_or_404(Section, pk=root_section_id)
         if not root_section.user_has_perm(user, PermissionType.READ):
             return HttpResponse("User does not have read permission", status = 403)
-        sections = root_section.children \
-                .filter(
-                        Q(access_lists__group__user = user) | Q(access_lists__user = user),
-                        access_lists__can_read = True)
-        archives = root_section.archives.all()
+
         context = {
                 "parent": root_section,
-                "sections": sections,
-                "archives": archives,
+                "sections": root_section.children_available(user),
+                "archives": root_section.archives.all(),
             }
         return render(request, self.template_name, context)
 
@@ -50,17 +43,24 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
     extra_context = {"form": SectionForm()}
     def post(self, request: HttpRequest): 
         root_section_id = int(request.POST["id"])
+
         if not root_section_id:
             user = request.user
             root_section_id = user.main_section.id
+
         root_section = get_object_or_404(Section, pk=root_section_id)
+
         user = request.user
         user_can_write = root_section.user_has_perm(user, PermissionType.WRITE)
         if not user_can_write:
             return HttpResponse("Unauthorized", status=401)
-        new_sec = root_section.children.create(name = request.POST["name"])
-        # inherits permissions
-        new_sec.access_lists.add(*root_section.access_lists.all())
+
+        name = request.POST["name"]
+        if not len(name):
+            return HttpResponse("Invalid request", status=400)
+
+        root_section.create_children(name)
+
         return HttpResponse(
             "success", 
             headers={"HX-Trigger": "new_section_parent_" + str(root_section_id)},
@@ -97,16 +97,14 @@ class ModalFileView(mixins.LoginRequiredMixin, TemplateView):
         user_can_write = root_section.user_has_perm(user, PermissionType.WRITE)
         if not user_can_write:
             return HttpResponse("Unauthorized", status=401)
+
         file = request.FILES["file"] 
-        filename, extension = os.path.splitext(file.name)
+        
+        if not file: 
+            return HttpResponse("File not uploaded", status=400)
 
-        arch = root_section.archives.create(
-                fullname = file.name,
-                name = filename,
-                extension = extension,
-                file = file
-                )
-
+        root_section.create_children_archive(file)
+        
         return HttpResponse(
             "success", 
             headers={"HX-Trigger": "new_file_parent_" + str(root_section_id)},
@@ -133,7 +131,6 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
 
 @final
 class SearchView(mixins.LoginRequiredMixin, TemplateView):
-
     def get(self, request):
         search_content = request.GET["content"]
         search_content = str(search_content)

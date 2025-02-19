@@ -1,5 +1,8 @@
 # pyright: reportUnknownVariableType=false
 import enum
+from django.core.files import File
+from django.db.models import Q
+import os
 from django.db import models
 from typing import final
 from django.contrib.auth.models import AbstractUser, Group
@@ -44,6 +47,15 @@ class PermissionHandler(models.Model):
             
         return False
 
+
+@final
+class User(AbstractUser):
+    main_section = models.ForeignKey(
+            "Section",
+            on_delete=models.SET_NULL,
+            null=True
+            )
+
 @final
 class Section(PermissionHandler):
     name = models.CharField(max_length=256, default="")
@@ -58,13 +70,37 @@ class Section(PermissionHandler):
     def __str__(self):
         return self.name
 
-@final
-class User(AbstractUser):
-    main_section = models.ForeignKey(
-            Section,
-            on_delete=models.SET_NULL,
-            null=True
-            )
+    def children_available(self, user: User):
+        """
+        Obtains children sections that the user can read, based on the access list
+        """
+        assert user is not None
+        sections = self.children \
+                .filter(
+                        Q(access_lists__group__user = user) | Q(access_lists__user = user),
+                        access_lists__can_read = True)
+        return sections 
+
+    def create_children(self, name: str):
+        """
+        Creates children an inherits permissions of the parent 
+        """
+        assert not len(name)
+        new_sec = root_section.children.create(name = name)
+        new_sec.access_lists.add(*root_section.access_lists.all())
+        return new_sec
+
+    def create_children_archive(self, file):
+        assert file is not None
+        fullname = str(file.name)
+        filename, extension = os.path.splitext(fullname)
+        arch = self.archives.create(
+                fullname = file.name,
+                name = filename,
+                extension = extension,
+                file = file
+                )
+        return arch
 
 @final
 class Archive(models.Model):
