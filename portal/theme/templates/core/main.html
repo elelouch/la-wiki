@@ -9,35 +9,61 @@
      x-data="{currentSectionId:0, selectedclasses:'bg-blue-500'}" 
      x-init="$watch('currentSectionId', val => htmx.process($refs.deleteButton))"
      @click.outside="currentSectionId = 0">
-    <div class="w-2/6 flex flex-col">
-        <div class="w-1/4  h-200 border border-rounded flex justify-around">
+    <div class="w-2/6 h-screen flex flex-col">
+        <div class="flex justify-between w-full h-200 border border-rounded flex justify-around">
             <!-- USE CURRENTID TO ADD THE MODAL FORM TO THE WITH THE ADD BUTTON -->
-            <button class="w-2/5 border border-black rounded-full" hx-trigger="click"
-                hx-get="{% url 'core:modal_section' %}" hx-target="#writable-section">
-                + Sec
-            </button>
+            <div class="flex basis-1/4">
+                <button class="w-2/5 border border-black rounded-full" hx-trigger="click"
+                    hx-get="{% url 'core:modal_section' %}" hx-target="#writable-section">
+                    + Sec
+                </button>
 
-            <!-- Tengo que encontrar como utilizar la seccion actualmente seleccionada junto a htmx-->
-            <button hx-trigger="click" :hx-delete="'/wiki/section/' + currentSectionId"  x-ref="deleteButton" hx-swap="none"
-                class="w-2/5 border border-black rounded-full">
-                - Sec
-            </button>
+                <!-- Tengo que encontrar como utilizar la seccion actualmente seleccionada junto a htmx-->
+                <button hx-trigger="click" :hx-delete="'/wiki/section/' + currentSectionId"  x-ref="deleteButton" hx-swap="none"
+                    class="w-2/5 border border-black rounded-full">
+                    - Sec
+                </button>
 
-            <button 
-                class="w-2/5 border border-black rounded-full" 
-                hx-trigger="click" 
-                hx-get="{% url 'core:modal_file'%}" 
-                hx-target="#writable-section">
-                + File
-            </button>
-
+                <button 
+                    class="w-2/5 border border-black rounded-full" 
+                    hx-trigger="click" 
+                    hx-get="{% url 'core:modal_file'%}" 
+                    hx-target="#writable-section">
+                    + File
+                </button>
+            </div>
+            <div class="flex flex-col rounded-lg basis-3/4 border border-black">
+                <div>
+                    <label for="search">Search</label>
+                    <input 
+                        hx-get="{% url "core:search" %}"
+                        hx-trigger="keyup changed delay:1s"
+                        hx-target="#list-files"
+                        hx-swap="innerHTML"
+                        name="content" id="search" type="text"></input>
+                </div>
+                <div>
+                    <label for="by-content">By content</label>
+                    <input id="by-content" type="checkbox"></input>
+                </div>
+                <div id="list-files">
+                    <ul class="absolute">
+                        <li>
+                            testing
+                        </li>
+                        <li>
+                            a ver
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
         <div hx-trigger="load,new_section_parent_{{user.main_section.id}} from:body"
             hx-get="{% url 'core:children' user.main_section.id %}" id="tree-view"
             class="border border-black rounded full-rounded" hx-swap="innerHTML">
         </div>
     </div>
-    <div class="w-4/6 border border-black" id="writable-section"></div>
+    <div class="flex w-4/6 border border-black" id="writable-section"></div>
 </div>
 
 {% else %}

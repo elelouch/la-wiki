@@ -1,5 +1,5 @@
-<div>
-    <iframe title="Selected File" 
-        src="{% url 'media:' 'uploads'|add:archive.name|add:archive.extension %}">
+<div class="w-full h-full">
+    <iframe class="w-full h-full" title="Selected File" 
+            src="/media/uploads/{{ archive.name|add:archive.extension }}">
     </iframe>
 </div>
