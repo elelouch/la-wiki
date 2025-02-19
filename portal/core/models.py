@@ -68,6 +68,7 @@ class User(AbstractUser):
 
 @final
 class Archive(models.Model):
+    fullname = models.CharField(max_length=256, default="")
     name = models.CharField(max_length=256)
     description = models.CharField(max_length=256, default = "")
     references = models.ManyToManyField("self")

@@ -1,4 +1,5 @@
 # pyright: reportUnknownVariableType=false
+from django.db.models.functions import Concat, Lower
 from django.http import HttpRequest, HttpResponseNotFound, HttpResponse
 from django.views.generic.base import TemplateView
 from django.utils.translation import gettext_lazy as _
@@ -98,11 +99,14 @@ class ModalFileView(mixins.LoginRequiredMixin, TemplateView):
             return HttpResponse("Unauthorized", status=401)
         file = request.FILES["file"] 
         filename, extension = os.path.splitext(file.name)
+
         arch = root_section.archives.create(
-                extension = extension,
+                fullname = file.name,
                 name = filename,
+                extension = extension,
                 file = file
                 )
+
         return HttpResponse(
             "success", 
             headers={"HX-Trigger": "new_file_parent_" + str(root_section_id)},
@@ -125,4 +129,26 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
     def get(self, request: HttpRequest, filename: str):
         name, extension = os.path.splitext(filename)
         arch = Archive.objects.get(name = name, extension = extension)
-        return render(request, self.template_name, {"arch": arch, "file": arch.file})
+        return render(request, self.template_name, {"archive": arch, "file": arch.file})
+
+@final
+class SearchView(mixins.LoginRequiredMixin, TemplateView):
+
+    def get(self, request):
+        search_content = request.GET["content"]
+        search_content = str(search_content)
+
+        list_str = "<ul class=\"bg-blue-500 absolute\">"
+        if len(search_content) <= 3 :
+            list_str += "</ul>"
+            return HttpResponse(list_str, status=401)
+
+        found_archives = Archive.objects.filter(fullname__icontains=search_content)
+
+        for archive in found_archives: 
+            list_str += "<li>"
+            list_str += archive.fullname
+            list_str += "</li>"
+        list_str += "</ul>"
+
+        return HttpResponse(list_str)

@@ -3,6 +3,7 @@ Objetivos grandes:
 - PERFILES CON NOTIFICACIONES sobre un pasante, por ejemplo
 - Explorador tipo VSCODE con archivos y un buscador de archivos
 - Revisar los estilos
+- 
 
 10/2/25
 TODO:
@@ -39,5 +40,11 @@ TODO:
 - Intentar meter logica para guardar archivos. [-]
 
 17/2/25
-- Intentar subir un archivo [-] 
+- Intentar subir un archivo [v] 
 - Revisar el alta de usuarios, crear una especie de perfil. [-]
+
+19/2/25
+- Mostrar en iframe los archivo subidos. [v]
+- Extender iframe para ocupar todo. [v]
+- Remover todos los elementos internos de iframe. [-] No hace falta, al contrario.
+- Implementar la busqueda de archivos. [-]
