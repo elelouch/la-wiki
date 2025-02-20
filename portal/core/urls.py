@@ -12,7 +12,8 @@ urlpatterns = [
         path("section/modal", views.ModalSectionView.as_view(), name="modal_section"), 
         path("file/modal", views.ModalFileView.as_view(), name="modal_file"), 
         path("archive/<str:filename>", views.ArchiveView.as_view(), name="archive"), 
-        path("search/", views.SearchView.as_view(), name="search"), 
+        path("text/markdown", views.MarkdownTextView.as_view(), name="markdown_text"),
+        path("search/", views.SearchArchiveView.as_view(), name="search"), 
         ]
 
 

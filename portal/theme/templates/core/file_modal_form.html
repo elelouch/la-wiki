@@ -1,5 +1,5 @@
 <!-- if x-data is not provided, x-ref doesn't work -->
-<div>
+<div x-init="htmx.process(htmx.find('#markdownButton'))">
     <!-- Modal body -->
     <form hx-post="{{request.path}}" hx-swap="delete" hx-target="this" id="section-modal" x-ref="fileModal"
         enctype="multipart/form-data"
@@ -17,5 +17,9 @@
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Submit</button>
         <button @click="$refs.fileModal.remove()"
             class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Cancel</button>
+        <button hx-trigger="click" hx-get="{% url 'core:markdown_text' %}" 
+               hx-target="#writable-section" hx-swap="innerHTML" id="markdownButton"
+            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">Write a plain text file</button>
     </form>
+    </input>
 </div>

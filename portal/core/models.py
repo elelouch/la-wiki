@@ -85,9 +85,9 @@ class Section(PermissionHandler):
         """
         Creates children an inherits permissions of the parent 
         """
-        assert not len(name)
-        new_sec = root_section.children.create(name = name)
-        new_sec.access_lists.add(*root_section.access_lists.all())
+        assert len(name)
+        new_sec = self.children.create(name = name)
+        new_sec.access_lists.add(*self.access_lists.all())
         return new_sec
 
     def create_children_archive(self, file):

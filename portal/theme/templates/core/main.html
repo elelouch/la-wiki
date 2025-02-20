@@ -34,27 +34,19 @@
             </div>
             <div class="flex flex-col rounded-lg basis-3/4 border border-black">
                 <div>
-                    <label for="search">Search</label>
                     <input 
                         hx-get="{% url "core:search" %}"
                         hx-trigger="keyup changed delay:1s"
                         hx-target="#list-files"
                         hx-swap="innerHTML"
+                        placeholder="Search"
                         name="content" id="search" type="text"></input>
                 </div>
                 <div>
                     <label for="by-content">By content</label>
                     <input id="by-content" type="checkbox"></input>
                 </div>
-                <div id="list-files">
-                    <ul class="absolute">
-                        <li>
-                            testing
-                        </li>
-                        <li>
-                            a ver
-                        </li>
-                    </ul>
+                <div id="list-files" @click.outside="$el.innerHTML=''">
                 </div>
             </div>
         </div>

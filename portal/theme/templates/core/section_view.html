@@ -11,15 +11,15 @@
         <div id="subsections_{{sec.id}}" x-show="open"></div>
     </div>
     {% endfor %}
-    {% for arch in archives %}
     <div>
+        {% for arch in archives %}
         <div>
             <button hx-trigger="click" 
-                hx-get="{% url 'core:archive' arch.name|add:arch.extension %}" 
-                hx-target="#writable-section" hx-swap="innerHTML">
-                {{arch.name}}{{arch.extension}}
+                    hx-get="{% url 'core:archive' arch.name|add:arch.extension %}" 
+                    hx-target="#writable-section" hx-swap="innerHTML">
+                {{arch.fullname}}
             </button>
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
 </div>

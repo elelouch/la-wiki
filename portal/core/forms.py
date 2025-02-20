@@ -37,3 +37,36 @@ class FileForm(forms.Form):
         )
     )
     file = forms.FileField(label="", required=True)
+
+@final
+class SearchForm(forms.Form):
+    name = forms.CharField(
+        label="",
+        widget=forms.TextInput(attrs={
+            "placeholder":_("Section Name"),
+            "class":"rounded-md"
+            }),
+        validators=[RegexValidator(code="404", message=_("Name is not valid"))],
+        max_length=200,
+        required=True
+    )
+
+@final
+class MarkdownForm(forms.Form):
+    name = forms.CharField(
+        label="",
+        widget=forms.TextInput(attrs={
+            "placeholder":_("Section Name"),
+            "class":"rounded-md"
+            }),
+        validators=[RegexValidator(code="404", message=_("Name is not valid"))],
+        max_length=200,
+        required=True
+    )
+    file = forms.CharField(
+        label="",
+        widget=forms.Textarea(),
+        max_length=4 * 1024 * 1024,
+        required=True
+    )
+

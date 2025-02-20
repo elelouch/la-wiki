@@ -2,14 +2,15 @@
 from django.db.models.functions import Concat, Lower
 from django.http import HttpRequest, HttpResponseNotFound, HttpResponse
 from django.views.generic.base import TemplateView
+from django.views.generic.list import ListView
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import render, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.contrib.auth import mixins
 from django.urls import reverse_lazy
-from .forms import SectionForm, FileForm
+from .forms import MarkdownForm, SectionForm, FileForm
 from typing import final
-from django.conf import settings
+import os
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from .models import PermissionType, Section, Archive
@@ -130,22 +131,21 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
         return render(request, self.template_name, {"archive": arch, "file": arch.file})
 
 @final
-class SearchView(mixins.LoginRequiredMixin, TemplateView):
-    def get(self, request):
-        search_content = request.GET["content"]
-        search_content = str(search_content)
+class SearchArchiveView(mixins.LoginRequiredMixin,ListView):
+    template_name="core/archive_list.html"
+    paginate_by = 15
+    model = Archive
+    login_url = reverse_lazy("wikiapp:login")
 
-        list_str = "<ul class=\"bg-blue-500 absolute\">"
-        if len(search_content) <= 3 :
-            list_str += "</ul>"
-            return HttpResponse(list_str, status=401)
+    def get_queryset(self):
+        qs = super().get_queryset()
+        search_content = self.request.GET["content"]
+        if len(search_content) <= 2 :
+            return []
+        return qs.filter(fullname__icontains=search_content)
 
-        found_archives = Archive.objects.filter(fullname__icontains=search_content)
-
-        for archive in found_archives: 
-            list_str += "<li>"
-            list_str += archive.fullname
-            list_str += "</li>"
-        list_str += "</ul>"
-
-        return HttpResponse(list_str)
+@final
+class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
+    template_name="core/markdown_form.html"
+    extra_contet = {"form": MarkdownForm()}
+    login_url = reverse_lazy("wikiapp:login")
