@@ -47,4 +47,10 @@ TODO:
 - Mostrar en iframe los archivo subidos. [v]
 - Extender iframe para ocupar todo. [v]
 - Remover todos los elementos internos de iframe. [-] No hace falta, al contrario.
-- Implementar la busqueda de archivos. [-]
+- Implementar la busqueda de archivos. [v]
+
+21/2/25
+- Revisar si se puede implementar una especie de arbol para los archivos. 
+Esto permitira tener archivos repetidos en distintas secciones. [-] 
+- Revisar si se pueden archivos de texto plano (Markdown). [-]
+- Mejorar el codigo [-]

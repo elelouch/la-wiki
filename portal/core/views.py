@@ -8,8 +8,10 @@ from django.shortcuts import render, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.contrib.auth import mixins
 from django.urls import reverse_lazy
+from django.conf import settings
 from .forms import MarkdownForm, SectionForm, FileForm
 from typing import final
+from django.core.files import File
 import os
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
@@ -43,7 +45,9 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_modal_form.html"
     extra_context = {"form": SectionForm()}
     def post(self, request: HttpRequest): 
-        root_section_id = int(request.POST["id"])
+        data = request.POST
+
+        root_section_id = int(data.get("id") or 0)
 
         if not root_section_id:
             user = request.user
@@ -56,8 +60,8 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
         if not user_can_write:
             return HttpResponse("Unauthorized", status=401)
 
-        name = request.POST["name"]
-        if not len(name):
+        name = data.get("name")
+        if not name:
             return HttpResponse("Invalid request", status=400)
 
         root_section.create_children(name)
@@ -89,17 +93,21 @@ class ModalFileView(mixins.LoginRequiredMixin, TemplateView):
     extra_context = {"form": FileForm()}
 
     def post(self, request: HttpRequest): 
-        root_section_id = int(request.POST["id"])
+        data = request.POST
+        files = request.FILES
+
+        root_section_id = int(data.get("id") or 0)
         if not root_section_id:
             user = request.user
             root_section_id = user.main_section.id
+
         root_section = get_object_or_404(Section, pk=root_section_id)
         user = request.user
         user_can_write = root_section.user_has_perm(user, PermissionType.WRITE)
         if not user_can_write:
             return HttpResponse("Unauthorized", status=401)
 
-        file = request.FILES["file"] 
+        file = files.get("file")
         
         if not file: 
             return HttpResponse("File not uploaded", status=400)
@@ -139,13 +147,45 @@ class SearchArchiveView(mixins.LoginRequiredMixin,ListView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        search_content = self.request.GET["content"]
-        if len(search_content) <= 2 :
+        data = self.request.GET
+        search_content = data.get("content")
+        if not search_content or len(search_content) <= 2 :
             return []
         return qs.filter(fullname__icontains=search_content)
 
 @final
 class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
     template_name="core/markdown_form.html"
-    extra_contet = {"form": MarkdownForm()}
+    extra_context = {"form": MarkdownForm()}
     login_url = reverse_lazy("wikiapp:login")
+
+    def post (self,request):
+        data = request.POST
+
+        root_section_id = int(data.get("root_id") or 0)
+        filename = data.get("name")
+        file_content = data.get("file")
+        if not file_content :
+            return HttpResponse("No files provided", status = 400)
+        if not filename:
+            return HttpResponse("No name provided", status = 400)
+
+        root_section = user.main_section if not root_section_id else get_object_or_404(Section, pk=root_section_id)
+
+        # add markdown suffix
+        fullname = filename + ".md"
+
+        new_file_path = os.path.join(settings.MEDIA_ROOT, 'upload', fullname)
+
+        with open(new_file_path, "x") as f:
+            new_file = File(f)
+            new_file.write(file_content)
+            new_archive = Archive(
+                    fullname = fullname,
+                    name = filename,
+                    file=new_file,
+                    root_section = root_section
+                    ) 
+            new_archive.save()
+
+        return HttpResponse("Markdown text success", status = 200)

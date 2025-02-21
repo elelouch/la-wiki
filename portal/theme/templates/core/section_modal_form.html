@@ -10,7 +10,7 @@
             </h3>
         </div>
         {% csrf_token %}
-        {{form}}
+        {{ form }}
         <button @click="$refs.sectionFormId.value = currentSectionId"
             class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Submit</button>
         <button @click="$refs.sectionModal.remove()"
