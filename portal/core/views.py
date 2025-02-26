@@ -14,6 +14,7 @@ from typing import final
 from django.core.files import File
 import os
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+import markdown as markdown_tool
 
 from .models import PermissionType, Section, Archive
 
@@ -129,14 +130,30 @@ class WikiView (mixins.LoginRequiredMixin, TemplateView):
 @final
 class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/archive_view.html"
+    markdown_template = "core/markdown_view.html"
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name="login"
 
     @method_decorator(xframe_options_sameorigin)
     def get(self, request: HttpRequest, filename: str):
         name, extension = os.path.splitext(filename)
-        arch = Archive.objects.get(name = name, extension = extension)
+        arch = get_object_or_404(Archive, name = name, extension = extension)
+        if "md" in extension :
+            text = arch.file.read()
+            html = markdown_tool.markdown(text.decode("ascii"))
+            print(html)
+            return render(request, self.markdown_template, {"archive": arch, "file": html})
         return render(request, self.template_name, {"archive": arch, "file": arch.file})
+
+    def delete(self, request: HttpRequest, filename: str):
+        name, extension = os.path.splitext(filename)
+        print(name, extension)
+        archive = get_object_or_404(Archive, name = name, extension = extension)
+        archive.file.delete()
+        archive.delete()
+        return HttpResponse("")
+
+
 
 @final
 class SearchArchiveView(mixins.LoginRequiredMixin,ListView):
@@ -161,6 +178,7 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
 
     def post (self,request):
         data = request.POST
+        markdown_ext = ".md"
 
         root_section_id = int(data.get("root_id") or 0)
         filename = data.get("name")
@@ -170,21 +188,21 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
         if not filename:
             return HttpResponse("No name provided", status = 400)
 
+        user = request.user
         root_section = user.main_section if not root_section_id else get_object_or_404(Section, pk=root_section_id)
 
         # add markdown suffix
-        fullname = filename + ".md"
+        fullname = filename + markdown_ext
 
-        new_file_path = os.path.join(settings.MEDIA_ROOT, 'upload', fullname)
-
-        with open(new_file_path, "x") as f:
+        with open(fullname, "w+") as f:
             new_file = File(f)
             new_file.write(file_content)
             new_archive = Archive(
                     fullname = fullname,
                     name = filename,
+                    extension = markdown_ext,
                     file=new_file,
-                    root_section = root_section
+                    section = root_section
                     ) 
             new_archive.save()
 

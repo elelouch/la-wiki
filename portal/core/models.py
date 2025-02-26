@@ -8,6 +8,7 @@ from typing import final
 from django.contrib.auth.models import AbstractUser, Group
 from django.conf import settings
 
+
 class PermissionType(enum.Enum):
     READ = "read"
     WRITE = "write"
@@ -118,3 +119,5 @@ class Archive(models.Model):
             )
     # setup name if necessary through file.name (must specify the path)
     file = models.FileField(upload_to="uploads", blank=True)
+
+

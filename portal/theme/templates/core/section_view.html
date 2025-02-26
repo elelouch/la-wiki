@@ -13,11 +13,16 @@
     {% endfor %}
     <div>
         {% for arch in archives %}
-        <div>
-            <button hx-trigger="click" 
-                    hx-get="{% url 'core:archive' arch.name|add:arch.extension %}" 
+        <div >
+            <button hx-trigger="click consume" 
+                    hx-get="{% url 'core:archive' arch.fullname %}" 
                     hx-target="#writable-section" hx-swap="innerHTML">
                 {{arch.fullname}}
+            </button>
+            <button hx-trigger="click"
+                    class="border rounded-full p-2"
+                    hx-delete="{% url 'core:archive' arch.fullname %}">
+                -
             </button>
         </div>
         {% endfor %}
