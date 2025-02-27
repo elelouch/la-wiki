@@ -56,5 +56,9 @@ Esto permitira tener archivos repetidos en distintas secciones. [-]
 - Mover parte estatica [v]
 
 26/2/25
-- Revisar si se puede implementar una especie de arbol para los archivos. Mejor dejarlo asi.
-- Revisar si se pueden subir archivos de texto plano (Markdown). [-]
+### - Revisar si se puede implementar una especie de arbol para los archivos. Mejor dejarlo asi.
+- Revisar si se pueden subir archivos de texto plano (Markdown). [v]
+
+27/2/25
+- Dejar la seleccion tambien para un archivo. 
+- Pintar solo en click, no si la seccion es la actual.

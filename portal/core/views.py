@@ -117,7 +117,7 @@ class ModalFileView(mixins.LoginRequiredMixin, TemplateView):
         
         return HttpResponse(
             "success", 
-            headers={"HX-Trigger": "new_file_parent_" + str(root_section_id)},
+            headers={"HX-Trigger": "new_archive_parent_" + str(root_section_id)},
             status = 200
         )
 
@@ -126,6 +126,12 @@ class WikiView (mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/main.html"
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name="login"
+
+    def get(self, request):
+        user = request.user
+        main_section = user.main_section
+        user_can_write = main_section.user_has_perm(user, PermissionType.WRITE) 
+        return render(request, self.template_name, {"user_can_write": user_can_write})
 
 @final
 class ArchiveView (mixins.LoginRequiredMixin, TemplateView):

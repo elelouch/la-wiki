@@ -1,29 +1,50 @@
-<div id="subsections_{{parent.id}}" class="pl-3"  >
+<div id="subsections_{{parent.id}}" class="pl-3" :class="!open && 'hidden'">
     {% for sec in sections %}
-    <!-- Debo actualizar el padre en lugar de el hijo, a la hora del borrado -->
-    <div hx-trigger="click once,deleted_section_parent_{{sec.id}} from:body,new_section_parent_{{sec.id}} from:body" x-data="{ open: false }"
-         hx-get="{% url 'core:children' sec.id %}" hx-target="#subsections_{{sec.id}}" hx-swap="innerHTML">
+    <div hx-trigger="click once,new_section_parent_{{sec.id}} from:body, new_archive_parent_{{sec.id}} from:body" 
+         class="flex flex-col"
+         x-data="{ open: false }"
+         hx-get="{% url 'core:children' sec.id %}" 
+         hx-target="find div" hx-swap="afterend">
 
-        <button @click="open = !open; currentSectionId = {{sec.id}}" :class="currentSectionId === {{sec.id}} && selectedclasses">
-            {{sec.name}}
-        </button>
+        <div class="flex flex-row">
+            <button @click="open = !open; currentSectionId = {{sec.id}}" 
+                class="flex basis-1/4" 
+                :class="currentSectionId === {{sec.id}} && selectedclasses">
+                {{sec.name}}
+            </button>
 
-        <div id="subsections_{{sec.id}}" x-show="open"></div>
+            <div class="flex basis-1/2"></div>
+
+            <button hx-trigger="click" 
+                    hx-delete="{% url 'core:section' sec.id %}"
+                    class="pl-3 pr-3 border border-black rounded-full">
+                    - 
+            </button>
+        </div>
+
     </div>
     {% endfor %}
+
     <div>
         {% for arch in archives %}
-        <div >
+        <div class="flex flex-row">
+
             <button hx-trigger="click consume" 
                     hx-get="{% url 'core:archive' arch.fullname %}" 
-                    hx-target="#writable-section" hx-swap="innerHTML">
+                    hx-target="#writable-section" hx-swap="innerHTML"
+                    class="flex basis-1/4"
+                    @click="currentArchiveId = {{arch.id}}" :class="currentArchiveId === {{arch.id}} && selectedclasses">
                 {{arch.fullname}}
             </button>
+
+            <div class="flex basis-full"></div>
+
             <button hx-trigger="click"
-                    class="border rounded-full p-2"
+                    class="border rounded-full pl-2 pr-2"
                     hx-delete="{% url 'core:archive' arch.fullname %}">
                 -
             </button>
+
         </div>
         {% endfor %}
     </div>
