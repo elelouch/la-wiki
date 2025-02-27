@@ -12,6 +12,7 @@ from django.conf import settings
 from .forms import MarkdownForm, SectionForm, FileForm
 from typing import final
 from django.core.files import File
+from django.core.files.base import ContentFile
 import os
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 import markdown as markdown_tool
@@ -182,7 +183,7 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
     extra_context = {"form": MarkdownForm()}
     login_url = reverse_lazy("wikiapp:login")
 
-    def post (self,request):
+    def post(self,request):
         data = request.POST
         markdown_ext = ".md"
 
@@ -200,16 +201,14 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
         # add markdown suffix
         fullname = filename + markdown_ext
 
-        with open(fullname, "w+") as f:
-            new_file = File(f)
-            new_file.write(file_content)
-            new_archive = Archive(
-                    fullname = fullname,
-                    name = filename,
-                    extension = markdown_ext,
-                    file=new_file,
-                    section = root_section
-                    ) 
-            new_archive.save()
+        content_file = ContentFile(file_content, name=fullname)
+        new_archive = Archive(
+                fullname = fullname,
+                name = filename,
+                extension = markdown_ext,
+                file=content_file,
+                section = root_section
+                ) 
+        new_archive.save()
 
         return HttpResponse("Markdown text success", status = 200)

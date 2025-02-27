@@ -119,5 +119,3 @@ class Archive(models.Model):
             )
     # setup name if necessary through file.name (must specify the path)
     file = models.FileField(upload_to="uploads", blank=True)
-
-
