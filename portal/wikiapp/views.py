@@ -43,15 +43,3 @@ class HomeView(mixins.LoginRequiredMixin, TemplateView):
 class LogoutView(views.LogoutView):
     template_name = "wikiapp/logout.html"
     next_page = reverse_lazy("wikiapp:login")
-
-@final
-class UserFormView(mixins.LoginRequiredMixin, TemplateView):
-    template_name = "core/user_profile.html"   
-    extra_context = {"form": forms.UserForm()}
-
-    def post(self, request: HttpRequest):
-        user = User(**request.POST)
-        if not user.id:
-            return HttpResponse("Id is not valid", status = 401)
-
-        return redirect(request, self.template_name)

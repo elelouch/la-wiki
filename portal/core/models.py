@@ -9,46 +9,44 @@ from django.contrib.auth.models import AbstractUser, Group
 from django.conf import settings
 
 
-class PermissionType(enum.Enum):
-    READ = "read"
-    WRITE = "write"
-
-@final
 class Access(models.Model):
     can_read = models.BooleanField(default=False)
     can_write = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
+
+@final
+class UserAccess(Access):
     user = models.ForeignKey(
-            'User',
+            "User",
             null=True,
             on_delete=models.CASCADE,
-            related_name="access_lists"
+            related_name="users_access"
             )
+    section = models.ForeignKey(
+            "Section",
+            null=True,
+            related_name="users_access",
+            on_delete=models.CASCADE
+            )
+    
+
+@final
+class GroupAccess(Access):
     group = models.ForeignKey(
             Group,
             null=True,
-            related_name="access_lists",
+            related_name="group_access",
             on_delete=models.CASCADE
             )
-
-class PermissionHandler(models.Model):
-    access_lists = models.ManyToManyField(Access)
-    def user_has_perm(self, user, perm):
-        Q = models.Q
-        acls_availables = self.access_lists \
-                .filter(Q(group__in=user.groups.all()) | Q(user=user))
-
-        if not acls_availables:
-            return False
-
-        for acl in acls_availables:
-            if perm == PermissionType.READ and acl.can_read:
-                return True
-            if perm == PermissionType.WRITE and acl.can_write:
-                return True
-            
-        return False
-
-
+    section = models.ForeignKey(
+            "Section",
+            null=True,
+            related_name="groups_access",
+            on_delete=models.CASCADE
+            )
+    
 @final
 class User(AbstractUser):
     main_section = models.ForeignKey(
@@ -58,7 +56,7 @@ class User(AbstractUser):
             )
 
 @final
-class Section(PermissionHandler):
+class Section(models.Model):
     name = models.CharField(max_length=256, default="")
     description = models.CharField(max_length=256, default="")
     parent = models.ForeignKey(
@@ -76,11 +74,11 @@ class Section(PermissionHandler):
         Obtains children sections that the user can read, based on the access list
         """
         assert user is not None
-        sections = self.children \
-                .filter(
-                        Q(access_lists__group__user = user) | Q(access_lists__user = user),
-                        access_lists__can_read = True)
-        return sections 
+        groups_access = Q(groups_access__group__in = user.groups.all(),groups_access__can_read = True)
+
+        users_access = Q(users_access__user = user,users_access__can_read = True)
+
+        return self.children.filter(groups_access | users_access)
 
     def create_children(self, name: str):
         """
@@ -88,7 +86,9 @@ class Section(PermissionHandler):
         """
         assert len(name)
         new_sec = self.children.create(name = name)
-        new_sec.access_lists.add(*self.access_lists.all())
+        new_sec.users_access.add(*self.users_access.all())
+        new_sec.groups_access.add(*self.groups_access.all())
+        new_sec.save()
         return new_sec
 
     def create_children_archive(self, file):
@@ -102,6 +102,18 @@ class Section(PermissionHandler):
                 file = file
                 )
         return arch
+
+    def user_can_read(self, user):
+        user_permission = self.users_access.filter(user=user, can_read=True)
+        group_permission = self.groups_access.filter(group__in=user.groups.all(), can_read=True)
+
+        return user_permission.exists() or group_permission.exists()
+
+    def user_can_write(self, user):
+        user_permission = self.users_access.filter(user=user, can_write=True)
+        group_permission = self.groups_access.filter(group__in=user.groups.all(), can_write=True)
+
+        return user_permission.exists() or group_permission.exists()
 
 @final
 class Archive(models.Model):

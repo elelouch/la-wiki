@@ -4,13 +4,14 @@
 
 {% if user.main_section %}
 
-<div x-data="{hideSections: false}">
+<div x-data="{hideSections: false}" class="flex flex-col">
     <button @click="hideSections = !hideSections">Hide Sections</button>
     <div class="flex justify-evenly"
-         x-data="{currentArchiveId:0, currentSectionId:0, selectedclasses:'bg-blue-200'}" 
+         x-data="{sectionSelected:false, currentArchiveId:0, currentSectionId:0, selectedclasses:'bg-blue-200'}" 
          @click.outside="currentSectionId = 0">
         <div class="basis-1/3 h-screen flex flex-col" :class="hideSections && 'hidden'">
             <div class="flex justify-between w-full h-200 border border-rounded flex justify-around">
+                {% if user_can_write %}
                 <div class="flex basis-1/4">
                     <button class="pl-2 pr-2 border border-black rounded-full" hx-trigger="click"
                         hx-get="{% url 'core:modal_section' %}" hx-target="#writable-section">
@@ -24,8 +25,13 @@
                         Add File
                     </button>
                 </div>
+                {% endif %}
 
+                {% if user_can_write%}
                 <div class="flex flex-col rounded-lg basis-3/4 border border-black">
+                {% else %}
+                <div class="flex flex-col rounded-lg basis-full border border-black">
+                {% endif %}
                     <div>
                         <input 
                             hx-get="{% url "core:search" %}"

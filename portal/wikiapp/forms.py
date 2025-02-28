@@ -29,18 +29,6 @@ class LoginForm (forms.Form):
 
 @final
 class UserForm(forms.Form):
-    id = forms.IntegerField(
-            initial=forms.ChoiceField(),
-            label="",
-            widget=forms.NumberInput(attrs={"class":"hidden"})
-            )
-    main_section = forms.ModelChoiceField(
-            label="",
-            queryset=Section.objects.all(),
-            to_field_name="id",
-            required=True,
-            widget=forms.Select(attrs={})
-            )
     email = forms.CharField(
             label="",
             widget=forms.TextInput(attrs={
@@ -78,7 +66,7 @@ class UserForm(forms.Form):
                 max_length=200,
                 required=True
             )
-    password = forms.CharField(
+    firstname = forms.CharField(
             label="",
             widget=forms.PasswordInput(attrs={
                 "placeholder":_("First Name"),
@@ -87,7 +75,7 @@ class UserForm(forms.Form):
             max_length=200,
             required=True
             )
-    last_name = forms.CharField(
+    lastname = forms.CharField(
             label="",
             widget=forms.PasswordInput(attrs={
                 "placeholder":_("Last Name"),

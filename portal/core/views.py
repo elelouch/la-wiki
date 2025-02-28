@@ -17,7 +17,7 @@ import os
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 import markdown as markdown_tool
 
-from .models import PermissionType, Section, Archive
+from .models import Section, Archive
 
 @final
 class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
@@ -31,12 +31,17 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
         if not root_section_id:
             return HttpResponse("Root section must be an integer", status=400)
         root_section = get_object_or_404(Section, pk=root_section_id)
-        if not root_section.user_has_perm(user, PermissionType.READ):
+
+        if not root_section.user_can_read(user):
             return HttpResponse("User does not have read permission", status = 403)
 
+        children_available = root_section.children_available(user)
+
+        for i in children_available:
+            print(i)
         context = {
                 "parent": root_section,
-                "sections": root_section.children_available(user),
+                "sections": children_available,
                 "archives": root_section.archives.all(),
             }
         return render(request, self.template_name, context)
@@ -58,8 +63,7 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
         root_section = get_object_or_404(Section, pk=root_section_id)
 
         user = request.user
-        user_can_write = root_section.user_has_perm(user, PermissionType.WRITE)
-        if not user_can_write:
+        if not root_section.user_can_write(user):
             return HttpResponse("Unauthorized", status=401)
 
         name = data.get("name")
@@ -77,10 +81,9 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
 
 class SectionView(mixins.LoginRequiredMixin, TemplateView):
     def delete(self, request, root_section_id): 
-        root_section = get_object_or_404(Section, pk=root_section_id)
         user = request.user
-        user_can_write = root_section.user_has_perm(user, PermissionType.WRITE)
-        if not user_can_write:
+        root_section = get_object_or_404(Section, pk=root_section_id)
+        if not root_section.user_can_write(user):
             return HttpResponse("Unauthorized", status=401)
         root_section.delete()
         return HttpResponse(
@@ -90,23 +93,21 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
 
 # get/post for appending a file to a section
 @final
-class ModalFileView(mixins.LoginRequiredMixin, TemplateView):
+class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/file_modal_form.html"   
     extra_context = {"form": FileForm()}
 
     def post(self, request: HttpRequest): 
+        user = request.user
         data = request.POST
         files = request.FILES
 
         root_section_id = int(data.get("id") or 0)
         if not root_section_id:
-            user = request.user
             root_section_id = user.main_section.id
 
         root_section = get_object_or_404(Section, pk=root_section_id)
-        user = request.user
-        user_can_write = root_section.user_has_perm(user, PermissionType.WRITE)
-        if not user_can_write:
+        if not root_section.user_can_write(user):
             return HttpResponse("Unauthorized", status=401)
 
         file = files.get("file")
@@ -131,8 +132,7 @@ class WikiView (mixins.LoginRequiredMixin, TemplateView):
     def get(self, request):
         user = request.user
         main_section = user.main_section
-        user_can_write = main_section.user_has_perm(user, PermissionType.WRITE) 
-        return render(request, self.template_name, {"user_can_write": user_can_write})
+        return render(request, self.template_name, {"user_can_write": main_section.user_can_write(user)})
 
 @final
 class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
@@ -148,13 +148,11 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
         if "md" in extension :
             text = arch.file.read()
             html = markdown_tool.markdown(text.decode("ascii"))
-            print(html)
             return render(request, self.markdown_template, {"archive": arch, "file": html})
         return render(request, self.template_name, {"archive": arch, "file": arch.file})
 
     def delete(self, request: HttpRequest, filename: str):
         name, extension = os.path.splitext(filename)
-        print(name, extension)
         archive = get_object_or_404(Archive, name = name, extension = extension)
         archive.file.delete()
         archive.delete()
@@ -201,14 +199,14 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
         # add markdown suffix
         fullname = filename + markdown_ext
 
-        content_file = ContentFile(file_content, name=fullname)
-        new_archive = Archive(
-                fullname = fullname,
-                name = filename,
-                extension = markdown_ext,
-                file=content_file,
-                section = root_section
-                ) 
-        new_archive.save()
+        with ContentFile(file_content, name=fullname) as content_file:
+            new_archive = Archive(
+                    fullname = fullname,
+                    name = filename,
+                    extension = markdown_ext,
+                    file=content_file,
+                    section = root_section
+                    ) 
+            new_archive.save()
 
         return HttpResponse("Markdown text success", status = 200)

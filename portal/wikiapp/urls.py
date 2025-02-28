@@ -10,5 +10,4 @@ urlpatterns = [
         path("home/", views.HomeView.as_view(), name="home"),
         path("", RedirectView.as_view(url=reverse_lazy("wikiapp:home"))),
         path("logout/", views.LogoutView.as_view(), name="logout"),
-        path("user/", views.UserFormView.as_view(), name="user"),
         ]
