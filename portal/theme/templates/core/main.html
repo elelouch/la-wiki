@@ -11,7 +11,7 @@
          @click.outside="currentSectionId = 0">
         <div class="basis-1/3 h-screen flex flex-col" :class="hideSections && 'hidden'">
             <div class="flex justify-between w-full h-200 border border-rounded flex justify-around">
-                {% if user_can_write %}
+                {% if user.can_write_main_section %}
                 <div class="flex basis-1/4">
                     <button class="pl-2 pr-2 border border-black rounded-full" hx-trigger="click"
                         hx-get="{% url 'core:modal_section' %}" hx-target="#writable-section">
@@ -27,7 +27,7 @@
                 </div>
                 {% endif %}
 
-                {% if user_can_write%}
+                {% if user.can_write_main_section %}
                 <div class="flex flex-col rounded-lg basis-3/4 border border-black">
                 {% else %}
                 <div class="flex flex-col rounded-lg basis-full border border-black">

@@ -37,8 +37,6 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
 
         children_available = root_section.children_available(user)
 
-        for i in children_available:
-            print(i)
         context = {
                 "parent": root_section,
                 "sections": children_available,
@@ -174,6 +172,7 @@ class SearchArchiveView(mixins.LoginRequiredMixin,ListView):
         if not search_content or len(search_content) <= 2 :
             return []
         return qs.filter(fullname__icontains=search_content)
+
 
 @final
 class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
