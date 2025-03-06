@@ -22,28 +22,27 @@ class UserAccess(Access):
             "User",
             null=True,
             on_delete=models.CASCADE,
-            related_name="user_accesses"
+            related_name="accesses"
             )
     section = models.ForeignKey(
             "Section",
             null=True,
-            related_name="users_access",
-            on_delete=models.CASCADE
+            on_delete=models.CASCADE,
+            related_name="user_accesses"
             )
-    
 
 @final
 class GroupAccess(Access):
     group = models.ForeignKey(
             Group,
             null=True,
-            related_name="group_accesses",
+            related_name="accesses",
             on_delete=models.CASCADE
             )
     section = models.ForeignKey(
             "Section",
             null=True,
-            related_name="groups_access",
+            related_name="group_accesses",
             on_delete=models.CASCADE
             )
     
@@ -69,62 +68,38 @@ class Section(models.Model):
 
     def __str__(self):
         return self.name
-
-    def archives_availables(self, user: User):
-        archives = Archive.objects.raw(
-        """
-        WITH RECURSIVE ancestors AS (
-            SELECT *
-            FROM core_section WHERE parent_id = %s
-            UNION ALL
-            SELECT child.* FROM core_section child, ancestors a
-            WHERE child.parent_id = a.id
-        ) SELECT * FROM core_archive arch
-        INNER JOIN ancestors anc
-        ON anc.id = arch.section_id
-        """,
-
-        """
-        /* WITH RECURSIVE ancestors AS (
-    SELECT *
-    FROM core_section WHERE parent_id = 1
-    UNION ALL
-    SELECT child.* FROM core_section child, ancestors a
-    WHERE child.parent_id = a.id
-) SELECT * FROM core_archive arch
-INNER JOIN ancestors anc
-ON anc.id = arch.section_id; */
-
-
-/* WITH RECURSIVE ancestors AS (
-    SELECT *
-    FROM core_section WHERE parent_id = 1
-    UNION ALL
-    SELECT child.* FROM core_section child, ancestors a
-    WHERE child.parent_id = a.id
-) SELECT * FROM core_archive arch
-INNER JOIN ancestors anc
-ON anc.id = arch.section_id; */
-
-SELECT * FROM core_user user
+    
+    def archive_availables(self, user: User):
+        testing = """
+        SELECT sec.name FROM core_user user
 INNER JOIN core_user_groups ug
 ON ug.user_id = user.id
-INNER JOIN auth_group g
+INNER JOIN auth_group g 
 ON ug.group_id = g.id
-INNER JOIN core_groupaccess cga
-ON cga.group_id = g.id;
+INNER JOIN core_groupaccess ga
+ON ga.group_id = g.id 
+INNER JOIN core_section sec
+ON sec.id = ga.section_id
+INNER JOIN core_archive ar;
 
-        """
-        [user.main_section.id])
-        return archives.execute()
+WITH RECURSIVE ancestor AS (
+    SELECT * FROM core_section sec
+    WHERE sec.id=1
+    UNION ALL
+    SELECT children.*
+    FROM core_section children, ancestor as a 
+    WHERE children.parent_id = a.id
+) SELECT * FROM ancestor;
+"""
+        pass
 
     def children_available(self, user: User):
         """
         Obtains children sections that the user can read, based on the access list
         """
         assert user is not None
-        groups_access = Q(groups_access__group__in = user.groups.all(),groups_access__can_read = True)
-        users_access = Q(users_access__user = user, users_access__can_read = True)
+        groups_access = Q(group_accesses__group__in = user.groups.all(),group_accesses__can_read = True)
+        users_access = Q(user_accesses__user = user, user_accesses__can_read = True)
         # arreglar el modelo de estar query O mejorar la query para evitar usar distinct
         return self.children.filter(groups_access | users_access).distinct()
 
@@ -133,15 +108,33 @@ ON cga.group_id = g.id;
         Creates children and inherits permissions of the parent 
         """
         assert len(name)
+
+        print("murio aca")
         new_sec = self.children.create(name = name)
-        users_access = self.users_access.all()
-        groups_access = self.groups_access.all()
+        users_access = self.user_accesses.all()
+        groups_access = self.group_accesses.all()
 
-        users_acl = [UserAccess(section=new_sec, user=acc.user, can_read=acc.can_read, can_write=acc.can_write) for acc in users_access]
-        new_sec.users_access.bulk_create(users_acl)
+        users_acl = [
+                UserAccess(
+                    section=new_sec,
+                    user=acc.user,
+                    can_read=acc.can_read,
+                    can_write=acc.can_write
+                ) 
+                for acc in users_access
+            ]
+        new_sec.user_accesses.bulk_create(users_acl)
 
-        groups_acl = [GroupAccess(section=new_sec, group=acc.group, can_read=acc.can_read, can_write=acc.can_write) for acc in groups_access]
-        new_sec.groups_access.bulk_create(groups_acl)
+        groups_acl = [
+                GroupAccess(
+                    section=new_sec,
+                    group=acc.group,
+                    can_read=acc.can_read,
+                    can_write=acc.can_write
+                ) 
+                for acc in groups_access
+            ]
+        new_sec.group_accesses.bulk_create(groups_acl)
 
         return new_sec
 
@@ -158,13 +151,13 @@ ON cga.group_id = g.id;
         return arch
 
     def user_can_read(self, user):
-        user_permission = self.users_access.filter(user=user, can_read=True)
-        group_permission = self.groups_access.filter(group__in=user.groups.all(), can_read=True)
+        user_permission = self.user_accesses.filter(user=user, can_read=True)
+        group_permission = self.group_accesses.filter(group__in=user.groups.all(), can_read=True)
         return user_permission.exists() or group_permission.exists()
 
     def user_can_write(self, user):
-        user_permission = self.users_access.filter(user=user, can_write=True)
-        group_permission = self.groups_access.filter(group__in=user.groups.all(), can_write=True)
+        user_permission = self.user_accesses.filter(user=user, can_write=True)
+        group_permission = self.group_accesses.filter(group__in=user.groups.all(), can_write=True)
         return user_permission.exists() or group_permission.exists()
 
 @final
