@@ -16,6 +16,7 @@ class User(AbstractUser):
             on_delete=models.SET_NULL,
             null=True
             )
+    can_write_main_section = models.BooleanField(default=False)
 
 @final
 class Section(models.Model):
@@ -30,26 +31,14 @@ class Section(models.Model):
 
     def __str__(self):
         return self.name
+    
+        pass
 
     def children_available(self, user: User):
         return self.children.all()
 
     def create_children(self, name: str):
-        assert len(name)
-        new_sec = self.children.create(name = name)
-        return new_sec
-
-    def create_children_archive(self, file):
-        assert file is not None
-        fullname = str(file.name)
-        filename, extension = os.path.splitext(fullname)
-        arch = self.archives.create(
-                fullname = file.name,
-                name = filename,
-                extension = extension,
-                file = file
-                )
-        return arch
+        pass
 
 @final
 class Archive(models.Model):

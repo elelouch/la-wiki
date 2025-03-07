@@ -62,3 +62,6 @@ Esto permitira tener archivos repetidos en distintas secciones. [-]
 27/2/25
 - Dejar la seleccion tambien para un archivo. 
 - Pintar solo en click, no si la seccion es la actual.
+
+5/3/25
+- Eliminar botones dependiendo si puedo escribir la seccion o no

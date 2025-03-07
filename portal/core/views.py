@@ -164,6 +164,7 @@ class SearchArchiveView(mixins.LoginRequiredMixin,ListView):
             return []
         return qs.filter(fullname__icontains=search_content)
 
+
 @final
 class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
     template_name="core/markdown_form.html"

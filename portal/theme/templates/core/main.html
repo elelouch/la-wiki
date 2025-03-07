@@ -27,7 +27,7 @@
                 </div>
                 {% endif %}
 
-                {% if user_can_write_main_section %}
+                {% if user.can_write_main_section %}
                 <div class="flex flex-col rounded-lg basis-3/4 border border-black">
                 {% else %}
                 <div class="flex flex-col rounded-lg basis-full border border-black">
