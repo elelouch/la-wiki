@@ -32,13 +32,8 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
             return HttpResponse("Root section must be an integer", status=400)
         root_section = get_object_or_404(Section, pk=root_section_id)
 
-        if not root_section.user_can_read(user):
-            return HttpResponse("User does not have read permission", status = 403)
-
         children_available = root_section.children_available(user)
 
-        for i in children_available:
-            print(i)
         context = {
                 "parent": root_section,
                 "sections": children_available,
@@ -63,8 +58,6 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
         root_section = get_object_or_404(Section, pk=root_section_id)
 
         user = request.user
-        if not root_section.user_can_write(user):
-            return HttpResponse("Unauthorized", status=401)
 
         name = data.get("name")
         if not name:
@@ -80,11 +73,9 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
     
 
 class SectionView(mixins.LoginRequiredMixin, TemplateView):
-    def delete(self, request, root_section_id): 
+    def delete(self, request: HttpRequest, root_section_id: int): 
         user = request.user
         root_section = get_object_or_404(Section, pk=root_section_id)
-        if not root_section.user_can_write(user):
-            return HttpResponse("Unauthorized", status=401)
         root_section.delete()
         return HttpResponse(
                 "Success",
@@ -107,8 +98,6 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
             root_section_id = user.main_section.id
 
         root_section = get_object_or_404(Section, pk=root_section_id)
-        if not root_section.user_can_write(user):
-            return HttpResponse("Unauthorized", status=401)
 
         file = files.get("file")
         
@@ -132,7 +121,7 @@ class WikiView (mixins.LoginRequiredMixin, TemplateView):
     def get(self, request):
         user = request.user
         main_section = user.main_section
-        return render(request, self.template_name, {"user_can_write": main_section.user_can_write(user)})
+        return render(request, self.template_name)
 
 @final
 class ArchiveView (mixins.LoginRequiredMixin, TemplateView):

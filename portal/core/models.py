@@ -1,54 +1,16 @@
 # pyright: reportUnknownVariableType=false
 import enum
 from django.core.files import File
-from django.db.models import Q
+from django.db.models import Q, ForeignKey
 import os
 from django.db import models
 from typing import final
 from django.contrib.auth.models import AbstractUser, Group
 from django.conf import settings
 
-
-class Access(models.Model):
-    can_read = models.BooleanField(default=False)
-    can_write = models.BooleanField(default=False)
-
-    class Meta:
-        abstract = True
-
-@final
-class UserAccess(Access):
-    user = models.ForeignKey(
-            "User",
-            null=True,
-            on_delete=models.CASCADE,
-            related_name="users_access"
-            )
-    section = models.ForeignKey(
-            "Section",
-            null=True,
-            related_name="users_access",
-            on_delete=models.CASCADE
-            )
-    
-
-@final
-class GroupAccess(Access):
-    group = models.ForeignKey(
-            Group,
-            null=True,
-            related_name="group_access",
-            on_delete=models.CASCADE
-            )
-    section = models.ForeignKey(
-            "Section",
-            null=True,
-            related_name="groups_access",
-            on_delete=models.CASCADE
-            )
-    
 @final
 class User(AbstractUser):
+    can_write_main_section = models.BooleanField(default=False)
     main_section = models.ForeignKey(
             "Section",
             on_delete=models.SET_NULL,
@@ -70,25 +32,11 @@ class Section(models.Model):
         return self.name
 
     def children_available(self, user: User):
-        """
-        Obtains children sections that the user can read, based on the access list
-        """
-        assert user is not None
-        groups_access = Q(groups_access__group__in = user.groups.all(),groups_access__can_read = True)
-
-        users_access = Q(users_access__user = user,users_access__can_read = True)
-
-        return self.children.filter(groups_access | users_access)
+        return self.children.all()
 
     def create_children(self, name: str):
-        """
-        Creates children an inherits permissions of the parent 
-        """
         assert len(name)
         new_sec = self.children.create(name = name)
-        new_sec.users_access.add(*self.users_access.all())
-        new_sec.groups_access.add(*self.groups_access.all())
-        new_sec.save()
         return new_sec
 
     def create_children_archive(self, file):
@@ -102,18 +50,6 @@ class Section(models.Model):
                 file = file
                 )
         return arch
-
-    def user_can_read(self, user):
-        user_permission = self.users_access.filter(user=user, can_read=True)
-        group_permission = self.groups_access.filter(group__in=user.groups.all(), can_read=True)
-
-        return user_permission.exists() or group_permission.exists()
-
-    def user_can_write(self, user):
-        user_permission = self.users_access.filter(user=user, can_write=True)
-        group_permission = self.groups_access.filter(group__in=user.groups.all(), can_write=True)
-
-        return user_permission.exists() or group_permission.exists()
 
 @final
 class Archive(models.Model):
@@ -131,3 +67,9 @@ class Archive(models.Model):
             )
     # setup name if necessary through file.name (must specify the path)
     file = models.FileField(upload_to="uploads", blank=True)
+
+@final
+class NegativeAccess(models.Model):
+    user = ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    section = ForeignKey(Section, on_delete=models.SET_NULL, null=True)
+
