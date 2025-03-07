@@ -1,36 +1,11 @@
-<div class="pl-3" :class="!open && 'hidden'">
+<div class="pl-3" :class="!open && 'hidden'" id="subsection_{{parent.id}}">
     {% for sec in sections %}
-    <div hx-trigger="click once,new_section_parent_{{sec.id}} from:body,new_archive_parent_{{sec.id}} from:body" 
-         class="flex flex-col"
-         x-data="{ open: false }"
-         hx-get="{% url 'core:children' sec.id %}" 
-         hx-target="find #subsection" hx-swap="afterend">
-
-        <div class="flex flex-row">
-            <button @click="open = !open; currentSectionId = {{sec.id}}; sectionSelected=true" 
-                class="flex basis-1/4" 
-                :class="sectionSelected && currentSectionId === {{sec.id}} && selectedclasses">
-                {{sec.name}}
-            </button>
-
-            <div class="flex basis-1/2"></div>
-
-            {% if user.can_write_main_section %}
-            <button hx-trigger="click" 
-                    hx-delete="{% url 'core:section' sec.id %}"
-                    class="pl-3 pr-3 border border-black rounded-full">
-                    - 
-            </button>
-            {% endif %}
-        </div>
-        <div id="subsection"></div>
-    </div>
+    {% include "core/section_item.html" with sec=sec root=parent %}
     {% endfor %}
 
     <div>
         {% for arch in archives %}
         <div class="flex flex-row">
-
             <button hx-trigger="click consume" 
                     hx-get="{% url 'core:archive' arch.fullname %}" 
                     hx-target="#writable-section" hx-swap="innerHTML"

@@ -31,14 +31,32 @@ class Section(models.Model):
 
     def __str__(self):
         return self.name
-    
-        pass
-
-    def children_available(self, user: User):
-        return self.children.all()
 
     def create_children(self, name: str):
-        pass
+        assert len(name)
+        return self.children.create(name = name)
+
+    def children_available(self, user: User):
+        return Section.objects.raw(
+                """
+                SELECT * FROM core_section cs
+                WHERE cs.parent_id = %s AND cs.id NOT IN (
+                    SELECT nacc.section_id 
+                    FROM core_negativeaccess nacc
+                    WHERE nacc.user_id = %s);
+                """, [self.id, user.id])
+
+    def create_children_archive(self, file):
+        assert file is not None
+        fullname = str(file.name)
+        filename, extension = os.path.splitext(fullname)
+        arch = self.archives.create(
+                fullname = file.name,
+                name = filename,
+                extension = extension,
+                file = file
+                )
+        return arch
 
 @final
 class Archive(models.Model):

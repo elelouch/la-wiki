@@ -67,7 +67,7 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
 
         return HttpResponse(
             "success", 
-            headers={"HX-Trigger": "new_section_parent_" + str(root_section_id)},
+            headers={"HX-Trigger": "section_parent_" + str(root_section_id)},
             status = 200
         )
     
@@ -79,8 +79,9 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         root_section.delete()
         return HttpResponse(
                 "Success",
-                headers={"HX-Trigger": "deleted_section_parent_" + str(root_section.parent.id)},
-                status = 200)
+                headers={"HX-Trigger": "section_parent_" + str(root_section.parent.id)},
+                status = 200
+                )
 
 # get/post for appending a file to a section
 @final
@@ -100,15 +101,12 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         root_section = get_object_or_404(Section, pk=root_section_id)
 
         file = files.get("file")
-        
         if not file: 
             return HttpResponse("File not uploaded", status=400)
-
         root_section.create_children_archive(file)
-        
         return HttpResponse(
             "success", 
-            headers={"HX-Trigger": "new_archive_parent_" + str(root_section_id)},
+            headers={"HX-Trigger": "archive_parent_" + str(root_section_id)},
             status = 200
         )
 
@@ -142,10 +140,14 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
 
     def delete(self, request: HttpRequest, filename: str):
         name, extension = os.path.splitext(filename)
+
         archive = get_object_or_404(Archive, name = name, extension = extension)
+        root_id = archive.section.id
         archive.file.delete()
         archive.delete()
-        return HttpResponse("")
+        response = HttpResponse("")
+        response["archive_parent_" + root_id]
+        return response
 
 
 
@@ -159,10 +161,33 @@ class SearchArchiveView(mixins.LoginRequiredMixin,ListView):
     def get_queryset(self):
         qs = super().get_queryset()
         data = self.request.GET
+        user = self.request.user
+
         search_content = data.get("content")
         if not search_content or len(search_content) <= 2 :
             return []
-        return qs.filter(fullname__icontains=search_content)
+
+        ilike_content = "%{content}%".format(content=search_content)
+        return qs.raw(
+                """
+                WITH RECURSIVE ancestors AS (
+                    SELECT *
+                    FROM core_section s 
+                    WHERE s.id = %s
+                    UNION ALL
+                    SELECT cs.*
+                    FROM core_section cs, ancestors a 
+                    WHERE cs.parent_id = a.id
+                    AND cs.id NOT IN (
+                        SELECT nacc.section_id 
+                        FROM core_negativeaccess nacc
+                        WHERE nacc.user_id = %s
+                    )
+                ) SELECT * FROM ancestors
+                INNER JOIN core_archive arch
+                ON ancestors.id = arch.section_id
+                WHERE arch.fullname LIKE %s;
+                """, [user.main_section.id, user.id, ilike_content])
 
 
 @final

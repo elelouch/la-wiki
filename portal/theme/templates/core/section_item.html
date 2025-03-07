@@ -1,0 +1,22 @@
+<div hx-trigger="click once,section_parent_{{sec.id}} from:body,archive_parent_{{sec.id}} from:body" 
+     class="flex flex-col"
+     x-data="{ open: false }"
+     hx-get="{% url 'core:children' sec.id %}" 
+     hx-target="find #subsection_{{sec.id}}" hx-swap="outerHTML">
+    <div class="flex flex-row">
+        <button @click="open = !open; currentSectionId = {{sec.id}}; sectionSelected=true" 
+         class="flex basis-1/4" 
+         :class="sectionSelected && currentSectionId === {{sec.id}} && selectedclasses">
+            {{sec.name}}
+        </button>
+        <div class="flex basis-1/2"></div>
+        {% if user.can_write_main_section %}
+        <button hx-trigger="click" 
+                hx-delete="{% url 'core:section' root.id %}"
+                class="pl-3 pr-3 border border-black rounded-full">
+            - 
+        </button>
+        {% endif %}
+    </div>
+    <div id="subsection_{{sec.id}}"></div>
+</div>

@@ -11,4 +11,4 @@ WITH RECURSIVE ancestors AS (
         FROM core_negativeaccess nacc
         WHERE nacc.user_id = 1
     )
-) SELECT * FROM ancestors
+) SELECT * FROM ancestors;
