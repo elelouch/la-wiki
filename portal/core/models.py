@@ -73,7 +73,7 @@ class Archive(models.Model):
             related_name="archives"
             )
     # setup name if necessary through file.name (must specify the path)
-    file = models.FileField(upload_to="uploads", blank=True)
+    file = models.FileField(upload_to="uploads/%Y/%m/%d", blank=True)
 
 @final
 class NegativeAccess(models.Model):

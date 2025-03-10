@@ -1,22 +1,27 @@
-<div hx-trigger="click once,section_parent_{{sec.id}} from:body,archive_parent_{{sec.id}} from:body" 
-     class="flex flex-col"
+<div hx-trigger="click once" 
+     class="flex flex-col subsection"
      x-data="{ open: false }"
      hx-get="{% url 'core:children' sec.id %}" 
-     hx-target="find #subsection_{{sec.id}}" hx-swap="outerHTML">
-    <div class="flex flex-row">
-        <button @click="open = !open; currentSectionId = {{sec.id}}; sectionSelected=true" 
-         class="flex basis-1/4" 
-         :class="sectionSelected && currentSectionId === {{sec.id}} && selectedclasses">
-            {{sec.name}}
-        </button>
-        <div class="flex basis-1/2"></div>
-        {% if user.can_write_main_section %}
-        <button hx-trigger="click" 
-                hx-delete="{% url 'core:section' root.id %}"
-                class="pl-3 pr-3 border border-black rounded-full">
-            - 
-        </button>
-        {% endif %}
+     hx-target="find .subsection" hx-swap="outerHTML">
+
+    <div class="flex flex-col" hx-swap="outerHTML">
+        <div class="flex flex-row">
+            <button @click="open = !open; currentSectionId = {{sec.id}}; sectionSelected=true" 
+                  class="flex basis-1/4" 
+                  :class="sectionSelected && currentSectionId === {{sec.id}} && selectedclasses">
+                {{sec.name}}
+            </button>
+            {% if user.can_write_main_section %}
+            <button hx-trigger="click consume"  hx-target="previous .subsection"
+                    hx-swap="delete"
+                    hx-confirm="You sure want to delete the section?" 
+                    hx-delete="{% url 'core:section' root.id %}"
+                    class="pl-3 pr-3 border border-black rounded-full">
+                - 
+            </button>
+            {% endif %}
+        </div>
+
+        <div class="subsection"></div>
     </div>
-    <div id="subsection_{{sec.id}}"></div>
 </div>

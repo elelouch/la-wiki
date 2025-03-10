@@ -45,6 +45,7 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
 @final
 class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_modal_form.html"
+    template_section_item = "core/section_item.html"
     extra_context = {"form": SectionForm()}
     def post(self, request: HttpRequest): 
         data = request.POST
@@ -63,13 +64,17 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
         if not name:
             return HttpResponse("Invalid request", status=400)
 
-        root_section.create_children(name)
-
-        return HttpResponse(
-            "success", 
-            headers={"HX-Trigger": "section_parent_" + str(root_section_id)},
-            status = 200
-        )
+        new_child = root_section.create_children(name)
+        res = render(
+                request,
+                self.template_section_item,
+                {
+                    "sec": new_child,
+                    "root": root_section
+                }
+           ) 
+        res["HX-Trigger"] = "section_" + str(root_section_id)
+        return 
     
 
 class SectionView(mixins.LoginRequiredMixin, TemplateView):
@@ -78,7 +83,7 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         root_section = get_object_or_404(Section, pk=root_section_id)
         root_section.delete()
         return HttpResponse(
-                "Success",
+                "",
                 headers={"HX-Trigger": "section_parent_" + str(root_section.parent.id)},
                 status = 200
                 )
