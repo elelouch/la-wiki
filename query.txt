@@ -1,0 +1,14 @@
+WITH RECURSIVE ancestors AS (
+    SELECT *
+    FROM core_section s 
+    WHERE s.parent_id IS NULL
+    UNION ALL
+    SELECT cs.*
+    FROM core_section cs, ancestors a 
+    WHERE cs.parent_id = a.id
+    AND cs.id NOT IN (
+        SELECT nacc.section_id 
+        FROM core_negativeaccess nacc
+        WHERE nacc.user_id = 1
+    )
+) SELECT * FROM ancestors;

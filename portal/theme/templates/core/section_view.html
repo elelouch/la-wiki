@@ -1,0 +1,12 @@
+<div class="pl-3" :class="!open && 'hidden'" class="flex flex-col subsection" id="sec_{{parent.id}}">
+    {% for sec in sections %}
+    {% include "core/section_item.html" with sec=sec root=parent %}
+    {% endfor %}
+    <div class="last-item">
+    </div>
+    <div>
+        {% for arch in archives %}
+        {% include "core/archive_item.html" with arch=arch %}
+        {% endfor %}
+    </div>
+</div>

@@ -1,0 +1,11 @@
+<div class="bg-blue-500 absolute">
+    {% for obj in object_list %}
+    <div>
+        <button hx-trigger="click" 
+                hx-get="{% url 'core:archive' obj.fullname %}" 
+                hx-target="#writable-section" hx-swap="innerHTML">
+            {{obj.fullname}}
+        </button>
+    </div>
+    {% endfor %}
+</div>

@@ -1,16 +1,11 @@
+from typing import final
 from django.db import models
+from django.contrib.auth.models import Group
 
-# Create your models here.
-
+@final
 class Menu(models.Model):
-    name = models.CharField(max_length=128)
-    parent = models.ForeignKey(on_delete=models.CASCADE)
+    name = models.CharField(max_length=200)
+    #Recordar usar reverse_lazy al cargar los menues
+    reverse_view_url = models.CharField(max_length=200, default="wikiapp:home")
+    groups = models.ManyToManyField(Group)
 
-class Archive(models.Model):
-    name = models.CharField(max_length=128)
-    extension = models.CharField(max_length=32)
-    description = models.CharField(max_length=256)
-    # references missing
-
-class Directory(models.Model):
-    name = models.CharField(max_length=128)

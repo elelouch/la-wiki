@@ -1,0 +1,22 @@
+{% extends "wikiapp/base.html" %}
+{% load myfilters %}
+{% load i18n %}
+{% load static %}
+
+{% block title %} Login {% endblock %}
+
+{% block content %}
+<div class="flex flex-row justify-center items-center">
+    <div class="flex flex-col min-h-screen justify-center items-center place-content-between">
+        <div class="basis-1/8">MuniWiki</div>
+        <form 
+         action="{% url 'wikiapp:login' %}"
+         method="post"
+         class="flex flex-col basis-64 place-content-evenly border rounded-md">
+            {% csrf_token %}
+            {{form}}
+            <button class="rounded-full basis-1/8 bg-yellow-500">{% translate "Log in" %}</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

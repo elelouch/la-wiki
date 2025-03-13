@@ -1,0 +1,30 @@
+<!-- if x-data is not provided, x-ref doesn't work -->
+<div class="h-screen w-screen top-0 left-0 right-0 down-0 fixed z-1000 fixed bg-black/50" 
+    x-init="htmx.process(htmx.find('#markdownButton'))" x-ref="fileModal">
+    <div class="h-screen w-screen top-0 left-0 right-0 down-0 absolute" 
+        style="z-index:-1">
+    </div>
+
+    <form hx-post="{{request.path}}" hx-swap="delete" hx-target="this"
+        enctype="multipart/form-data"
+        style="position: fixed;top: 20%;left: 50%;transform: translate(-50%, -50%);"
+        class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10" tabindex="-1">
+         
+        <div
+            class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                Upload a file
+            </h3>
+        </div>
+        {% csrf_token %}
+        {{form}}
+        <!-- form value available on the core/forms.py file -->
+        <button @click="$refs.sectionFormId.value = currentSectionId"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Submit</button>
+        <button @click="$refs.fileModal.remove()"
+            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Cancel</button>
+        <button hx-trigger="click" hx-get="{% url 'core:markdown_text' %}" 
+               hx-target="#writable-section" hx-swap="innerHTML" id="markdownButton"
+            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">Write a plain text file</button>
+    </form>
+</div>
