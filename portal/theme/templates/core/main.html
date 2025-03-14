@@ -20,7 +20,9 @@
              <div class="flex justify-between w-full h-50 border border-rounded flex justify-around">
                 {% if user.can_write_main_section %}
                 <div class="flex basis-1/4">
-                    <button class="basis-1/3 border border-black rounded-full" hx-trigger="click"
+                    <button class="basis-1/3 text-white bg-blue-800
+                    		hover:bg-blue-950 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
+                        hx-trigger="click"
                         hx-get="{% url 'core:modal_section' user.main_section.id %}" hx-target="#pivot-section">
                         <i class="fa-solid fa-plus"></i>
                     </button>

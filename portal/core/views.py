@@ -95,7 +95,7 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         	request,
         	self.template_name,
         	{"root_id": root_section_id, "form":FileForm()}
-        	)
+            )
 
     def post(self, request: HttpRequest, root_section_id: int):
         user = request.user
@@ -137,10 +137,9 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
     redirect_field_name="login"
 
     @method_decorator(xframe_options_sameorigin)
-    def get(self, request: HttpRequest, filename: str):
-        name, extension = os.path.splitext(filename)
-        arch = get_object_or_404(Archive, name = name, extension = extension)
-        if "md" in extension :
+    def get(self, request: HttpRequest, archive_id: int):
+        arch = get_object_or_404(Archive, pk=int(archive_id))
+        if ".md" == arch.extension :
             text = arch.file.read()
             html = markdown_tool.markdown(text.decode("ascii"))
             return render(request, self.markdown_template, {"archive": arch, "file": html})
@@ -153,14 +152,13 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
         		"date_str": arch.first_time_upload.strftime("%Y/%m/%d")
         	})
 
-    def delete(self, request: HttpRequest, filename: str):
-        name, extension = os.path.splitext(filename)
-        archive = get_object_or_404(Archive, name = name, extension = extension)
+    def delete(self, request: HttpRequest, archive_id: int):
+        archive = get_object_or_404(Archive, pk=int(archive_id))
         root_id = archive.section.id
         archive.file.delete()
         archive.delete()
         response = HttpResponse("")
-        response["archive_parent_" + root_id]
+        response["HX-Trigger"] = "clearMainSection"
         return response
 
 @final

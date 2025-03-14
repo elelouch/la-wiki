@@ -10,7 +10,7 @@ urlpatterns = [
         path("section/<int:root_section_id>", views.SectionView.as_view(), name="section"), 
         path("section/modal/<int:root_section_id>", views.ModalSectionView.as_view(), name="modal_section"), 
         path("archive/modal/<int:root_section_id>", views.ModalArchiveView.as_view(), name="modal_archive"), 
-        path("archive/<str:filename>", views.ArchiveView.as_view(), name="archive"), 
+        path("archive/<int:archive_id>", views.ArchiveView.as_view(), name="archive"), 
         path("text/markdown", views.MarkdownTextView.as_view(), name="markdown_text"),
         path("search/", views.SearchArchiveView.as_view(), name="search"), 
         ]
