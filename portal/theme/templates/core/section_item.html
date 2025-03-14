@@ -4,37 +4,37 @@
      hx-get="{% url 'core:children' sec.id %}" 
      hx-target="find .subsection" hx-swap="outerHTML">
 
-    <div class="flex flex-col"
-        hx-target="find .subsection"
-        hx-swap="afterbegin">
-        <div class="flex flex-row" :class="sectionSelected && currentSectionId === {{sec.id}} && selectedclasses">
-            <button @click="open = !open; currentSectionId = {{sec.id}}; sectionSelected=true" 
-                  class="flex basis-1/3">
-                {{sec.name}}
-            </button>
-            {% if user.can_write_main_section %}
-            <div class="flex flex-row basis-2/3" :class="currentSectionId !== {{sec.id}} && 'hidden'">
-                <button hx-trigger="click consume" 
-                        hx-confirm="You sure want to delete the section?" 
-                        hx-delete="{% url 'core:section' sec.id %}"
-                        hx-target="closest .subsection"
-                        hx-swap="delete"
-                        class="basis-1/3 pl-3 pr-3 border border-black rounded-full">
-                    Delete
-                </button>
-                {% endif %}
-                <button hx-get="{% url 'core:modal_section' sec.id %}"
-                        hx-target="#writable-section"
-                        class="basis-1/3 pl-3 pr-3 border border-black rounded-full">
-                    Add Child 
-                </button>
-                <button hx-get="{% url 'core:modal_archive' root.id %}"
-                        hx-target="#writable-section"
-                        class="basis-1/3 pl-3 pr-3 border border-black rounded-full">
-                    Add Archive 
-                </button>
-            </div>
-        </div>
-        <div class="subsection"></div>
+  <div class="flex flex-col"
+       hx-target="find .subsection"
+       hx-swap="afterbegin">
+    <div class="flex flex-row" :class="sectionSelected && currentSectionId === {{sec.id}} && selectedclasses">
+      <button @click="open = !open; currentSectionId = {{sec.id}}; sectionSelected = true" 
+              class="flex basis-1/3">
+        {{sec.name}}
+      </button>
+      {% if user.can_write_main_section %}
+      <div class="flex flex-row basis-2/3" :class="currentSectionId !== {{sec.id}} && 'hidden'">
+        <button hx-trigger="click consume" 
+                hx-confirm="You sure want to delete the section?" 
+                hx-delete="{% url 'core:section' sec.id %}"
+                hx-target="closest .subsection"
+                hx-swap="delete"
+                class="basis-1/3 pl-3 pr-3 border border-black rounded-full">
+          Delete
+        </button>
+        {% endif %}
+        <button hx-get="{% url 'core:modal_section' sec.id %}"
+                hx-target="#writable-section"
+                class="basis-1/3 pl-3 pr-3 border border-black rounded-full">
+          Add Child 
+        </button>
+        <button hx-get="{% url 'core:modal_archive' root.id %}"
+                hx-target="#writable-section"
+                class="basis-1/3 pl-3 pr-3 border border-black rounded-full">
+          Add Archive 
+        </button>
+      </div>
     </div>
+    <div class="subsection"></div>
+  </div>
 </div>

@@ -65,7 +65,8 @@ class Archive(models.Model):
     description = models.CharField(max_length=256, default = "")
     references = models.ManyToManyField("self")
     extension = models.CharField(max_length=12, default = "")
-    last_time_modified = models.DateField(auto_now_add=True)
+    last_time_modified = models.DateField(null=True)
+    first_time_upload = models.DateField(auto_now_add=True)
     section = models.ForeignKey(
             Section, 
             on_delete=models.CASCADE,

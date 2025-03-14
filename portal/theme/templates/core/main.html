@@ -9,19 +9,20 @@
     <div class="flex justify-evenly"
          x-data="{sectionSelected:false, currentArchiveId:0, currentSectionId:0, selectedclasses:'bg-blue-200'}" 
          @click.outside="currentSectionId = 0">
-        <div class="basis-1/3 h-screen flex flex-col" :class="hideSections && 'hidden'">
+      <div class="basis-1/3 h-screen flex flex-col" :class="hideSections && 'hidden'"
+            @clear-main-sectinon.window="$refs.pivotsection.innerHTML = ''">
             <div class="flex justify-between w-full h-150 border border-rounded flex justify-around">
                 {% if user.can_write_main_section %}
                 <div class="flex basis-1/4">
                     <button class="pl-2 pr-2 border border-black rounded-full" hx-trigger="click"
-                        hx-get="{% url 'core:modal_section' 0 %}" hx-target="#writable-section">
+                        hx-get="{% url 'core:modal_section' user.main_section.id %}" hx-target="#pivot-section">
                         Add Section 
                     </button>
 
                     <button class="pl-2 pr-2 border border-black rounded-full" 
                         hx-trigger="click" 
-                        hx-get="{% url 'core:modal_archive' 0 %}" 
-                        hx-target="#writable-section">
+                        hx-get="{% url 'core:modal_archive' user.main_section.id %}" 
+                        hx-target="#pivot-section">
                         Add File
                     </button>
                 </div>
@@ -48,13 +49,14 @@
                     </div>
                 </div>
             </div>
-
             <div hx-trigger="load,new_section_parent_{{user.main_section.id}} from:body"
-                hx-get="{% url 'core:children' user.main_section.id %}" id="tree-view"
+                hx-get="{% url 'core:children' user.main_section.id %}" id="tree-view" 
                 class="border border-black rounded full-rounded" hx-swap="innerHTML">
             </div>
         </div>
         <div class="flex border border-black h-screen" id="writable-section" :class="hideSections ? 'basis-full' : 'basis-2/3'"></div>
+    </div>
+    <div x-ref="pivotsection" id="pivot-section">
     </div>
 </div>
 {% else %}

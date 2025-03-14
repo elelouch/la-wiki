@@ -1,28 +1,27 @@
 <!-- if x-data is not provided, x-ref doesn't work -->
 <div class="h-screen w-screen top-0 left-0 right-0 down-0 fixed z-1000 fixed bg-black/50" x-ref="sectionModal">
-    <div class="h-screen w-screen top-0 left-0 right-0 down-0 absolute" 
-        style="z-index:-1">
+  <div class="h-screen w-screen top-0 left-0 right-0 down-0 absolute" 
+       style="z-index:-1">
+  </div>
+  <!-- Modal body -->
+  <form hx-post="{% url 'core:section' root_id %}" 
+        hx-target="#sec_{{root_id}}"
+        hx-swap="beforeend"
+        class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10"
+        style="position: fixed;top: 20%;left: 50%;transform: translate(-50%, -50%);">
+    <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+      <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+        Enter a new child section
+      </h3>
     </div>
-    <!-- Modal body -->
-    <form hx-post="{% url 'core:section' root_id %}" 
-         hx-target="#sec_{{root_id}}" 
-         @submit="$refs.sectionModal.remove(); $el.submit()"
-         hx-swap="beforeend"
-         class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10"
-         style="position: fixed;top: 20%;left: 50%;transform: translate(-50%, -50%);">
-        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
-            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                Enter a new child section
-            </h3>
-        </div>
-        {% csrf_token %}
-        {{ form }}
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">
-            Submit
-        </button>
-        <button @click="$refs.sectionModal.remove()"
+    {% csrf_token %}
+    {{ form }}
+    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">
+      Submit
+    </button>
+    <button @click="$refs.sectionModal.remove()"
             class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">
-            Cancel
-        </button>
-    </form>
+      Cancel
+    </button>
+  </form>
 </div>

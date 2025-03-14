@@ -63,7 +63,6 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
     
     def post(self, request: HttpRequest, root_section_id: int): 
         data = request.POST
-
         if not root_section_id:
             user = request.user
             root_section_id = user.main_section.id
@@ -73,14 +72,16 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         if not name:
             return HttpResponse("Invalid request", status=400)
         new_child = root_section.create_children(name)
-        return render(
+        res = render(
                 request,
                 self.template_section_item,
                 {
                     "sec": new_child,
                     "root": root_section
                 }
-           ) 
+           )
+        res["HX-Trigger"] = "clearMainSection"
+        return res
 
 # get/post for appending a file to a section
 @final
@@ -100,7 +101,7 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         root_section.create_children_archive(file)
         return HttpResponse(
             "success", 
-            headers={"HX-Trigger": "archive_parent_" + str(root_section_id)},
+            headers={"HX-Trigger": "archiveParent" + str(root_section_id)},
             status = 200
         )
 
@@ -130,7 +131,7 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
             text = arch.file.read()
             html = markdown_tool.markdown(text.decode("ascii"))
             return render(request, self.markdown_template, {"archive": arch, "file": html})
-        return render(request, self.template_name, {"archive": arch, "file": arch.file})
+        return render(request, self.template_name, {"archive": arch, "file": arch.file, "date": arch.first_time_upload})
 
     def delete(self, request: HttpRequest, filename: str):
         name, extension = os.path.splitext(filename)
