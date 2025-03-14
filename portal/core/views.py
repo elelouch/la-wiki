@@ -87,9 +87,17 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
 @final
 class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/file_modal_form.html"   
+    archive_item_template = "core/archive_item.html"
     extra_context = {"form": FileForm()}
 
-    def post(self, request: HttpRequest, root_section_id: int): 
+    def get(self, request: HttpRequest, root_section_id: int):
+        return render(
+        	request,
+        	self.template_name,
+        	{"root_id": root_section_id, "form":FileForm()}
+        	)
+
+    def post(self, request: HttpRequest, root_section_id: int):
         user = request.user
         files = request.FILES
         if not root_section_id:
@@ -98,12 +106,17 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         file = files.get("file")
         if not file: 
             return HttpResponse("File not uploaded", status=400)
-        root_section.create_children_archive(file)
-        return HttpResponse(
-            "success", 
-            headers={"HX-Trigger": "archiveParent" + str(root_section_id)},
-            status = 200
+        new_archive = root_section.create_children_archive(file)
+        response = render(
+            request,
+            self.archive_item_template,
+            {
+            	"root_id": root_section_id,
+            	"arch": new_archive
+            }
         )
+        response["HX-Trigger"] = "clearMainSection"
+        return response
 
 @final
 class WikiView (mixins.LoginRequiredMixin, TemplateView):
@@ -131,11 +144,17 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
             text = arch.file.read()
             html = markdown_tool.markdown(text.decode("ascii"))
             return render(request, self.markdown_template, {"archive": arch, "file": html})
-        return render(request, self.template_name, {"archive": arch, "file": arch.file, "date": arch.first_time_upload})
+        return render(
+        	request,
+        	self.template_name,
+        	{
+        		"archive": arch,
+        		"file": arch.file,
+        		"date_str": arch.first_time_upload.strftime("%Y/%m/%d")
+        	})
 
     def delete(self, request: HttpRequest, filename: str):
         name, extension = os.path.splitext(filename)
-
         archive = get_object_or_404(Archive, name = name, extension = extension)
         root_id = archive.section.id
         archive.file.delete()
@@ -143,8 +162,6 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
         response = HttpResponse("")
         response["archive_parent_" + root_id]
         return response
-
-
 
 @final
 class SearchArchiveView(mixins.LoginRequiredMixin,ListView):

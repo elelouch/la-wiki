@@ -18,15 +18,6 @@ class SectionForm(forms.Form):
 
 @final
 class FileForm(forms.Form):
-    id = forms.IntegerField(
-        label="",
-        widget=forms.NumberInput(
-            attrs={
-                "class":"hidden",
-                "x-ref":"sectionFormId"
-            }
-        )
-    )
     file = forms.FileField(label="", required=True)
 
 @final

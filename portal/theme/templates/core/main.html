@@ -10,7 +10,7 @@
          x-data="{sectionSelected:false, currentArchiveId:0, currentSectionId:0, selectedclasses:'bg-blue-200'}" 
          @click.outside="currentSectionId = 0">
       <div class="basis-1/3 h-screen flex flex-col" :class="hideSections && 'hidden'"
-            @clear-main-sectinon.window="$refs.pivotsection.innerHTML = ''">
+            @clear-main-section.window="$refs.pivotsection.innerHTML = ''">
             <div class="flex justify-between w-full h-150 border border-rounded flex justify-around">
                 {% if user.can_write_main_section %}
                 <div class="flex basis-1/4">

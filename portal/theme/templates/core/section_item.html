@@ -13,7 +13,7 @@
         {{sec.name}}
       </button>
       {% if user.can_write_main_section %}
-      <div class="flex flex-row basis-2/3" :class="currentSectionId !== {{sec.id}} && 'hidden'">
+      <div class="flex flex-row basis-2/3" :class="!sectionSelected || currentSectionId !== {{sec.id}} ? 'hidden' : ''">
         <button hx-trigger="click consume" 
                 hx-confirm="You sure want to delete the section?" 
                 hx-delete="{% url 'core:section' sec.id %}"
@@ -24,12 +24,12 @@
         </button>
         {% endif %}
         <button hx-get="{% url 'core:modal_section' sec.id %}"
-                hx-target="#writable-section"
+                hx-target="#pivot-section"
                 class="basis-1/3 pl-3 pr-3 border border-black rounded-full">
           Add Child 
         </button>
-        <button hx-get="{% url 'core:modal_archive' root.id %}"
-                hx-target="#writable-section"
+        <button hx-get="{% url 'core:modal_archive' sec.id %}"
+                hx-target="#pivot-section"
                 class="basis-1/3 pl-3 pr-3 border border-black rounded-full">
           Add Archive 
         </button>

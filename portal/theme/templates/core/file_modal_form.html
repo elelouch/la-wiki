@@ -5,7 +5,7 @@
         style="z-index:-1">
     </div>
 
-    <form hx-post="{{request.path}}" hx-swap="delete" hx-target="this"
+    <form hx-post="{% url 'core:modal_archive' root_id %}"  hx-swap="beforeend" hx-target="#sec_{{root_id}}"
         enctype="multipart/form-data"
         style="position: fixed;top: 20%;left: 50%;transform: translate(-50%, -50%);"
         class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10" tabindex="-1">
@@ -19,12 +19,12 @@
         {% csrf_token %}
         {{form}}
         <!-- form value available on the core/forms.py file -->
-        <button @click="$refs.sectionFormId.value = currentSectionId"
-            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Submit</button>
-        <button @click="$refs.fileModal.remove()"
-            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Cancel</button>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Submit</button>
+        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Cancel</button>
         <button hx-trigger="click" hx-get="{% url 'core:markdown_text' %}" 
-               hx-target="#writable-section" hx-swap="innerHTML" id="markdownButton"
-            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">Write a plain text file</button>
+                hx-target="#writable-section" hx-swap="innerHTML" id="markdownButton"
+                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">
+                Write a plain text file
+        </button>
     </form>
 </div>
