@@ -9,30 +9,34 @@
        hx-swap="afterbegin">
     <div class="flex flex-row" :class="sectionSelected && currentSectionId === {{sec.id}} && selectedclasses">
       <button @click="open = !open; currentSectionId = {{sec.id}}; sectionSelected = true" 
-              class="flex basis-1/3">
-        {{sec.name}}
+              class="flex basis-3/4">
+        <i class="fa-solid fa-caret-down" :class="!open && 'hidden'"></i>
+        <i class="fa-solid fa-caret-right" :class="open && 'hidden'"></i>
+        <span class="pl-4">
+            {{sec.name}}
+        </span>
       </button>
-      {% if user.can_write_main_section %}
-      <div class="flex flex-row basis-2/3" :class="!sectionSelected || currentSectionId !== {{sec.id}} ? 'hidden' : ''">
+      <div class="flex flex-row basis-1/4" :class="!sectionSelected || currentSectionId !== {{sec.id}} ? 'hidden' : ''">
+        {% if user.can_write_main_section %}
         <button hx-trigger="click consume" 
                 hx-confirm="You sure want to delete the section?" 
                 hx-delete="{% url 'core:section' sec.id %}"
                 hx-target="closest .subsection"
                 hx-swap="delete"
                 class="basis-1/3 pl-3 pr-3 border border-black rounded-full">
-          Delete
+        	<i class="fa-solid fa-xmark"></i>
         </button>
-        {% endif %}
         <button hx-get="{% url 'core:modal_section' sec.id %}"
                 hx-target="#pivot-section"
                 class="basis-1/3 pl-3 pr-3 border border-black rounded-full">
-          Add Child 
-        </button>
+		<i class="fa-solid fa-plus"></i>
+	</button>
         <button hx-get="{% url 'core:modal_archive' sec.id %}"
                 hx-target="#pivot-section"
                 class="basis-1/3 pl-3 pr-3 border border-black rounded-full">
-          Add Archive 
-        </button>
+		<i class="fa-solid fa-file"></i>
+	</button>
+        {% endif %}
       </div>
     </div>
     <div class="subsection"></div>

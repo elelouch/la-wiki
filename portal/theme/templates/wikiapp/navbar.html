@@ -27,7 +27,9 @@
                 <li>
                     <form action="{% url 'wikiapp:logout' %}" method="post">
                         {% csrf_token %}
-                        <button class="text-white">Logout</button>
+                        <button class="text-white">
+			    <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
                     </form>
                 </li>
             </ul>

@@ -20,10 +20,13 @@
         {{form}}
         <!-- form value available on the core/forms.py file -->
         <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Submit</button>
-        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Cancel</button>
+        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full"
+        	@click="$refs.fileModal.remove()">
+        	Cancel
+        </button>
         <button hx-trigger="click" hx-get="{% url 'core:markdown_text' %}" 
                 hx-target="#writable-section" hx-swap="innerHTML" id="markdownButton"
-                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">
+         	@click="$refs.fileModal.remove()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">
                 Write a plain text file
         </button>
     </form>

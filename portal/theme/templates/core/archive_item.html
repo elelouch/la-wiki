@@ -1,20 +1,17 @@
-<div class="flex flex-row archive" id="arch.id">
+<div class="flex flex-row" id="arch_{{arch.id}}":class="!sectionSelected && currentArchiveId === {{arch.id}} && selectedclasses">
     <button hx-trigger="click consume" 
             hx-get="{% url 'core:archive' arch.fullname %}" 
             hx-target="#writable-section" hx-swap="innerHTML"
             class="flex basis-1/4"
-            @click="currentArchiveId = {{arch.id}}; sectionSelected=false" 
-            :class="!sectionSelected && currentArchiveId === {{arch.id}} && selectedclasses">
+            @click="currentArchiveId = {{arch.id}}; sectionSelected=false">
         {{arch.fullname}}
     </button>
-
     <div class="flex basis-full"></div>
-
     {% if user.can_write_main_section%}
     <button hx-trigger="click"
             class="border rounded-full pl-2 pr-2"
             hx-delete="{% url 'core:archive' arch.fullname %}">
-            Remove Archive
+	<i class="fa-solid fa-xmark"></i>
     </button>
     {% endif %}
 </div>

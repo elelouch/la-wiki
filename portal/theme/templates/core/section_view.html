@@ -1,4 +1,4 @@
-<div class="pl-3" :class="!open && 'hidden'" class="flex flex-col subsection" id="sec_{{parent.id}}">
+<div class="pl-6" :class="!open && 'hidden'" class="flex flex-col subsection" id="sec_{{parent.id}}">
     {% for sec in sections %}
     {% include "core/section_item.html" with sec=sec root=parent %}
     {% endfor %}
