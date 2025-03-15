@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django.shortcuts import render, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.contrib.auth import mixins
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.conf import settings
 from .forms import MarkdownForm, SectionForm, FileForm
 from typing import final
@@ -125,9 +125,28 @@ class WikiView (mixins.LoginRequiredMixin, TemplateView):
     redirect_field_name="login"
 
     def get(self, request):
-        user = request.user
-        main_section = user.main_section
-        return render(request, self.template_name)
+        main_section = request.user.main_section
+        if not main_section:
+            return HttpResponse("Main section not assigned", status=400)
+
+        modal_section_url = reverse("core:modal_section", args=[main_section.id])
+        section_btn_attrs = """
+            hx-get={url}
+            hx-target=#pivot-section
+            hx-trigger=click
+            """.format(url=modal_section_url)
+
+        modal_arch_url = reverse("core:modal_archive", args=[main_section.id])
+        arch_btn_attrs= """
+            hx-get={url}
+            hx-target=#pivot-section
+            hx-trigger=click
+            """.format(url=modal_arch_url)
+        ctx = {
+                "section_btn_attrs": section_btn_attrs,
+                "arch_btn_attrs": arch_btn_attrs,
+            }
+        return render(request, self.template_name, ctx)
 
 @final
 class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
