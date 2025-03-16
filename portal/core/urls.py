@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from django.views.generic import RedirectView
+# from django.views.generic import RedirectView
 
 app_name = "core"
 
@@ -13,6 +13,7 @@ urlpatterns = [
         path("archive/<int:archive_id>", views.ArchiveView.as_view(), name="archive"), 
         path("text/markdown", views.MarkdownTextView.as_view(), name="markdown_text"),
         path("search/", views.SearchArchiveView.as_view(), name="search"), 
+        path("testing/children", views.ChildrenViewTest.as_view(), name="test-children"),
         ]
 
 

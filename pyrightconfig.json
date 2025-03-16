@@ -1,0 +1,28 @@
+{
+    "include": [
+        "portal/"
+    ],
+
+    "exclude": [
+        "**/site-packages",
+        "**/node_modules",
+        "**/__pycache__"
+    ],
+
+    "ignore": [
+        "src/oldstuff"
+    ],
+
+    "defineConstant": {
+        "DEBUG": true
+    },
+
+    "stubPath": "src/stubs",
+
+    "reportMissingImports": "error",
+    "reportMissingTypeStubs": false,
+
+    "pythonPlatform": "Linux",
+
+    "executionEnvironments": []
+}

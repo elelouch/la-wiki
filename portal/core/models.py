@@ -36,7 +36,39 @@ class Section(models.Model):
         assert len(name)
         return self.children.create(name = name)
 
+    def all_children(self, user: User):
+        assert user
+        return Section.objects.raw(
+            """
+            WITH RECURSIVE ancestors AS (
+                SELECT *
+                FROM core_section s 
+                WHERE s.id = %s
+                UNION ALL
+                SELECT cs.*
+                FROM core_section cs, ancestors a 
+                WHERE cs.parent_id = a.id
+                AND cs.id NOT IN (
+                    SELECT nacc.section_id 
+                    FROM core_negativeaccess nacc
+                    WHERE nacc.user_id = %s
+                )
+            ) SELECT * FROM ancestors;
+            """, [self.id, user.id])
+
+    def all_children_map(self, user: User):
+        tree_map = {}
+
+        for i in self.all_children(user):
+            pid = i.parent_id
+            if i.parent_id not in tree_map:
+                tree_map[pid] = []
+            tree_map[pid].append(i)
+
+        return tree_map
+
     def children_available(self, user: User):
+        assert user 
         return Section.objects.raw(
                 """
                 SELECT * FROM core_section cs

@@ -1,6 +1,5 @@
 # pyright: reportUnknownVariableType=false
-from django.db.models.functions import Concat, Lower
-from django.http import HttpRequest, HttpResponseNotFound, HttpResponse
+from django.http import HttpRequest, HttpResponse
 from django.views.generic.base import TemplateView
 from django.views.generic.list import ListView
 from django.utils.translation import gettext_lazy as _
@@ -8,12 +7,9 @@ from django.shortcuts import render, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.contrib.auth import mixins
 from django.urls import reverse_lazy, reverse
-from django.conf import settings
 from .forms import MarkdownForm, SectionForm, FileForm
 from typing import final
-from django.core.files import File
 from django.core.files.base import ContentFile
-import os
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 import markdown as markdown_tool
 
@@ -55,9 +51,7 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
 class SectionView(mixins.LoginRequiredMixin, TemplateView):
     template_section_item = "core/section_item.html"
     def delete(self, request: HttpRequest, root_section_id: int): 
-        user = request.user
-        root_section = get_object_or_404(Section, pk=root_section_id)
-        parent_id = root_section.parent.id
+        root_section = get_object_or_404(Section, pk=int(root_section_id))
         root_section.delete()
         return HttpResponse("")
     
@@ -217,7 +211,20 @@ class SearchArchiveView(mixins.LoginRequiredMixin,ListView):
                 ON ancestors.id = arch.section_id
                 WHERE arch.fullname LIKE %s;
                 """, [user.main_section.id, user.id, ilike_content])
+@final
+class ChildrenViewTest(mixins.LoginRequiredMixin,ListView):
+    def get(self, request: HttpRequest):
+        user = request.user
 
+        return HttpResponse("") 
+
+    def printing(tree_map, rid):
+        if not (rid and rid in tree_map):
+            return 
+        for child in tree_map[rid]:
+            print(child)
+            ChildrenViewTest.printing(tree_map, child.id)
+    
 
 @final
 class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
