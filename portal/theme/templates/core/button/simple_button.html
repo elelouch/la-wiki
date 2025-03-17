@@ -1,5 +1,6 @@
-<button class="text-white bg-blue-800 hover:bg-blue-950 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
+{% autoescape off %}
+<button class="text-white bg-blue-800 hover:bg-blue-950 font-medium rounded-lg text-sm px-2 py-2 me-2 mb-2 flex justify-center items-center {{add_class}}"
 	{{add_attrs}}>
-  
   <i class="fa-solid {{button_class}}"></i>
 </button>
+{% endautoescape %}

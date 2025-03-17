@@ -1,20 +1,25 @@
-<div class="flex flex-row" id="arch_{{arch.id}}":class="!sectionSelected && currentArchiveId === {{arch.id}} && selectedclasses">
-    <button hx-trigger="click consume" 
-            hx-get="{% url 'core:archive' arch.id%}"
-            hx-target="#writable-section" hx-swap="innerHTML"
-            class="flex basis-full"
-            @click="currentArchiveId = {{arch.id}}; sectionSelected=false">
+{% load myfilters %}
+{% with arch_id=arch.id|stringformat:"s" %}
+
+<div class="flex flex-row cursor-pointer" id="arch_{{arch_id}}" 
+    :class="!sectionSelected && currentArchiveId === {{arch_id}} && selectedclasses"
+    @click="currentArchiveId = {{arch_id}}; sectionSelected=false" 
+    hx-trigger="click consume" 
+    hx-get="{% url 'core:archive' arch_id %}"
+    hx-target="#writable-section" hx-swap="innerHTML">
+
+    <span>
         {{arch.fullname}}
-    </button>
+    </span>
+
     <div class="flex basis-full"></div>
-    {% if user.can_write_main_section%}
-    <button hx-trigger="click"
-    	    hx-confirm="Are you sure?"
-            class="border rounded-full pl-2 pr-2"
-            hx-target="#arch_{{arch.id}}"
-            hx-swap="delete"
-            hx-delete="{% url 'core:archive' arch.id%}">
-	<i class="fa-solid fa-xmark"></i>
-    </button>
-    {% endif %}
+    <div :class="!sectionSelected && currentArchiveId === {{arch_id}} ? '' : 'hidden'">
+        {% if user.can_write_main_section%}
+        {% url 'core:archive' arch.id as arch_url %}
+        {% btn_delete arch_url "#arch_"|add:arch_id "click consume" "delete" as del_arch_attrs %}
+        {% include "core/button/simple_button.html" with add_attrs=del_arch_attrs button_class="fa-xmark" add_class="bg-red-500 hover:bg-red-800" %}
+        {% endif %}
+    </div>
 </div>
+
+{% endwith %}

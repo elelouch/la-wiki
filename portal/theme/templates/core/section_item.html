@@ -1,5 +1,5 @@
 {% load myfilters %}
-<div class="flex flex-col subsection"
+<div class="flex flex-col subsection text-md"
      x-data="{open: false}"
      hx-target="find .subsection"
      hx-swap="afterbegin">
@@ -11,19 +11,20 @@
                 {{sec.name}}
             </span>
         </button>
-        <div class="flex flex-row basis-1/4" :class="!sectionSelected || currentSectionId !== {{sec.id}} ? 'hidden' : ''">
+        <div class="h-200 flex flex-row justify-evenly basis-1/4" :class="!sectionSelected || currentSectionId !== {{sec.id}} ? 'hidden' : ''">
             {% if user.can_write_main_section %}
 
             {% url 'core:modal_archive' sec.id as modal_arch_url %}
-            {% btn_get modal_arch_url as sec_attrs %}
-            {% include "core/button/simple_button.html" with add_attrs=sec_attrs button_class='fa-file' %}
+            {% btn_get modal_arch_url "#pivot-section" "click" as arch_attrs %}
+            {% include "core/button/simple_button.html" with add_attrs=arch_attrs button_class="fa-file" %}
 
-            {% url 'core:modal_section' sec.id as modal_sec_url%}
-            {% btn_get modal_sec_url as arch_attrs %}
-            {% include "core/button/simple_button.html" with add_attrs=arch_attrs button_class="fa-plus"%}
+            {% url 'core:modal_section' sec.id as modal_sec_url %}
+            {% btn_get modal_sec_url "#pivot-section" "click" as sec_attrs %}
+            {% include "core/button/simple_button.html" with add_attrs=sec_attrs button_class="fa-plus"%}
 
-            {% btn_delete modal_sec_url as del_sec_attrs %}
-            {% include "core/button/simple_button.html" with add_attrs=del_sec_attrs button_class="fa-minus"%}
+            {% url 'core:section' sec.id as sec_url %}
+            {% btn_delete sec_url "closest .subsection" "click" "delete" as del_sec_attrs %}
+            {% include "core/button/simple_button.html" with add_attrs=del_sec_attrs button_class="fa-xmark" add_class="bg-red-500 hover:bg-red-800" %}
 
             {% endif %}
         </div>

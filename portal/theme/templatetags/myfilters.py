@@ -13,22 +13,32 @@ def hash_or_empty(h, key):
     return []
 
 @register.simple_tag
-def btn_get(url):
+def btn_get(url, target, trigger):
     attrs= """
         hx-get={url}
-        hx-target=#pivot-section
-        hx-trigger=click
+        hx-target="{target}"
+        hx-trigger="{trigger}"
         """
-    return attrs.format(url=url)
+    return attrs.format(
+            url=url,
+            target=target,
+            trigger=trigger,
+        )
 
 @register.simple_tag
-def btn_delete(url):
+def btn_delete(url, target, trigger, swap):
+    print(url,target,trigger,swap)
     attrs = """
-        hx-trigger=click consume
-        hx-confirm='You sure want to delete the section'
-        hx-swap='delete'
-        hx-target='closest .subsection'
-        hx-delete={url}
+        hx-trigger="{trigger}"
+        hx-confirm="Are you sure"
+        hx-swap="{swap}"
+        hx-target="{target}"
+        hx-delete="{url}"
         """
-    return attrs.format(url=url)
+    return attrs.format(
+            url=url,
+            trigger=trigger,
+            swap=swap,
+            target=target
+        )
 

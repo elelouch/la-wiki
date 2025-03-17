@@ -130,19 +130,6 @@ class WikiView (mixins.LoginRequiredMixin, TemplateView):
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name="login"
 
-    def get(self, request):
-        main_section = request.user.main_section
-        if not main_section:
-            return HttpResponse("Main section not assigned", status=400)
-
-        modal_section_url = reverse("core:modal_section", args=[main_section.id])
-        modal_arch_url = reverse("core:modal_archive", args=[main_section.id])
-        ctx = {
-                "modal_arch_url": modal_arch_url,
-                "modal_sec_url": modal_section_url
-            }
-        return render(request, self.template_name, ctx)
-
 @final
 class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/archive_view.html"
@@ -150,7 +137,7 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
     default_template = "core/archive_view_default.html"
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name="login"
-    iframe_render=[".pdf", ".svg", ".jpg", ".jpeg"]
+    iframe_render=[".pdf", ".svg", ".jpg", ".jpeg", ".png"]
 
     @method_decorator(xframe_options_sameorigin)
     def get(self, request: HttpRequest, archive_id: int):
