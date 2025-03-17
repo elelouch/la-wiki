@@ -5,7 +5,7 @@
   </div>
   <!-- Modal body -->
   <form hx-post="{% url 'core:section' root_id %}" 
-        hx-target="#sec_{{root_id}}"
+        hx-target="#sec_{{root_id}} .children"
         hx-swap="beforeend"
         class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10"
         style="position:fixed;top: 20%;left: 50%;transform: translate(-50%, -50%);">

@@ -98,7 +98,7 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         	request,
         	self.template_name,
         	{"root_id": root_section_id, "form":FileForm()}
-            )
+        )
 
     def post(self, request: HttpRequest, root_section_id: int):
         user = request.user

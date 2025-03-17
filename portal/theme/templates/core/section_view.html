@@ -1,10 +1,9 @@
 {% load myfilters %}
-<div :class="!open && 'hidden'" class="flex flex-col subsection" id="sec_{{root_id}}">
-    {% for sec in secmap|hash_or_empty:root_id %}
-    {% include "core/section_item.html" with sec=sec secmap=secmap archmap=archmap %}
-    {% endfor %}
 
-    {% for arch in archmap|hash_or_empty:root_id %}
-    {% include "core/archive_item.html" with arch=arch %}
-    {% endfor %}
-</div>
+{% for sec in secmap|hash_or_empty:root_id %}
+{% include "core/section_item.html" with sec=sec secmap=secmap archmap=archmap %}
+{% endfor %}
+
+{% for arch in archmap|hash_or_empty:root_id %}
+{% include "core/archive_item.html" with arch=arch %}
+{% endfor %}
