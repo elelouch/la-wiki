@@ -17,7 +17,7 @@
         {% if user.can_write_main_section%}
         {% url 'core:archive' arch.id as arch_url %}
         {% btn_delete arch_url "#arch_"|add:arch_id "click consume" "delete" as del_arch_attrs %}
-        {% include "core/button/simple_button.html" with add_attrs=del_arch_attrs button_class="fa-xmark" add_class="bg-red-500 hover:bg-red-800" %}
+        {% include "core/button/simple_button.html" with add_attrs=del_arch_attrs button_class="fa-solid fa-xmark" add_class="bg-red-500 hover:bg-red-800" %}
         {% endif %}
     </div>
 </div>

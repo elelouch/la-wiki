@@ -27,7 +27,6 @@ def btn_get(url, target, trigger):
 
 @register.simple_tag
 def btn_delete(url, target, trigger, swap):
-    print(url,target,trigger,swap)
     attrs = """
         hx-trigger="{trigger}"
         hx-confirm="Are you sure"

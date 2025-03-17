@@ -1,5 +1,5 @@
 {% load myfilters %}
-<div class="pl-6" :class="!open && 'hidden'" class="flex flex-col subsection" id="sec_{{root_id}}">
+<div :class="!open && 'hidden'" class="flex flex-col subsection" id="sec_{{root_id}}">
     {% for sec in secmap|hash_or_empty:root_id %}
     {% include "core/section_item.html" with sec=sec secmap=secmap archmap=archmap %}
     {% endfor %}
