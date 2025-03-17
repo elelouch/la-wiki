@@ -1,4 +1,7 @@
 {% extends "wikiapp/navbar.html" %}
+{% block title %}
+Wiki
+{% endblock %}
 
 {% block page_content %}
 
@@ -45,8 +48,7 @@
                     <div id="list-files" @click.outside="$el.innerHTML=''"></div>
                     </div>
                 </div>
-                <div hx-trigger="load,new_section_parent_{{user.main_section.id}} from:body"
-                     hx-get="{% url 'core:children' user.main_section.id %}" id="tree-view" 
+                <div hx-trigger="load" hx-get="{% url 'core:children' %}" id="tree-view" 
                      class="border border-black rounded full-rounded" hx-swap="innerHTML">
                 </div>
             </div>

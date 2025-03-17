@@ -3,6 +3,7 @@
         "portal/"
     ],
 
+    "typeCheckingMode":"standard",
     "exclude": [
         "**/site-packages",
         "**/node_modules",
@@ -17,7 +18,7 @@
         "DEBUG": true
     },
 
-    "stubPath": "src/stubs",
+    // "stubPath": "src/stubs",
 
     "reportMissingImports": "error",
     "reportMissingTypeStubs": false,

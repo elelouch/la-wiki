@@ -6,7 +6,7 @@ app_name = "core"
 
 urlpatterns = [
         path("", views.WikiView.as_view(), name="wiki_read"),
-        path("section/<int:root_section_id>/children", views.ChildrenView.as_view(), name="children"),
+        path("section", views.ChildrenView.as_view(), name="children"),
         path("section/<int:root_section_id>", views.SectionView.as_view(), name="section"), 
         path("section/modal/<int:root_section_id>", views.ModalSectionView.as_view(), name="modal_section"), 
         path("archive/modal/<int:root_section_id>", views.ModalArchiveView.as_view(), name="modal_archive"), 

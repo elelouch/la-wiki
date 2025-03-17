@@ -1,12 +1,9 @@
-# pyright: reportUnknownVariableType=false
-import enum
-from django.core.files import File
-from django.db.models import Q, ForeignKey
+from django.db.models import ForeignKey
 import os
+from functools import reduce
 from django.db import models
 from typing import final
-from django.contrib.auth.models import AbstractUser, Group
-from django.conf import settings
+from django.contrib.auth.models import AbstractUser
 
 @final
 class User(AbstractUser):
@@ -57,15 +54,30 @@ class Section(models.Model):
             """, [self.id, user.id])
 
     def all_children_map(self, user: User):
-        tree_map = {}
+        treemap = {}
+        archivesmap = {}
+        qs = self.all_children(user)
 
-        for i in self.all_children(user):
+        qs.prefetch_related("archives")
+        for sec in self.all_children(user):
+            parentid = sec.parent_id
+            secid = sec.id
+            if parentid not in treemap:
+                treemap[parentid] = []
+            treemap[parentid].append(sec)
+            if secid not in archivesmap and sec.archives.all():
+                archivesmap[secid] = []
+            for arch in sec.archives.all():
+                archivesmap[sec.id].append(arch)
+        return (treemap, archivesmap)
+
+    def all_children_map_reduce(self, user: User):
+        def pedro(i, tree_map):
             pid = i.parent_id
             if i.parent_id not in tree_map:
                 tree_map[pid] = []
             tree_map[pid].append(i)
-
-        return tree_map
+        return reduce(pedro, self.all_children(user), {})
 
     def children_available(self, user: User):
         assert user 
@@ -87,7 +99,7 @@ class Section(models.Model):
                 name = filename,
                 extension = extension,
                 file = file
-                )
+            )
         return arch
 
 @final

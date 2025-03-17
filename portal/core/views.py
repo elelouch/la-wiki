@@ -13,7 +13,7 @@ from django.core.files.base import ContentFile
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 import markdown as markdown_tool
 
-from .models import Section, Archive
+from .models import Section, Archive, User
 
 @final
 class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
@@ -21,27 +21,29 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name = "login"
 
-    def get(self, request: HttpRequest, root_section_id: int):
-        assert self.template_name is not None
+    def get(self, request: HttpRequest):
+        assert self.template_name
         user = request.user
-        if not root_section_id:
-            return HttpResponse("Root section must be an integer", status=400)
-        root_section = get_object_or_404(Section, pk=root_section_id)
-
-        children_available = root_section.children_available(user)
-
-        context = {
-                "parent": root_section,
-                "sections": children_available,
-                "archives": root_section.archives.all(),
-            }
-        return render(request, self.template_name, context)
+        ms = user.main_section
+        if not ms:
+            return HttpResponse("Main section not assigned", status = 404)
+        a,b = ms.all_children_map(user)
+        return render(
+                request,
+                self.template_name,
+                {
+                    "archmap": b,
+                    "secmap": a,
+                    "root_id": ms.id
+                }
+            )
 
 # get/post for appending a section to a section
 @final
 class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_modal_form.html"
     def get(self, request: HttpRequest, root_section_id: int):
+        assert self.template_name
         return render(request, self.template_name, {
             "root_id": root_section_id,
             "form": SectionForm()
@@ -57,10 +59,15 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
     
     def post(self, request: HttpRequest, root_section_id: int): 
         data = request.POST
+        root_section = None
         if not root_section_id:
-            user = request.user
-            root_section_id = user.main_section.id
-        root_section = get_object_or_404(Section, pk=root_section_id)
+            user = request.user 
+            root_section = user.main_section
+            if not root_section:
+                return HttpResponse("Main section not assigned", status=400)
+        else:
+            root_section = get_object_or_404(Section, pk=root_section_id)
+
         user = request.user
         name = data.get("name")
         if not name:
@@ -71,7 +78,8 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
                 self.template_section_item,
                 {
                     "sec": new_child,
-                    "root": root_section
+                    "root": root_section,
+                    "single_sec": True
                 }
            )
         res["HX-Trigger"] = "clearMainSection"
@@ -85,6 +93,7 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
     extra_context = {"form": FileForm()}
 
     def get(self, request: HttpRequest, root_section_id: int):
+        assert self.template_name
         return render(
         	request,
         	self.template_name,
@@ -95,7 +104,10 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         user = request.user
         files = request.FILES
         if not root_section_id:
-            root_section_id = user.main_section.id
+            main_section = user.main_section
+            if not main_section:
+                return HttpResponse("Main section not assigned", status=400)
+            root_section_id = main_section.id
         root_section = get_object_or_404(Section, pk=root_section_id)
         file = files.get("file")
         if not file: 
@@ -146,8 +158,10 @@ class WikiView (mixins.LoginRequiredMixin, TemplateView):
 class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/archive_view.html"
     markdown_template = "core/markdown_view.html"
+    default_view = "core/default_view.html"
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name="login"
+    iframe_render=[".pdf", ".svg", ".jpg", ".jpeg"]
 
     @method_decorator(xframe_options_sameorigin)
     def get(self, request: HttpRequest, archive_id: int):
@@ -156,14 +170,16 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
             text = arch.file.read()
             html = markdown_tool.markdown(text.decode("ascii"))
             return render(request, self.markdown_template, {"archive": arch, "file": html})
-        return render(
-        	request,
-        	self.template_name,
-        	{
-        		"archive": arch,
-        		"file": arch.file,
-        		"date_str": arch.first_time_upload.strftime("%Y/%m/%d")
-        	})
+
+        if arch.extension in self.iframe_render:
+            return render(
+                request,
+                self.template_name,
+                {
+                    "archive": arch,
+                    "file": arch.file,
+                    "date_str": arch.first_time_upload.strftime("%Y/%m/%d")
+                })
 
     def delete(self, request: HttpRequest, archive_id: int):
         archive = get_object_or_404(Archive, pk=int(archive_id))
@@ -213,18 +229,7 @@ class SearchArchiveView(mixins.LoginRequiredMixin,ListView):
                 """, [user.main_section.id, user.id, ilike_content])
 @final
 class ChildrenViewTest(mixins.LoginRequiredMixin,ListView):
-    def get(self, request: HttpRequest):
-        user = request.user
-
-        return HttpResponse("") 
-
-    def printing(tree_map, rid):
-        if not (rid and rid in tree_map):
-            return 
-        for child in tree_map[rid]:
-            print(child)
-            ChildrenViewTest.printing(tree_map, child.id)
-    
+    template_name = "core/section_view.html"
 
 @final
 class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
