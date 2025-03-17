@@ -158,7 +158,7 @@ class WikiView (mixins.LoginRequiredMixin, TemplateView):
 class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/archive_view.html"
     markdown_template = "core/markdown_view.html"
-    default_view = "core/default_view.html"
+    default_template = "core/archive_view_default.html"
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name="login"
     iframe_render=[".pdf", ".svg", ".jpg", ".jpeg"]
@@ -168,7 +168,7 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
         arch = get_object_or_404(Archive, pk=int(archive_id))
         if ".md" == arch.extension :
             text = arch.file.read()
-            html = markdown_tool.markdown(text.decode("ascii"))
+            html = markdown_tool.markdown(text.decode("utf-8"))
             return render(request, self.markdown_template, {"archive": arch, "file": html})
 
         if arch.extension in self.iframe_render:
@@ -180,6 +180,8 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
                     "file": arch.file,
                     "date_str": arch.first_time_upload.strftime("%Y/%m/%d")
                 })
+
+        return render(request, self.default_template, {"content":arch.file.read().decode("utf-8")})
 
     def delete(self, request: HttpRequest, archive_id: int):
         archive = get_object_or_404(Archive, pk=int(archive_id))
