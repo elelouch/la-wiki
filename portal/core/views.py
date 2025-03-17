@@ -136,21 +136,10 @@ class WikiView (mixins.LoginRequiredMixin, TemplateView):
             return HttpResponse("Main section not assigned", status=400)
 
         modal_section_url = reverse("core:modal_section", args=[main_section.id])
-        section_btn_attrs = """
-            hx-get={url}
-            hx-target=#pivot-section
-            hx-trigger=click
-            """.format(url=modal_section_url)
-
         modal_arch_url = reverse("core:modal_archive", args=[main_section.id])
-        arch_btn_attrs= """
-            hx-get={url}
-            hx-target=#pivot-section
-            hx-trigger=click
-            """.format(url=modal_arch_url)
         ctx = {
-                "section_btn_attrs": section_btn_attrs,
-                "arch_btn_attrs": arch_btn_attrs,
+                "modal_arch_url": modal_arch_url,
+                "modal_sec_url": modal_section_url
             }
         return render(request, self.template_name, ctx)
 

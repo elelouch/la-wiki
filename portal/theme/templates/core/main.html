@@ -1,4 +1,5 @@
 {% extends "wikiapp/navbar.html" %}
+{% load myfilters %}
 {% block title %}
 Wiki
 {% endblock %}
@@ -23,7 +24,9 @@ Wiki
             <div class="flex justify-between w-full h-50 border border-rounded flex justify-around">
                 {% if user.can_write_main_section %}
                 <div class="flex basis-1/4">
+                    {% btn_get modal_sec_url as section_btn_attrs %} 
                     {% include "core/button/simple_button.html" with add_attrs=section_btn_attrs button_class='fa-plus'%}
+                    {% btn_get modal_arch_url as arch_btn_attrs %} 
                     {% include "core/button/simple_button.html" with add_attrs=arch_btn_attrs button_class='fa-file'%}
                 </div>
                 {% endif %}
