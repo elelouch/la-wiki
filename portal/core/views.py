@@ -76,11 +76,7 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         res = render(
                 request,
                 self.template_section_item,
-                {
-                    "sec": new_child,
-                    "root": root_section,
-                    "single_sec": True
-                }
+                {"sec": new_child,"root": root_section}
            )
         res["HX-Trigger"] = "clearMainSection"
         return res

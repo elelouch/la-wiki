@@ -8,7 +8,7 @@ def add_class(field, arg: str):
 
 @register.filter
 def hash_or_empty(h, key):
-    if key in h:
+    if h and key in h:
         return h[key]
     return []
 

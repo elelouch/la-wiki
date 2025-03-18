@@ -5,10 +5,13 @@
         style="z-index:-1">
     </div>
 
-    <form hx-post="{% url 'core:modal_archive' root_id %}"  hx-swap="beforeend" hx-target="#sec_{{root_id}}"
-        enctype="multipart/form-data"
-        style="position: fixed;top: 20%;left: 50%;transform: translate(-50%, -50%);"
-        class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10" tabindex="-1">
+    <form hx-post="{% url 'core:modal_archive' root_id %}"  
+          hx-target="#sec_{{root_id}} .children-archives"
+          hx-swap="beforeend" 
+          enctype="multipart/form-data"
+          style="position: fixed;top: 20%;left: 50%;transform: translate(-50%, -50%);"
+          class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10" 
+          tabindex="-1">
          
         <div
             class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">

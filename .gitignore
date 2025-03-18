@@ -81,4 +81,4 @@ media
 
 # ignore media
 **/media/*
-include
+include/

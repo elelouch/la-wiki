@@ -7,6 +7,7 @@ Wiki
 {% block page_content %}
 
 {% if user.main_section %}
+{% with root=user.main_section %}
 
 <div x-data="{hideSections: false}" class="flex flex-col">
     <div class="flex justify-evenly"
@@ -23,11 +24,11 @@ Wiki
             <div class="flex justify-between w-full flex justify-around">
                 {% if user.can_write_main_section %}
                 <div class="flex basis-1/4 h-24">
-                    {% url "core:modal_archive" user.main_section.id as modal_arch_url %}
+                    {% url "core:modal_archive" root.id as modal_arch_url %}
                     {% btn_get modal_arch_url "#pivot-section" "click" as arch_btn_attrs %} 
                     {% include "core/button/simple_button.html" with add_attrs=arch_btn_attrs button_class='fa-solid fa-file'%}
 
-                    {% url "core:modal_section" user.main_section.id as modal_sec_url %}
+                    {% url "core:modal_section" root.id as modal_sec_url %}
                     {% btn_get modal_sec_url "#pivot-section" "click" as section_btn_attrs %} 
                     {% include "core/button/simple_button.html" with add_attrs=section_btn_attrs button_class='fa-solid fa-plus'%}
                 </div>
@@ -35,33 +36,38 @@ Wiki
 
                 {% if user.can_write_main_section %}
                 <div class="flex flex-col rounded-lg basis-3/4 border border-black">
-                {% else %}
-                <div class="flex flex-col rounded-lg basis-full border border-black">
-                {% endif %}
-                    <div>
-                        <input hx-get="{% url 'core:search' %}"
-                               hx-trigger="keyup changed delay:1s"
-                               hx-target="#list-files"
-                               hx-swap="innerHTML"
-                               placeholder="Search" name="content" id="search" type="text">
-                        </input>
-                    </div>
-                    <div>
-                        <label for="by-content">By content</label>
-                        <input id="by-content" type="checkbox"></input>
-                    </div>
-                    <div id="list-files" @click.outside="$el.innerHTML=''"></div>
+                    {% else %}
+                    <div class="flex flex-col rounded-lg basis-full border border-black">
+                        {% endif %}
+                        <div>
+                            <input hx-get="{% url 'core:search' %}"
+                                   hx-trigger="keyup changed delay:1s"
+                                   hx-target="#list-files"
+                                   hx-swap="innerHTML"
+                                   placeholder="Search" name="content" id="search" type="text">
+                            </input>
+                        </div>
+                        <div>
+                            <label for="by-content">By content</label>
+                            <input id="by-content" type="checkbox"></input>
+                        </div>
+                        <div id="list-files" @click.outside="$el.innerHTML=''"></div>
                     </div>
                 </div>
-                <div hx-trigger="load" hx-get="{% url 'core:children' %}" id="tree-view" 
-                     class="rounded full-rounded" hx-swap="innerHTML">
+                <div hx-trigger="load" 
+                     hx-get="{% url 'core:children' %}" 
+                     id="sec_{{root.id}}" 
+                     class="rounded full-rounded" 
+                     hx-swap="innerHTML">
                 </div>
             </div>
-            <div class="flex h-screen" id="writable-section" :class="hideSections ? 'basis-full' : 'basis-2/3'"></div>
+            <div class="flex h-screen" id="writable-section" :class="hideSections ? 'basis-full' : 'basis-2/3'">
+            </div>
         </div>
         <div x-ref="pivotsection" id="pivot-section">
         </div>
     </div>
+    {% endwith %}
     {% else %}
     <div>
         User does not have a main section assigned
