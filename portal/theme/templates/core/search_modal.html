@@ -1,0 +1,21 @@
+<!-- if x-data is not provided, x-ref doesn't work -->
+<div class="h-screen w-screen top-0 left-0 right-0 down-0 fixed z-1000 fixed bg-black/70" 
+      x-ref="searchModal">
+
+    <div class="h-screen w-screen top-0 left-0 right-0 down-0 absolute" 
+         style="z-index:-1"
+         @click="$refs.searchModal.remove()">
+    </div>
+
+    <div class="w-80">
+        <form hx-get="{% url 'core:search-list' %}"
+              style="position: fixed;top: 20%;left: 50%;transform: translate(-50%, -50%);"
+              class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10" 
+              tabindex="-1">
+            {% csrf_token %}
+            {{form}}
+            <div id="list-files"></div>
+        </form>
+    </div>
+
+</div>

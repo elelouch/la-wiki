@@ -1,8 +1,5 @@
 {% load myfilters %}
-<div class="flex flex-col text-md section"
-     x-init="htmx.process($el)"
-     id="sec_{{sec.id}}"
-     x-data="{open: false}">
+<div class="flex flex-col text-md section" id="sec_{{sec.id}}" x-data="{open: false}">
 
     <div class="flex flex-row" :class="sectionSelected && currentSectionId === {{sec.id}} && selectedclasses">
         <button @click="open = !open; currentSectionId = {{sec.id}}; sectionSelected = true" 
@@ -31,7 +28,7 @@
             {% endif %}
         </div>
     </div>
-    <div class="pl-4 children" :class="!open && 'hidden'">
+    <div class="pl-4 children transition-opacity delay-150 duration-300 ease-in-out" :class="!open && 'hidden'">
         {% include "core/section_view.html" with root_id=sec.id  secmap=secmap archmap=archmap %}
     </div>
 </div>

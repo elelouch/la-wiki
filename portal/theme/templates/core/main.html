@@ -13,13 +13,13 @@ Wiki
     <div class="flex justify-evenly"
          x-data="{sectionSelected:false, currentArchiveId:0, currentSectionId:0, selectedclasses:'bg-blue-100 border border-black'}">
 
-        <div class="flex flex-col border-r-2 border-black">
+        <div class="flex flex-col">
             <button class="basis-full bg-blue-100" @click="hideSections = !hideSections">
                 <i class="fa-solid" :class="hideSections ? 'fa-eye' : 'fa-eye-slash'"></i>
             </button>
         </div>
 
-        <div class="basis-1/3 h-screen border-r-2 border-black flex flex-col" :class="hideSections && 'hidden'"
+        <div class="basis-1/3 h-screen flex flex-col" :class="hideSections && 'hidden'"
              @clear-main-section.window="$refs.pivotsection.innerHTML = ''">
             <div class="flex justify-between w-full flex justify-around">
                 {% if user.can_write_main_section %}
@@ -35,33 +35,35 @@ Wiki
                 {% endif %}
 
                 {% if user.can_write_main_section %}
-                <div class="flex flex-col rounded-lg basis-3/4 border border-black">
+                <div class="flex flex-col rounded-lg basis-3/4">
                     {% else %}
                     <div class="flex flex-col rounded-lg basis-full border border-black">
                         {% endif %}
                         <div>
-                            <input hx-get="{% url 'core:search' %}"
-                                   hx-trigger="keyup changed delay:1s"
-                                   hx-target="#list-files"
-                                   hx-swap="innerHTML"
-                                   placeholder="Search" name="content" id="search" type="text">
-                            </input>
+                            {% url 'core:search' as search_url %}
+                            {% btn_get search_url "#pivot-section" "click" as search_attrs %} 
+                            {% autoescape off %}
+                                <input {{search_attrs}} placeholder="Search" name="content" id="search" type="text">
+                                </input>
+                            {% endautoescape %}
                         </div>
-                        <div>
-                            <label for="by-content">By content</label>
-                            <input id="by-content" type="checkbox"></input>
-                        </div>
-                        <div id="list-files" @click.outside="$el.innerHTML=''"></div>
                     </div>
                 </div>
                 <div hx-trigger="load" 
                      hx-get="{% url 'core:children' %}" 
+                     hx-target="find div"
                      id="sec_{{root.id}}" 
                      class="rounded full-rounded" 
                      hx-swap="innerHTML">
+                    <div>
+                    </div>
                 </div>
             </div>
-            <div class="flex h-screen" id="writable-section" :class="hideSections ? 'basis-full' : 'basis-2/3'">
+            <div class="flex h-screen"
+                id="writable-section" 
+                @clear-main-section.window="$el.innerHTML = ''"
+                x-ref="writablesec" 
+                :class="hideSections ? 'basis-full' : 'basis-2/3'">
             </div>
         </div>
         <div x-ref="pivotsection" id="pivot-section">

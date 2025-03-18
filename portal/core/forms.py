@@ -1,6 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from typing import final
 from django import forms
+from django.urls import reverse_lazy
 from django.core.validators import RegexValidator
 
 @final
@@ -25,7 +26,11 @@ class SearchForm(forms.Form):
     name = forms.CharField(
         label="",
         widget=forms.TextInput(attrs={
-            "placeholder":_("Section Name"),
+            "id":"modalSearchInput",
+            "hx-get": reverse_lazy("core:search-list"),
+            "hx-trigger":"input changed delay:500ms",
+            "hx-target":"#list-files",
+            "placeholder":_("Search an archive"),
             "class":"rounded-md"
             }),
         validators=[RegexValidator(code="404", message=_("Name is not valid"))],

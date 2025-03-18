@@ -1,12 +1,13 @@
 <!-- if x-data is not provided, x-ref doesn't work -->
-<div class="h-screen w-screen top-0 left-0 right-0 down-0 fixed z-1000 fixed bg-black/50" 
+<div class="h-screen w-screen top-0 left-0 right-0 down-0 fixed z-1000 fixed bg-black/70" 
     x-init="htmx.process(htmx.find('#markdownButton'))" x-ref="fileModal">
-    <div class="h-screen w-screen top-0 left-0 right-0 down-0 absolute" 
+    <div @click="$refs.fileModal.remove()"
+        class="h-screen w-screen top-0 left-0 right-0 down-0 absolute" 
         style="z-index:-1">
     </div>
 
     <form hx-post="{% url 'core:modal_archive' root_id %}"  
-          hx-target="#sec_{{root_id}} .children-archives"
+          hx-target="#sec_{{root_id}} > div > .children-archives"
           hx-swap="beforeend" 
           enctype="multipart/form-data"
           style="position: fixed;top: 20%;left: 50%;transform: translate(-50%, -50%);"

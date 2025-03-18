@@ -6,14 +6,14 @@ from django.utils.translation import gettext_lazy as _
 from django.shortcuts import render, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.contrib.auth import mixins
-from django.urls import reverse_lazy, reverse
-from .forms import MarkdownForm, SectionForm, FileForm
+from django.urls import reverse_lazy
+from .forms import MarkdownForm, SectionForm, FileForm, SearchForm
 from typing import final
 from django.core.files.base import ContentFile
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 import markdown as markdown_tool
 
-from .models import Section, Archive, User
+from .models import Section, Archive
 
 @final
 class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
@@ -157,7 +157,6 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
 
     def delete(self, request: HttpRequest, archive_id: int):
         archive = get_object_or_404(Archive, pk=int(archive_id))
-        root_id = archive.section.id
         archive.file.delete()
         archive.delete()
         response = HttpResponse("")
@@ -165,7 +164,7 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
         return response
 
 @final
-class SearchArchiveView(mixins.LoginRequiredMixin,ListView):
+class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
     template_name="core/archive_list.html"
     paginate_by = 15
     model = Archive
@@ -175,13 +174,11 @@ class SearchArchiveView(mixins.LoginRequiredMixin,ListView):
         qs = super().get_queryset()
         data = self.request.GET
         user = self.request.user
-
-        search_content = data.get("content")
+        search_content = data.get("name")
         if not search_content or len(search_content) <= 2 :
             return []
-
         ilike_content = "%{content}%".format(content=search_content)
-        return qs.raw(
+        test = qs.raw(
                 """
                 WITH RECURSIVE ancestors AS (
                     SELECT *
@@ -196,11 +193,30 @@ class SearchArchiveView(mixins.LoginRequiredMixin,ListView):
                         FROM core_negativeaccess nacc
                         WHERE nacc.user_id = %s
                     )
-                ) SELECT * FROM ancestors
+                ) SELECT 
+                        arch.id, 
+                        arch.fullname, 
+                        arch.name,
+                        arch.description,
+                        arch.section_id,
+                        arch.first_time_upload,
+                        arch.last_time_modified,
+                        arch.extension,
+                        arch.file
+                FROM ancestors
                 INNER JOIN core_archive arch
                 ON ancestors.id = arch.section_id
                 WHERE arch.fullname LIKE %s;
                 """, [user.main_section.id, user.id, ilike_content])
+        print(test)
+        return test
+
+@final
+class SearchArchiveView(mixins.LoginRequiredMixin,TemplateView):
+    template_name="core/search_modal.html"
+    login_url = reverse_lazy("wikiapp:login")
+    extra_context = {"form": SearchForm()}
+
 @final
 class ChildrenViewTest(mixins.LoginRequiredMixin,ListView):
     template_name = "core/section_view.html"

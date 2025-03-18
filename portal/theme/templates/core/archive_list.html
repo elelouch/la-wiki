@@ -2,8 +2,9 @@
     {% for obj in object_list %}
     <div>
         <button hx-trigger="click" 
-                hx-get="{% url 'core:archive' obj.fullname %}" 
-                hx-target="#writable-section" hx-swap="innerHTML">
+                hx-get="{% url 'core:archive' obj.id %}" 
+                @click="$refs.searchModal.remove()"
+                hx-target="#writable-section">
             {{obj.fullname}}
         </button>
     </div>
