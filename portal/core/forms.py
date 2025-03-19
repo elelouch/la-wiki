@@ -28,6 +28,7 @@ class SearchForm(forms.Form):
         widget=forms.TextInput(attrs={
             "x-ref":"modalSearchInput",
             "placeholder":_("Search an archive"),
+            "autocomplete":"off",
             "class":"rounded-md"
             }),
         validators=[RegexValidator(code="404", message=_("Name is not valid"))],

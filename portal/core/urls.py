@@ -14,6 +14,8 @@ urlpatterns = [
         path("text/markdown", views.MarkdownTextView.as_view(), name="markdown_text"),
         path("search/", views.SearchArchiveView.as_view(), name="search"), 
         path("search-list/", views.SearchArchiveListView.as_view(), name="search-list"), 
+        path("search-list/references", views.SearchArchiveListReferencesView.as_view(), name="search-list-references"), 
+        path("references/", views.ReferencesView.as_view(), name="references"), 
         path("testing/children", views.ChildrenViewTest.as_view(), name="test-children"),
         ]
 

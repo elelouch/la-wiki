@@ -163,7 +163,6 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
         response["HX-Trigger"] = "clearMainSection"
         return response
 
-@final
 class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
     template_name="core/archive_list.html"
     paginate_by = 15
@@ -178,7 +177,7 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
         if not search_content or len(search_content) <= 2 :
             return []
         ilike_content = "%{content}%".format(content=search_content)
-        test = qs.raw(
+        return qs.raw(
                 """
                 WITH RECURSIVE ancestors AS (
                     SELECT *
@@ -208,8 +207,15 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
                 ON ancestors.id = arch.section_id
                 WHERE arch.fullname LIKE %s;
                 """, [user.main_section.id, user.id, ilike_content])
-        print(test)
-        return test
+
+@final
+class SearchArchiveListReferencesView(SearchArchiveListView):
+    template_name="core/archive_references_list.html"
+
+@final
+class ReferencesView(mixins.LoginRequiredMixin, TemplateView):
+    template_name="core/reference_view.html"
+    extra_context = {"form": SearchForm()}
 
 @final
 class SearchArchiveView(mixins.LoginRequiredMixin,TemplateView):

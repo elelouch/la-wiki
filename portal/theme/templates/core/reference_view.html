@@ -1,0 +1,14 @@
+<div class="h-24 w-80 bg-blue-900 border rounded-lg">
+    <header>
+        References
+        <form hx-get="{% url 'core:search-list-references' %}"
+              hx-trigger="keyup delay:500ms"
+              hx-target="#references-list"
+              tabindex="-1">
+            {% csrf_token %}
+            {{form}}
+        </form>
+    </header>
+    <div id="references-list" class="h-24 bg-blue-700"></div>
+    <footer class="bg-blue-700">Search for a file</footer>
+</div>

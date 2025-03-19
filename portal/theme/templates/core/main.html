@@ -9,18 +9,16 @@ Wiki
 {% if user.main_section %}
 {% with root=user.main_section %}
 
-<div x-data="{hideSections: false}" class="flex flex-col">
-    <div class="flex justify-evenly"
-         x-data="{sectionSelected:false, currentArchiveId:0, currentSectionId:0, selectedclasses:'bg-blue-100 border border-black'}">
+<div x-data="{hideSections: false, hideReferences: true}" class="flex flex-col">
+    <div class="flex flex-row justify-evenly" x-data="{sectionSelected:false, currentArchiveId:0, currentSectionId:0, selectedclasses:'bg-blue-100 border border-black'}">
 
-        <div class="flex flex-col">
+        <div class="flex flex-col" id="hide-sections-btn">
             <button class="basis-full bg-blue-100" @click="hideSections = !hideSections">
                 <i class="fa-solid" :class="hideSections ? 'fa-eye' : 'fa-eye-slash'"></i>
             </button>
         </div>
 
-        <div class="basis-1/3 h-screen flex flex-col" :class="hideSections && 'hidden'"
-             @clear-main-section.window="$refs.pivotsection.innerHTML = ''">
+        <div class="basis-1/5 h-screen flex flex-col" :class="hideSections && 'hidden'" @clear-main-section.window="$refs.pivotsection.innerHTML = ''">
             <div class="flex justify-between w-full flex justify-around">
                 {% if user.can_write_main_section %}
                 <div class="flex basis-1/4 h-24">
@@ -36,44 +34,45 @@ Wiki
 
                 {% if user.can_write_main_section %}
                 <div class="flex flex-col rounded-lg basis-3/4">
-                    {% else %}
-                    <div class="flex flex-col rounded-lg basis-full border border-black">
-                        {% endif %}
-                        <div>
-                            {% url 'core:search' as search_url %}
-                            {% btn_get search_url "#pivot-section" "click" as search_attrs %} 
-                            {% autoescape off %}
-                                <input {{search_attrs}} placeholder="Search" name="content" id="search" type="text">
-                                </input>
-                            {% endautoescape %}
-                        </div>
-                    </div>
-                </div>
-                <div hx-trigger="load" 
-                     hx-get="{% url 'core:children' %}" 
-                     hx-target="find div"
-                     id="sec_{{root.id}}" 
-                     class="rounded full-rounded" 
-                     hx-swap="innerHTML">
+                {% else %}
+                <div class="flex flex-col rounded-lg basis-full border border-black">
+                {% endif %}
                     <div>
+                        {% url 'core:search' as search_url %}
+                        {% btn_get search_url "#pivot-section" "click" as search_attrs %} 
+                        {% autoescape off %}
+                        <input {{search_attrs}} placeholder="Search" name="content" id="search" type="text">
+                        </input>
+                        {% endautoescape %}
                     </div>
                 </div>
             </div>
-            <div class="flex h-screen"
-                id="writable-section" 
-                @clear-main-section.window="$el.innerHTML = ''"
-                x-ref="writablesec" 
-                :class="hideSections ? 'basis-full' : 'basis-2/3'">
+            <div hx-trigger="load"  hx-get="{% url 'core:children' %}" hx-target="find div" id="sec_{{root.id}}" class="rounded full-rounded">
+                <div>
+                </div>
             </div>
         </div>
-        <div x-ref="pivotsection" id="pivot-section">
+        <div class="flex h-screen" id="writable-section" 
+            @clear-main-section.window="$el.innerHTML = ''" 
+            x-ref="writablesec" 
+            :class="hideSections && hideReferences ? 'basis-full' : (hideSections || hideReferences ? 'basis-4/5' : 'basis-3/5') ">
+        </div>
+        <div id="references-div" class="basis-1/5" :class="hideReferences && 'hidden'" hx-trigger="load"  hx-get="{% url 'core:references' %}" >
+        </div>
+        <div id="hide-references-btn" class="flex flex-col">
+            <button class="basis-full bg-blue-100" @click="hideReferences = !hideReferences">
+                <i class="fa-solid fa-bookmark"></i>
+            </button>
         </div>
     </div>
-    {% endwith %}
-    {% else %}
-    <div>
-        User does not have a main section assigned
+    <div x-ref="pivotsection" id="pivot-section">
     </div>
-    {% endif %}
+</div>
+{% endwith %}
+{% else %}
+<div>
+    User does not have a main section assigned
+</div>
+{% endif %}
 
-    {% endblock %}
+{% endblock %}
