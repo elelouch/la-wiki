@@ -1,3 +1,14 @@
+{% for obj in object_list %}
 <div>
-    Testing
+    <button hx-trigger="click" 
+            id="ref_{{obj.id}}"
+            hx-get="{% url 'core:archive' obj.id %}" 
+            hx-target="#writable-section">
+        {{obj.fullname}}
+        <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <button>
+        <i class="fa-solid fa-xmark"></i>
+    </button>
 </div>
+{% endfor %}

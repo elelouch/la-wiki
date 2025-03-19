@@ -57,7 +57,8 @@ Wiki
             x-ref="writablesec" 
             :class="hideSections && hideReferences ? 'basis-full' : (hideSections || hideReferences ? 'basis-4/5' : 'basis-3/5') ">
         </div>
-        <div id="references-div" class="basis-1/5" :class="hideReferences && 'hidden'" hx-trigger="load"  hx-get="{% url 'core:references' %}" >
+        <div id="references-div" class="basis-1/5" :class="hideReferences && 'hidden'">
+            No references available
         </div>
         <div id="hide-references-btn" class="flex flex-col">
             <button class="basis-full bg-blue-100" @click="hideReferences = !hideReferences">

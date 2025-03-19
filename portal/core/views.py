@@ -165,7 +165,7 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
 
 class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
     template_name="core/archive_list.html"
-    paginate_by = 15
+    paginate_by = 10
     model = Archive
     login_url = reverse_lazy("wikiapp:login")
 
@@ -215,13 +215,26 @@ class SearchArchiveListReferencesView(SearchArchiveListView):
 @final
 class ReferencesView(mixins.LoginRequiredMixin, TemplateView):
     template_name="core/reference_view.html"
-    extra_context = {"form": SearchForm()}
+
+    def get(self, request: HttpRequest, archive_id: int):
+        assert self.template_name
+        if not archive_id :
+            return render(request, self.template_name, {}) 
+        arch = get_object_or_404(Archive, pk=archive_id)
+        return render(
+                request, 
+                self.template_name, 
+                {
+                    "form": SearchForm(),
+                    "references": arch.references.all()
+                }
+            ) 
+
 
 @final
 class SearchArchiveView(mixins.LoginRequiredMixin,TemplateView):
     template_name="core/search_modal.html"
     login_url = reverse_lazy("wikiapp:login")
-    extra_context = {"form": SearchForm()}
 
 @final
 class ChildrenViewTest(mixins.LoginRequiredMixin,ListView):

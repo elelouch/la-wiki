@@ -1,4 +1,7 @@
-<div class="w-full h-full">
+<div class="w-full h-full" 
+    hx-trigger="load" 
+    hx-get="{% url 'core:references' archive.id %}"
+    hx-target="#references-div">
     <iframe class="w-full h-full" title="Selected File" 
             src="/media/uploads/{{date_str}}/{{ archive.name|add:archive.extension }}">
     </iframe>

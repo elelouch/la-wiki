@@ -1,14 +1,21 @@
-<div class="h-24 w-80 bg-blue-900 border rounded-lg">
+<div class="h-24 w-80 bg-blue-900 border rounded-lg" x-data="{refs:[]}">
     <header>
         References
         <form hx-get="{% url 'core:search-list-references' %}"
               hx-trigger="keyup delay:500ms"
-              hx-target="#references-list"
+              hx-target="#references-search"
               tabindex="-1">
             {% csrf_token %}
             {{form}}
         </form>
     </header>
-    <div id="references-list" class="h-24 bg-blue-700"></div>
-    <footer class="bg-blue-700">Search for a file</footer>
+    <div>
+        <header>References Added</header>
+        <div id="references-list" class="h-24 bg-blue-700">
+            {% for ref in references %}
+                {% include 'core/reference_item.html' %}
+            {% endfor %}
+        </div>
+    <div>
+    <footer class="bg-blue-700">Add references to different archives</footer>
 </div>

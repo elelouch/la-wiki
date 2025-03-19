@@ -1,0 +1,10 @@
+<div>
+    <button hx-trigger="click" 
+            hx-get="{% url 'core:archive' arch.id %}" 
+            hx-target="#writable-section">
+        {{ref.fullname}}
+    </button>
+    <button>
+        <i class="fa-solid fa-xmark"></i>
+    </button>
+</div>
