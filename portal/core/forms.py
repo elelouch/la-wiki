@@ -26,7 +26,7 @@ class SearchForm(forms.Form):
     name = forms.CharField(
         label="",
         widget=forms.TextInput(attrs={
-            "id":"modalSearchInput",
+            "x-ref":"modalSearchInput",
             "placeholder":_("Search an archive"),
             "class":"rounded-md"
             }),

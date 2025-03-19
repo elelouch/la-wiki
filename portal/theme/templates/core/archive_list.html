@@ -1,8 +1,9 @@
-<div class="bg-blue-500 absolute">
+<div class="bg-blue-900 text-white">
     {% for obj in object_list %}
     <div>
         <button hx-trigger="click" 
                 hx-get="{% url 'core:archive' obj.id %}" 
+                @click="$nextTick(() => $refs.searchModal.remove())"
                 hx-target="#writable-section">
             {{obj.fullname}}
         </button>
