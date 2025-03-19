@@ -14,8 +14,7 @@
           class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10" 
           tabindex="-1">
          
-        <div
-            class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
+        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600 border-gray-200">
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
                 Upload a file
             </h3>
@@ -30,7 +29,7 @@
         </button>
         <button hx-trigger="click" hx-get="{% url 'core:markdown_text' %}" 
                 hx-target="#writable-section" hx-swap="innerHTML" id="markdownButton"
-         	@click="$refs.fileModal.remove()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">
+                @click="$refs.fileModal.remove()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">
                 Write a plain text file
         </button>
     </form>

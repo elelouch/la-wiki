@@ -27,9 +27,6 @@ class SearchForm(forms.Form):
         label="",
         widget=forms.TextInput(attrs={
             "id":"modalSearchInput",
-            "hx-get": reverse_lazy("core:search-list"),
-            "hx-trigger":"input changed delay:500ms",
-            "hx-target":"#list-files",
             "placeholder":_("Search an archive"),
             "class":"rounded-md"
             }),

@@ -3,7 +3,6 @@
     <div>
         <button hx-trigger="click" 
                 hx-get="{% url 'core:archive' obj.id %}" 
-                @click="$refs.searchModal.remove()"
                 hx-target="#writable-section">
             {{obj.fullname}}
         </button>
