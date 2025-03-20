@@ -1,10 +1,10 @@
-<div>
+<div x-show="show">
     <button hx-trigger="click" 
-            hx-get="{% url 'core:archive' arch.id %}" 
+            hx-get="{% url 'core:archive' ref.id %}" 
             hx-target="#writable-section">
         {{ref.fullname}}
     </button>
-    <button>
+    <button @click="; Alpine.store('refs', refsStored.filter(id => id !== {{ref.id}})); show = false">
         <i class="fa-solid fa-xmark"></i>
     </button>
 </div>

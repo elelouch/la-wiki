@@ -1,14 +1,11 @@
 {% for obj in object_list %}
-<div>
-    <button hx-trigger="click" 
-            id="ref_{{obj.id}}"
-            hx-get="{% url 'core:archive' obj.id %}" 
-            hx-target="#writable-section">
+<div x-data="{ show: false }">
+    <button @click="show = true; console.log(Alpine.store('refs'))" id="ref_{{obj.id}}">
         {{obj.fullname}}
         <i class="fa-solid fa-arrow-left"></i>
     </button>
-    <button>
-        <i class="fa-solid fa-xmark"></i>
-    </button>
+    <template x-teleport="#references-list">
+        {% include "core/reference_item.html" with ref=obj%}
+    </template>
 </div>
 {% endfor %}

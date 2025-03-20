@@ -221,17 +221,21 @@ class ReferencesView(mixins.LoginRequiredMixin, TemplateView):
         if not archive_id :
             return render(request, self.template_name, {}) 
         arch = get_object_or_404(Archive, pk=archive_id)
+        refs = arch.references
         return render(
                 request, 
                 self.template_name, 
                 {
+                    "arch": arch,
                     "form": SearchForm(),
-                    "references": arch.references.all()
+                    "references": refs.all(),
+                    "ids": list(refs.values_list('id', flat=True))
                 }
             ) 
 
     def post(self, request: HttpRequest, archive_id: int):
         data = request.POST
+        print(data)
         if not archive_id:
             return HttpResponse("Archive id is not valid", status=400)
         # arch = get_object_or_404(Archive, pk=archive_id)
