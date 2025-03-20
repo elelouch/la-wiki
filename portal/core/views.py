@@ -230,6 +230,16 @@ class ReferencesView(mixins.LoginRequiredMixin, TemplateView):
                 }
             ) 
 
+    def post(self, request: HttpRequest, archive_id: int):
+        data = request.POST
+        if not archive_id:
+            return HttpResponse("Archive id is not valid", status=400)
+        # arch = get_object_or_404(Archive, pk=archive_id)
+        ref_id_list = data.get("ref_id_list")
+        print(ref_id_list)
+        return HttpResponse("")
+        
+
 
 @final
 class SearchArchiveView(mixins.LoginRequiredMixin,TemplateView):

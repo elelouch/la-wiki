@@ -1,21 +1,28 @@
-<div class="h-24 w-80 bg-blue-900 border rounded-lg" x-data="{refs:[]}">
-    <header>
-        References
-        <form hx-get="{% url 'core:search-list-references' %}"
-              hx-trigger="keyup delay:500ms"
-              hx-target="#references-search"
-              tabindex="-1">
-            {% csrf_token %}
-            {{form}}
-        </form>
-    </header>
-    <div>
+<div class="flex flex-col w-80 bg-blue-900 border rounded-lg" x-data="{refs:[]}">
+    <div class="basis-1/3">
+        <header>
+            References
+            <form hx-get="{% url 'core:search-list-references' %}"
+                  hx-trigger="keyup delay:500ms"
+                  hx-target="#references-search"
+                  tabindex="-1">
+                {% csrf_token %}
+                {{form}}
+            </form>
+        </header>
+        <div id="references-search" class="bg-blue-700"></div>
+        <footer class="bg-blue-700">Add references to different archives</footer>
+    </div>
+
+    <div class="basis-2/3 border border-black border-rounded">
         <header>References Added</header>
-        <div id="references-list" class="h-24 bg-blue-700">
+        <div id="references-list" class="bg-blue-700">
             {% for ref in references %}
                 {% include 'core/reference_item.html' %}
             {% endfor %}
         </div>
+        <button id="save-references">Save references</button>
     <div>
-    <footer class="bg-blue-700">Add references to different archives</footer>
 </div>
+
+<!-- puedo guardar una lista de ids primarias y enviarla en un post -->

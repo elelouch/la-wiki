@@ -18,7 +18,7 @@ Wiki
             </button>
         </div>
 
-        <div class="basis-1/5 h-screen flex flex-col" :class="hideSections && 'hidden'" @clear-main-section.window="$refs.pivotsection.innerHTML = ''">
+        <div class="basis-1/5 h-screen flex flex-col" x-show="!hideSections" @clear-main-section.window="$refs.pivotsection.innerHTML = ''" x-transition>
             <div class="flex justify-between w-full flex justify-around">
                 {% if user.can_write_main_section %}
                 <div class="flex basis-1/4 h-24">
@@ -57,7 +57,7 @@ Wiki
             x-ref="writablesec" 
             :class="hideSections && hideReferences ? 'basis-full' : (hideSections || hideReferences ? 'basis-4/5' : 'basis-3/5') ">
         </div>
-        <div id="references-div" class="basis-1/5" :class="hideReferences && 'hidden'">
+        <div id="references-div" class="basis-1/5" x-show="!hideReferences" x-transition>
             No references available
         </div>
         <div id="hide-references-btn" class="flex flex-col">
