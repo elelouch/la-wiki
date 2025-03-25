@@ -20,7 +20,6 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_view.html"
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name = "login"
-
     def get(self, request: HttpRequest):
         assert self.template_name
         user = request.user
@@ -67,7 +66,6 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
                 return HttpResponse("Main section not assigned", status=400)
         else:
             root_section = get_object_or_404(Section, pk=root_section_id)
-
         user = request.user
         name = data.get("name")
         if not name:
@@ -235,20 +233,23 @@ class ReferencesView(mixins.LoginRequiredMixin, TemplateView):
 
     def post(self, request: HttpRequest, archive_id: int):
         data = request.POST
-        print(data)
         if not archive_id:
             return HttpResponse("Archive id is not valid", status=400)
-        # arch = get_object_or_404(Archive, pk=archive_id)
-        ref_id_list = data.get("ref_id_list")
-        print(ref_id_list)
+        arch = get_object_or_404(Archive, pk=archive_id)
+        new_refs = data.get("refs")
+        if not new_refs:
+            return HttpResponse("")
+        excluded_refs =  arch.references.all().exclude(id__in=new_refs)
+        for eref in excluded_refs:
+            eref.delete()
+        arch.references.add(new_refs)
         return HttpResponse("")
-        
-
 
 @final
 class SearchArchiveView(mixins.LoginRequiredMixin,TemplateView):
     template_name="core/search_modal.html"
     login_url = reverse_lazy("wikiapp:login")
+    extra_context = {"form": SearchForm()}
 
 @final
 class ChildrenViewTest(mixins.LoginRequiredMixin,ListView):

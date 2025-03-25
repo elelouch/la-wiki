@@ -1,11 +1,14 @@
 {% for obj in object_list %}
-<div x-data="{ show: false }">
-    <button @click="show = true; console.log(Alpine.store('refs'))" id="ref_{{obj.id}}">
-        {{obj.fullname}}
-        <i class="fa-solid fa-arrow-left"></i>
-    </button>
-    <template x-teleport="#references-list">
-        {% include "core/reference_item.html" with ref=obj%}
-    </template>
+<div x-data="{templateId: $id('template-id')}">
+  <button
+    @click="document.querySelector('#' + templateId); $store.archiveRefs.curr.push({{obj.id}})"
+    id="ref_{{obj.id}}"
+  >
+    {{obj.fullname}}
+    <i class="fa-solid fa-arrow-left"></i>
+  </button>
+  <template :id="templateId">
+    {% include "core/reference_item.html" with ref=obj %}
+  </template>
 </div>
 {% endfor %}

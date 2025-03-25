@@ -1,34 +1,28 @@
-<div class="flex flex-col w-80 bg-blue-900 border rounded-lg h-full w-full" 
-     x-data="init:{Alpine.store('archivesReferences', {  })}">
-    <div class="basis-1/3">
+<div class="flex flex-col w-80 bg-blue-900 border rounded-lg h-full w-full">
+    <div init="$store.archiveRefs.curr = {{ids}}" class="basis-1/3">
         <header>
             References
-            <form hx-get="{% url 'core:search-list-references' %}"
-                  hx-trigger="keyup delay:500ms"
-                  hx-target="#references-search"
-                  tabindex="-1">
+            <form hx-get="{% url 'core:search_list_references' %}" hx-trigger="keyup delay:500ms"
+                hx-target="#references-search" tabindex="-1">
                 {% csrf_token %}
                 {{form}}
             </form>
         </header>
         <div id="references-search" class="bg-blue-700"></div>
-        <footer class="bg-blue-700">Add references to different archives</footer>
+        <footer class="bg-blue-700">Add reference to another archive</footer>
     </div>
 
     <div class="basis-2/3 border border-black border-rounded">
         <header>References Added</header>
-        <div id="references-list" class="bg-blue-700">
+        <div x-ref="refList" id="references-list" class="bg-blue-700">
             {% for ref in references %}
-                {% include 'core/reference_item.html' %}
+                <div x-data="{show: true}">
+                    {% include 'core/reference_item.html' %}
+                </div>
             {% endfor %}
         </div>
-        <button 
-            id="save-references" 
-            hx-post="{% url "core:references" arch.id %}"
-            hx-vals='js:{"refs": $store.refs}'>
+        <button id="save-references" hx-post="{% url "core:references" arch.id %}" hx-vals='js:{ "refs": Alpine.store("archiveRefs").curr }'>
             Save references
         </button>
     <div>
 </div>
-
-<!-- puedo guardar una lista de ids primarias y enviarla en un post -->

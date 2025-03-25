@@ -10,7 +10,8 @@ Wiki
 {% with root=user.main_section %}
 
 <div x-data="{hideSections: false, hideReferences: true}" class="flex flex-col">
-    <div class="flex flex-row justify-evenly" x-data="{sectionSelected:false, currentArchiveId:0, currentSectionId:0, selectedclasses:'bg-blue-100 border border-black'}">
+    <div class="flex flex-row justify-evenly"
+        x-data="{sectionSelected:false, currentArchiveId:0, currentSectionId:0, selectedclasses:'bg-blue-100 border border-black'}">
 
         <div class="flex flex-col" id="hide-sections-btn">
             <button class="basis-full bg-blue-100" @click="hideSections = !hideSections">
@@ -18,62 +19,72 @@ Wiki
             </button>
         </div>
 
-        <div class="basis-1/5 h-screen flex flex-col" x-show="!hideSections" @clear-main-section.window="$refs.pivotsection.innerHTML = ''" x-transition>
+        <div class="basis-1/5 h-screen flex flex-col" x-show="!hideSections"
+            @clear-main-section.window="$refs.pivotsection.innerHTML = ''" x-transition>
             <div class="flex justify-between w-full flex justify-around">
                 {% if user.can_write_main_section %}
                 <div class="flex basis-1/4 h-24">
                     {% url "core:modal_archive" root.id as modal_arch_url %}
-                    {% btn_get modal_arch_url "#pivot-section" "click" as arch_btn_attrs %} 
+                    {% btn_get modal_arch_url "#pivot-section" "click" as arch_btn_attrs %}
                     {% include "core/button/simple_button.html" with add_attrs=arch_btn_attrs button_class='fa-solid fa-file'%}
 
                     {% url "core:modal_section" root.id as modal_sec_url %}
-                    {% btn_get modal_sec_url "#pivot-section" "click" as section_btn_attrs %} 
+                    {% btn_get modal_sec_url "#pivot-section" "click" as section_btn_attrs %}
                     {% include "core/button/simple_button.html" with add_attrs=section_btn_attrs button_class='fa-solid fa-plus'%}
                 </div>
                 {% endif %}
 
                 {% if user.can_write_main_section %}
                 <div class="flex flex-col rounded-lg basis-3/4">
-                {% else %}
-                <div class="flex flex-col rounded-lg basis-full border border-black">
-                {% endif %}
+                    {% else %}
+                    <div class="flex flex-col rounded-lg basis-full border border-black">
+                        {% endif %}
+                        <div>
+                            {% url 'core:search' as search_url %}
+                            {% btn_get search_url "#pivot-section" "click" as search_attrs %}
+                            {% autoescape off %}
+                            <input {{search_attrs}} placeholder="Search" name="content" id="search" type="text">
+                            </input>
+                            {% endautoescape %}
+                        </div>
+                    </div>
+                </div>
+                <div hx-trigger="load" hx-get="{% url 'core:children' %}" hx-target="find div" id="sec_{{root.id}}" class="rounded full-rounded">
                     <div>
-                        {% url 'core:search' as search_url %}
-                        {% btn_get search_url "#pivot-section" "click" as search_attrs %} 
-                        {% autoescape off %}
-                        <input {{search_attrs}} placeholder="Search" name="content" id="search" type="text">
-                        </input>
-                        {% endautoescape %}
                     </div>
                 </div>
             </div>
-            <div hx-trigger="load"  hx-get="{% url 'core:children' %}" hx-target="find div" id="sec_{{root.id}}" class="rounded full-rounded">
-                <div>
-                </div>
+            <div class="flex h-screen" id="writable-section" @clear-main-section.window="$el.innerHTML = ''"
+                x-ref="writablesec"
+                :class="hideSections && hideReferences ? 'basis-full' : (hideSections || hideReferences ? 'basis-4/5' : 'basis-3/5') ">
+            </div>
+            <div id="references-div" class="basis-1/5" x-show="!hideReferences" x-transition>
+                No references available
+            </div>
+            <div id="hide-references-btn" class="flex flex-col">
+                <button class="basis-full bg-blue-100" @click="hideReferences = !hideReferences">
+                    <i class="fa-solid fa-bookmark"></i>
+                </button>
             </div>
         </div>
-        <div class="flex h-screen" id="writable-section" 
-            @clear-main-section.window="$el.innerHTML = ''" 
-            x-ref="writablesec" 
-            :class="hideSections && hideReferences ? 'basis-full' : (hideSections || hideReferences ? 'basis-4/5' : 'basis-3/5') ">
-        </div>
-        <div id="references-div" class="basis-1/5" x-show="!hideReferences" x-transition>
-            No references available
-        </div>
-        <div id="hide-references-btn" class="flex flex-col">
-            <button class="basis-full bg-blue-100" @click="hideReferences = !hideReferences">
-                <i class="fa-solid fa-bookmark"></i>
-            </button>
-        </div>
+        <div x-ref="pivotsection" id="pivot-section"></div>
     </div>
-    <div x-ref="pivotsection" id="pivot-section">
-    </div>
-</div>
+
+    {% block scripts %}
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('archiveRefs', {
+                curr: []
+            })
+        })
+    </script>
+    {% endblock %}
+
 {% endwith %}
 {% else %}
-<div>
-    User does not have a main section assigned
-</div>
+    <div>
+        User does not have a main section assigned
+    </div>
 {% endif %}
 
 {% endblock %}

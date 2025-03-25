@@ -1,25 +1,36 @@
-<div class="h-screen w-screen top-0 left-0 right-0 down-0 fixed z-1000 fixed bg-black/70" 
-     x-init="$refs.modalSearchInput.focus()"
-     x-ref="searchModal">
+<div
+  class="h-screen w-screen top-0 left-0 right-0 down-0 fixed z-1000 fixed bg-black/70"
+  x-init="$refs.modalSearchInput.focus()"
+  x-ref="searchModal"
+>
+  <div
+    class="h-screen w-screen top-0 left-0 right-0 down-0 absolute"
+    style="z-index: -1"
+    @click="$refs.searchModal.remove()"
+    @keyup.esc.window="$refs.searchModal.remove()"
+  ></div>
 
-    <div class="h-screen w-screen top-0 left-0 right-0 down-0 absolute" 
-         style="z-index:-1"
-         @click="$refs.searchModal.remove()">
-    </div>
-
-    <div class="h-24 w-80 bg-blue-900 border rounded-lg"
-         style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%);">
-        <header>
-            <form hx-get="{% url 'core:search-list' %}"
-                  hx-trigger="keyup delay:500ms"
-                  hx-target="#list-files"
-                  class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10" 
-                  tabindex="-1">
-                {% csrf_token %}
-                {{form}}
-            </form>
-        </header>
-        <div id="list-files" class="h-24 bg-blue-700"></div>
-        <footer class="bg-blue-700">Search for a file</footer>
-    </div>
+  <div
+    class="h-24 w-80 bg-blue-900 border rounded-lg"
+    style="
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    "
+  >
+    <header>
+      <form
+        hx-get="{% url 'core:search-list' %}"
+        hx-trigger="keyup delay:500ms"
+        hx-target="#list-files"
+        class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10"
+        tabindex="-1"
+      >
+        {% csrf_token %} {{form}}
+      </form>
+    </header>
+    <div id="list-files" class="h-24 bg-blue-700"></div>
+    <footer class="bg-blue-700">Search for a file</footer>
+  </div>
 </div>
