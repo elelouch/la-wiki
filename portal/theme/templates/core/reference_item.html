@@ -1,4 +1,4 @@
-<div x-show="show">
+<div>
   <button
     hx-trigger="click"
     hx-get="{% url 'core:archive' ref.id %}"
@@ -6,9 +6,7 @@
   >
     {{ref.fullname}}
   </button>
-  <button
-    @click="show = false; let refs = $store.archiveRefs; refs.curr = refs.curr.filter(id => id !== {{ref.id}})"
-  >
+  <button @click="show = false; let refs = $store.archiveRefs; refs.curr = refs.curr.filter(id => id !== {{ref.id}})">
     <i class="fa-solid fa-xmark"></i>
   </button>
 </div>

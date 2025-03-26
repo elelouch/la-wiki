@@ -1,9 +1,6 @@
 {% for obj in object_list %}
 <div x-data="{templateId: $id('template-id')}">
-  <button
-    @click="document.querySelector('#' + templateId); $store.archiveRefs.curr.push({{obj.id}})"
-    id="ref_{{obj.id}}"
-  >
+  <button @click="addRefItem(templateId);let refItem = document.querySelector('#' +  templateId).content.cloneNode(true);$refs.refList.appendChild(refItem);$store.archiveRefs.curr.push({{obj.id}})">
     {{obj.fullname}}
     <i class="fa-solid fa-arrow-left"></i>
   </button>
