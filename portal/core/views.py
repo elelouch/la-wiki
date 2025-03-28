@@ -8,12 +8,12 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth import mixins
 from django.urls import reverse_lazy
 from .forms import MarkdownForm, SectionForm, FileForm, SearchForm
-from typing import final
+from typing import cast, final
 from django.core.files.base import ContentFile
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 import markdown as markdown_tool
 
-from .models import Section, Archive
+from .models import GroupSectionPermission, Section, Archive, User, UserSectionPermission
 
 @final
 class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
@@ -22,8 +22,8 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
     redirect_field_name = "login"
     def get(self, request: HttpRequest):
         assert self.template_name
-        user = request.user
-        ms = user.main_section
+        user = cast(User,request.user)
+        ms = cast(Section, user.main_section)
         if not ms:
             return HttpResponse("Main section not assigned", status = 404)
         a,b = ms.all_children_map(user)
@@ -60,13 +60,12 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         data = request.POST
         root_section = None
         if not root_section_id:
-            user = request.user 
+            user = cast(User, request.user)
             root_section = user.main_section
             if not root_section:
                 return HttpResponse("Main section not assigned", status=400)
         else:
             root_section = get_object_or_404(Section, pk=root_section_id)
-        user = request.user
         name = data.get("name")
         if not name:
             return HttpResponse("Invalid request", status=400)
@@ -95,14 +94,23 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         )
 
     def post(self, request: HttpRequest, root_section_id: int):
-        user = request.user
+        user = cast(User, request.user)
         files = request.FILES
+        root_section = None
+        can_write_section = False
+
         if not root_section_id:
-            main_section = user.main_section
-            if not main_section:
+            root_section = user.main_section
+            if not root_section:
                 return HttpResponse("Main section not assigned", status=400)
-            root_section_id = main_section.id
-        root_section = get_object_or_404(Section, pk=root_section_id)
+        else:
+            root_section = get_object_or_404(Section, pk=root_section_id)
+        #root_section cannot be null at this point
+
+        can_write_section = root_section.find_permission(user, 'can_write_section')
+        if not can_write_section:
+            return HttpResponse("Unauthorized", status=401)
+
         file = files.get("file")
         if not file: 
             return HttpResponse("File not uploaded", status=400)
@@ -136,6 +144,7 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
     @method_decorator(xframe_options_sameorigin)
     def get(self, request: HttpRequest, archive_id: int):
         arch = get_object_or_404(Archive, pk=int(archive_id))
+
         if ".md" == arch.extension :
             text = arch.file.read()
             html = markdown_tool.markdown(text.decode("utf-8"))
