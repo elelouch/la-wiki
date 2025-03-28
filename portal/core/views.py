@@ -108,13 +108,13 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         else:
             root_section = get_object_or_404(Section, pk=root_section_id)
         #root_section cannot be null at this point
-        if not root_section.find_permission(user, 'write_section'):
+        if not root_section.find_permission(user, 'add_section'):
             return HttpResponse("Unauthorized", status=401)
 
         file = files.get("file")
         if not file: 
             return HttpResponse("File not uploaded", status=400)
-        perm_entities = Permission.objects.filter(name__in=['delete_section', 'read_section'])
+        perm_entities = Permission.objects.filter(codename__in=['delete_section', 'view_section'])
         new_archive = root_section.create_children_archive(file, user, list(perm_entities))
         response = render(
             request,

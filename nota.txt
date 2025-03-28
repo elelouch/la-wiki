@@ -1,0 +1,11 @@
+Corregir el find_permission para poder usar varios code_name.
+El can_write_main_section deberia actualizarse cuando una section nueva es asignada
+
+tipo
+
+@property
+def main_section(self):
+    return self.main_section
+
+@main_section.setter(self):
+    self.can_write_main_section = self.find_permission('add_section', 'add_archive')

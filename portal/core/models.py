@@ -10,13 +10,22 @@ from django.db.models.query import RawQuerySet
 
 @final
 class User(AbstractUser):
-    can_write_main_section = models.BooleanField(default=False)
+    _can_write_main_section = models.BooleanField(default=False, null=True)
     main_section = models.ForeignKey(
             "Section",
             on_delete=models.SET_NULL,
             null=True
             )
-    can_write_main_section = models.BooleanField(default=False)
+    @property
+    def can_write_main_section(self):
+        if self._can_write_main_section is None:
+            can_write = self.main_section.find_permission(self, 'add_section')
+            self._can_write_main_section = can_write
+            self.save()
+            return can_write
+
+        return self._can_write_main_section
+
 
 @final
 class Section(models.Model):
@@ -163,8 +172,11 @@ class Section(models.Model):
         assert user and str
         return list(chain(self.user_permissions(user), self.group_permissions(user)))
 
-    def find_permission(self, user: User, perm_str: str) -> bool:
-        return any(p.codename == perm_str for p in self.all_permissions(user))
+    def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
+        for perm in self.all_permissions(user):
+            if perm.codename in perm_strs:
+                perm_strs.remove(perm.codename)
+        return len(perm_strs) == 0
 
 @final
 class Archive(models.Model):
