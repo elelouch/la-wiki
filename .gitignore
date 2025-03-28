@@ -4,6 +4,7 @@ lib64
 __init__.py
 bin
 **/node_modules/*
+pyvenv.cfg
 
 
 # Python # 
