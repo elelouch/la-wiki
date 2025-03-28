@@ -173,10 +173,12 @@ class Section(models.Model):
         return list(chain(self.user_permissions(user), self.group_permissions(user)))
 
     def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
+        word_counter = dict([(p,0) for p in perm_strs])
         for perm in self.all_permissions(user):
-            if perm.codename in perm_strs:
-                perm_strs.remove(perm.codename)
-        return len(perm_strs) == 0
+            codename = perm.codename 
+            if codename in word_counter:
+                word_counter[codename] += 1
+        return all(val > 0 for val in word_counter.values())
 
 @final
 class Archive(models.Model):
@@ -213,8 +215,14 @@ class Archive(models.Model):
         assert user and str
         return list(chain(self.user_permissions(user), self.group_permissions(user)))
 
-    def find_permission(self, user: User, perm_str: str) -> bool:
-        return any(p.codename == perm_str for p in self.all_permissions(user))
+    def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
+        word_counter = dict([(p,0) for p in perm_strs])
+        for perm in self.all_permissions(user):
+            codename = perm.codename 
+            if codename in word_counter:
+                word_counter[codename] += 1
+        return all(val > 0 for val in word_counter.values())
+
 
 class SectionPermission(models.Model):
     section = models.ForeignKey(Section, on_delete=models.CASCADE, default=None)
