@@ -59,18 +59,28 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
     def post(self, request: HttpRequest, root_section_id: int): 
         data = request.POST
         root_section = None
+        user = cast(User, request.user)
+
         if not root_section_id:
-            user = cast(User, request.user)
             root_section = user.main_section
             if not root_section:
                 return HttpResponse("Main section not assigned", status=400)
         else:
             root_section = get_object_or_404(Section, pk=root_section_id)
 
+        if not root_section.find_permission(user, "add_section"):
+            return HttpResponse("Unauthorized", status = 401)
+
         name = (data.get("name") or "").strip()
         if not name:
             return HttpResponse("Invalid request", status=400)
-        new_child = root_section.create_children(name)
+        new_child = root_section.create_children(
+                name,
+                user,
+                "delete_section", 
+                "add_section",
+                "view_section"
+            )
         res = render(
                 request,
                 self.template_section_item,
@@ -114,8 +124,12 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         file = files.get("file")
         if not file: 
             return HttpResponse("File not uploaded", status=400)
-        perm_entities = Permission.objects.filter(codename__in=['delete_section', 'view_section'])
-        new_archive = root_section.create_children_archive(file, user, list(perm_entities))
+        new_archive = root_section.create_children_archive(
+                file,
+                user,
+                "delete_archive",
+                "view_archive",
+            )
         response = render(
             request,
             self.archive_item_template,
@@ -172,7 +186,7 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
         user = cast(User, request.user)
         archive = get_object_or_404(Archive, pk=int(archive_id))
 
-        if not archive.find_permission(user, 'delete_archive'):
+        if not archive.find_permission(user, "delete_archive"):
             return HttpResponse("Unauthorized", status=401)
 
         archive.file.delete()

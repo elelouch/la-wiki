@@ -1,30 +1,25 @@
-from django.db.models import SET_NULL, ForeignKey
-from itertools import chain
+from django.db.models import SET_NULL, ForeignKey, QuerySet
 from functools import reduce
 from django.db import models
 from typing import final
 from django.contrib.auth.models import AbstractUser, Group, Permission
+from .utils import flatten_perms
+
 import os
 
 from django.db.models.query import RawQuerySet
 
 @final
 class User(AbstractUser):
-    _can_write_main_section = models.BooleanField(default=False, null=True)
     main_section = models.ForeignKey(
             "Section",
             on_delete=models.SET_NULL,
             null=True
             )
+    # Esto se puede llamar mas de una vez CUIDADO 
     @property
     def can_write_main_section(self):
-        if self._can_write_main_section is None:
-            can_write = self.main_section.find_permission(self, 'add_section')
-            self._can_write_main_section = can_write
-            self.save()
-            return can_write
-
-        return self._can_write_main_section
+        return self.main_section.find_permission(self, 'add_section')
 
 
 @final
@@ -41,9 +36,15 @@ class Section(models.Model):
     def __str__(self):
         return self.name
 
-    def create_children(self, name: str):
-        assert len(name)
-        return self.children.create(name = name)
+    def create_children(self, name: str, user:User, *perms_str:list[str]):
+        assert len(name) and perms_str
+        new_section = self.children.create(name = name)
+        perm_entities = Permission.objects.filter(codename__in=perms_str)
+        usp = new_section.usersectionpermission_set \
+                .create(user=user)
+        usp.permissions.set(perm_entities)
+        return new_section
+        
 
     def all_children(self, user: User) -> RawQuerySet:
         """
@@ -135,7 +136,7 @@ class Section(models.Model):
                     WHERE nacc.user_id = %s);
                 """, [self.id, user.id])
 
-    def create_children_archive(self, file, user:User, perms: list[Permission]) -> "Archive":
+    def create_children_archive(self, file, user:User, *perms_str: list[str]) -> "Archive":
         """
         Crea un archivo hijo de la seccion actual, agregando solo
         accesos para el usuario que lo creo.
@@ -143,6 +144,7 @@ class Section(models.Model):
         agregue los permisos a un archivo de manera grupal.
         """
         assert file is not None
+        assert perms_str and user
         fullname = str(file.name)
         filename, extension = os.path.splitext(fullname)
         arch = self.archives.create(
@@ -151,26 +153,27 @@ class Section(models.Model):
                 extension = extension,
                 file = file
             )
-        user_section_perms = [UserSectionPermission(user=user, perm=p) for p in perms]
-        arch.usersectionpermission_set.bulk_create(user_section_perms)
+        print("permisos recibidos", perms_str)
+        perm_entities = Permission.objects.filter(codename__in=perms_str)
+        uap = arch.userarchivepermission_set.create(user=user)
+        uap.permissions.set(perm_entities)
         return arch
 
     def group_permissions(self, user: User) -> list[Permission]:
         assert user
         groups_perms = self.groupsectionpermission_set \
                 .filter(group__in=user.groups.all())
-        return [gp.permissions.all() for gp in groups_perms]
-
+        return flatten_perms(groups_perms)
 
     def user_permissions(self, user: User) -> list[Permission]:
         assert user
         user_perms = self.usersectionpermission_set \
                 .filter(user=user) 
-        return [up.permissions.all() for up in user_perms]
+        return flatten_perms(user_perms)
 
     def all_permissions(self, user: User) -> list[Permission]:
         assert user and str
-        return list(chain(self.user_permissions(user), self.group_permissions(user)))
+        return self.user_permissions(user) + self.group_permissions(user)
 
     def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
         word_counter = dict([(p,0) for p in perm_strs])
@@ -202,18 +205,17 @@ class Archive(models.Model):
         assert user
         groups_perms = self.grouparchivepermission_set \
                 .filter(group__in=user.groups.all())
-        return [gp.permissions.all() for gp in groups_perms]
-
+        return flatten_perms(groups_perms)
 
     def user_permissions(self, user: User) -> list[Permission]:
         assert user
         user_perms = self.userarchivepermission_set \
                 .filter(user=user) 
-        return [up.permissions.all() for up in user_perms]
+        return flatten_perms(user_perms)
 
     def all_permissions(self, user: User) -> list[Permission]:
         assert user and str
-        return list(chain(self.user_permissions(user), self.group_permissions(user)))
+        return self.user_permissions(user) + self.group_permissions(user)
 
     def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
         word_counter = dict([(p,0) for p in perm_strs])
