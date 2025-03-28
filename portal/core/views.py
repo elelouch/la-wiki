@@ -1,4 +1,5 @@
 # pyright: reportUnknownVariableType=false
+from django.contrib.auth.models import Permission
 from django.http import HttpRequest, HttpResponse
 from django.views.generic.base import TemplateView
 from django.views.generic.list import ListView
@@ -13,7 +14,7 @@ from django.core.files.base import ContentFile
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 import markdown as markdown_tool
 
-from .models import GroupSectionPermission, Section, Archive, User, UserSectionPermission
+from .models import Section, Archive, User
 
 @final
 class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
@@ -37,7 +38,6 @@ class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
                 }
             )
 
-# get/post for appending a section to a section
 @final
 class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_modal_form.html"
@@ -66,7 +66,8 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
                 return HttpResponse("Main section not assigned", status=400)
         else:
             root_section = get_object_or_404(Section, pk=root_section_id)
-        name = data.get("name")
+
+        name = (data.get("name") or "").strip()
         if not name:
             return HttpResponse("Invalid request", status=400)
         new_child = root_section.create_children(name)
@@ -78,7 +79,6 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         res["HX-Trigger"] = "clearMainSection"
         return res
 
-# get/post for appending a file to a section
 @final
 class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/file_modal_form.html"   
@@ -94,10 +94,12 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         )
 
     def post(self, request: HttpRequest, root_section_id: int):
+        """
+        Alta de archivos
+        """
         user = cast(User, request.user)
         files = request.FILES
         root_section = None
-        can_write_section = False
 
         if not root_section_id:
             root_section = user.main_section
@@ -106,15 +108,14 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         else:
             root_section = get_object_or_404(Section, pk=root_section_id)
         #root_section cannot be null at this point
-
-        can_write_section = root_section.find_permission(user, 'can_write_section')
-        if not can_write_section:
+        if not root_section.find_permission(user, 'write_section'):
             return HttpResponse("Unauthorized", status=401)
 
         file = files.get("file")
         if not file: 
             return HttpResponse("File not uploaded", status=400)
-        new_archive = root_section.create_children_archive(file)
+        perm_entities = Permission.objects.filter(name__in=['delete_section', 'read_section'])
+        new_archive = root_section.create_children_archive(file, user, list(perm_entities))
         response = render(
             request,
             self.archive_item_template,
@@ -143,8 +144,11 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
 
     @method_decorator(xframe_options_sameorigin)
     def get(self, request: HttpRequest, archive_id: int):
+        assert self.template_name
         arch = get_object_or_404(Archive, pk=int(archive_id))
-
+        user = cast(User, request.user)
+        if not arch.find_permission(user, 'view_archive'):
+            return HttpResponse("Unauthorized", status=401)
         if ".md" == arch.extension :
             text = arch.file.read()
             html = markdown_tool.markdown(text.decode("utf-8"))
@@ -163,10 +167,18 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
         return render(request, self.default_template, {"content":arch.file.read().decode("utf-8")})
 
     def delete(self, request: HttpRequest, archive_id: int):
+        if not archive_id:
+            return HttpResponse("Archive id not valid", status=400)
+        user = cast(User, request.user)
         archive = get_object_or_404(Archive, pk=int(archive_id))
+
+        if not archive.find_permission(user, 'delete_archive'):
+            return HttpResponse("Unauthorized", status=401)
+
         archive.file.delete()
         archive.delete()
         response = HttpResponse("")
+        # agregamos header
         response["HX-Trigger"] = "clearMainSection"
         return response
 
@@ -179,8 +191,9 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
     def get_queryset(self):
         qs = super().get_queryset()
         data = self.request.GET
-        user = self.request.user
-        search_content = data.get("name")
+        user = cast(User, self.request.user)
+        main_section = user.main_section
+        search_content = (data.get("name") or "").strip()
         if not search_content or len(search_content) <= 2 :
             return []
         ilike_content = "%{content}%".format(content=search_content)
@@ -248,9 +261,8 @@ class ReferencesView(mixins.LoginRequiredMixin, TemplateView):
         new_refs = data.get("refs")
         if not new_refs:
             return HttpResponse("")
-        excluded_refs =  arch.references.all().exclude(id__in=new_refs)
-        for eref in excluded_refs:
-            eref.delete()
+        excluded_refs =  arch.references.exclude(id__in=new_refs)
+        arch.references.remove(list(excluded_refs))
         arch.references.add(new_refs)
         return HttpResponse("")
 
@@ -275,9 +287,10 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
         markdown_ext = ".md"
 
         root_section_id = int(data.get("root_id") or 0)
-        filename = data.get("name")
+        filename = (data.get("name") or "").strip()
         file_content = data.get("file")
-        if not file_content :
+
+        if not file_content:
             return HttpResponse("No files provided", status = 400)
         if not filename:
             return HttpResponse("No name provided", status = 400)
