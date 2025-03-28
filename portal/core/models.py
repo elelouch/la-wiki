@@ -36,7 +36,7 @@ class Section(models.Model):
     def __str__(self):
         return self.name
 
-    def create_children(self, name: str, user:User, *perms_str:list[str]):
+    def create_child(self, name: str, user:User, *perms_str: str):
         assert len(name) and perms_str
         new_section = self.children.create(name = name)
         perm_entities = Permission.objects.filter(codename__in=perms_str)
@@ -93,6 +93,7 @@ class Section(models.Model):
             - treemap, con pares (<id_seccion_padre>, [secciones_hijas])
             - archivesmap, con pares (<id_seccion_padre>, [archivos_hijos])
         """
+        assert user
         treemap = {}
         archivesmap = {}
         qs = self.all_children(user)
@@ -115,6 +116,7 @@ class Section(models.Model):
         Experimental (Se puede borrar)
         Obtiene la lista de secciones hijas
         """
+        assert user
         def aux(child_sec, tree_map):
             pid = child_sec.parent_id
             if child_sec.parent_id not in tree_map:
@@ -136,7 +138,7 @@ class Section(models.Model):
                     WHERE nacc.user_id = %s);
                 """, [self.id, user.id])
 
-    def create_children_archive(self, file, user:User, *perms_str: list[str]) -> "Archive":
+    def create_child_archive(self, file, user:User, *perms_str: str) -> "Archive":
         """
         Crea un archivo hijo de la seccion actual, agregando solo
         accesos para el usuario que lo creo.
@@ -145,6 +147,7 @@ class Section(models.Model):
         """
         assert file is not None
         assert perms_str and user
+
         fullname = str(file.name)
         filename, extension = os.path.splitext(fullname)
         arch = self.archives.create(
@@ -153,7 +156,6 @@ class Section(models.Model):
                 extension = extension,
                 file = file
             )
-        print("permisos recibidos", perms_str)
         perm_entities = Permission.objects.filter(codename__in=perms_str)
         uap = arch.userarchivepermission_set.create(user=user)
         uap.permissions.set(perm_entities)
@@ -172,10 +174,10 @@ class Section(models.Model):
         return flatten_perms(user_perms)
 
     def all_permissions(self, user: User) -> list[Permission]:
-        assert user and str
+        assert user 
         return self.user_permissions(user) + self.group_permissions(user)
 
-    def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
+    def find_permission(self, user: User, *perm_strs: str) -> bool:
         word_counter = dict([(p,0) for p in perm_strs])
         for perm in self.all_permissions(user):
             codename = perm.codename 
@@ -218,6 +220,7 @@ class Archive(models.Model):
         return self.user_permissions(user) + self.group_permissions(user)
 
     def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
+        assert user and perm_strs
         word_counter = dict([(p,0) for p in perm_strs])
         for perm in self.all_permissions(user):
             codename = perm.codename 
@@ -225,6 +228,8 @@ class Archive(models.Model):
                 word_counter[codename] += 1
         return all(val > 0 for val in word_counter.values())
 
+class PermissionHolder(models.Model):
+    permissions = models.ManyToManyField(Permission)
 
 class SectionPermission(models.Model):
     section = models.ForeignKey(Section, on_delete=models.CASCADE, default=None)
@@ -241,7 +246,6 @@ class ArchivePermission(models.Model):
 @final
 class GroupArchivePermission(ArchivePermission):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
-
 @final
 class UserArchivePermission(ArchivePermission):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -74,7 +74,7 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         name = (data.get("name") or "").strip()
         if not name:
             return HttpResponse("Invalid request", status=400)
-        new_child = root_section.create_children(
+        new_child = root_section.create_child(
                 name,
                 user,
                 "delete_section", 
@@ -124,7 +124,7 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         file = files.get("file")
         if not file: 
             return HttpResponse("File not uploaded", status=400)
-        new_archive = root_section.create_children_archive(
+        new_archive = root_section.create_child_archive(
                 file,
                 user,
                 "delete_archive",
