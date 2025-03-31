@@ -274,9 +274,14 @@ class ReferencesView(mixins.LoginRequiredMixin, TemplateView):
         arch = get_object_or_404(Archive, pk=archive_id)
         new_refs = data.get("refs")
         if not new_refs:
+            arch.references.clear()
             return HttpResponse("")
-        excluded_refs =  arch.references.exclude(id__in=new_refs)
-        arch.references.remove(list(excluded_refs))
+        excluded_refs = arch.references \
+            .exclude(id__in=new_refs) \
+            .values_list('id', flat=True)
+        excluded_refs_list = list(excluded_refs)
+        if not excluded_refs_list:
+            arch.references.remove()
         arch.references.add(new_refs)
         return HttpResponse("")
 

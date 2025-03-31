@@ -16,12 +16,15 @@
         <header>References Added</header>
         <div x-ref="refList" id="references-list" class="bg-blue-700">
             {% for ref in references %}
-                <div x-data="{show: true}">
-                    {% include 'core/reference_item.html' %}
-                </div>
+                {% include 'core/reference_item.html' %}
             {% endfor %}
         </div>
-        <button id="save-references" hx-post="{% url "core:references" arch.id %}" hx-vals='js:{ "refs": Alpine.store("archiveRefs").curr }'>
+        <button id="save-references" 
+            hx-headers='{"X-CSRFToken": "{{csrf_token}}"}'
+            hx-post="{% url "core:references" arch.id %}" 
+            hx-vals='js:{ "refs": Alpine.store("archiveRefs").curr }'
+            hx-target="#references-list"
+            >
             Save references
         </button>
     <div>
