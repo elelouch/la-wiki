@@ -94,6 +94,7 @@ class Section(models.Model):
             - treemap, con pares (<id_seccion_padre>, [secciones_hijas])
             - archivesmap, con pares (<id_seccion_padre>, [archivos_hijos])
         """
+        assert user
         treemap = {}
         archivesmap = {}
         qs = self.all_children(user)
@@ -120,6 +121,7 @@ class Section(models.Model):
         """
         assert file is not None
         assert perms_str and user
+
         fullname = str(file.name)
         filename, extension = os.path.splitext(fullname)
         arch = self.archives.create(
@@ -179,6 +181,7 @@ class PermissionHolder(GroupPermission, UserPermission):
         return self.user_permissions(user) + self.group_permissions(user)
 
     def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
+        assert user and perm_strs
         word_counter = dict([(p,0) for p in perm_strs])
         for perm in self.all_permissions(user):
             codename = perm.codename 
