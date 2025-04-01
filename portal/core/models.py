@@ -3,7 +3,6 @@ from functools import reduce
 from django.db import models
 from typing import final
 from django.contrib.auth.models import AbstractUser, Group, Permission
-from .utils import flatten_perms
 from itertools import chain
 
 import os
@@ -54,8 +53,7 @@ class Section(models.Model, PermissionHolder):
         assert len(name) and perms_str
         new_section = self.children.create(name = name)
         perm_entities = Permission.objects.filter(codename__in=perms_str)
-        usp = new_section.user_perms \
-                .create(user=user)
+        usp = new_section.user_perms.create(user=user)
         usp.permissions.set(perm_entities)
         return new_section
         
@@ -190,16 +188,16 @@ class UserPermission(models.Model):
 
 @final
 class SectionUserPermission(UserPermission):
-    section = models.ForeignKey(Section, related_name="group_perms",on_delete=models.CASCADE)
+    section = models.ForeignKey(Section, related_name='section_user_permissions', on_delete=models.CASCADE)
 
 @final
 class SectionGroupPermission(GroupPermission):
-    section = models.ForeignKey(Section, related_name="user_perms",on_delete=models.CASCADE)
+    section = models.ForeignKey(Section, related_name='section_group_permissions',on_delete=models.CASCADE)
 
 @final
 class ArchiveUserPermission(UserPermission):
-    archive = models.ForeignKey(Archive, related_name="user_perms",on_delete=models.CASCADE)
+    archive = models.ForeignKey(Archive, related_name='archive_user_permissions', on_delete=models.CASCADE)
 
 @final
 class ArchiveGroupPermission(GroupPermission):
-    archive = models.ForeignKey(Archive, related_name="group_perms",on_delete=models.CASCADE)
+    archive = models.ForeignKey(Archive, related_name='archive_user_permissions', on_delete=models.CASCADE)
