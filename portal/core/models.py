@@ -26,7 +26,6 @@ class PermissionHolder:
         assert user
         a = self.user_permissions(user)
         b = self.group_permissions(user)
-        print(*a,*b)
         return list(chain(a,b))
 
     def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
@@ -51,10 +50,11 @@ class Section(models.Model, PermissionHolder):
     def __str__(self):
         return self.name
 
-    def create_children(self, name: str, user:User, *perms_str:list[str]):
+    def create_child(self, name: str, user:User, *perms_str:list[str]):
         assert len(name) and perms_str
         new_section = self.children.create(name = name)
         perm_entities = Permission.objects.filter(codename__in=perms_str)
+        
         usp = new_section.usersectionpermission_set \
                 .create(user=user)
         usp.permissions.set(perm_entities)
@@ -120,7 +120,7 @@ class Section(models.Model, PermissionHolder):
                 archivesmap[sec.id].append(arch)
         return (treemap, archivesmap)
 
-    def create_children_archive(self, file, user:User, *perms_str: list[str]) -> "Archive":
+    def create_child_archive(self, file, user:User, *perms_str: tuple[str]) -> "Archive":
         """
         Crea un archivo hijo de la seccion actual, agregando solo
         accesos para el usuario que lo creo.

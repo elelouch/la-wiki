@@ -77,7 +77,8 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
                 name,
                 user,
                 "delete_section", 
-                "view_section"
+                "view_section",
+                "add_section"
             )
         res = render(
                 request,
@@ -219,11 +220,6 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
                     SELECT cs.*
                     FROM core_section cs, ancestors a 
                     WHERE cs.parent_id = a.id
-                    AND cs.id NOT IN (
-                        SELECT nacc.section_id 
-                        FROM core_negativeaccess nacc
-                        WHERE nacc.user_id = %s
-                    )
                 ) SELECT 
                         arch.id, 
                         arch.fullname, 
@@ -238,7 +234,7 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
                 INNER JOIN core_archive arch
                 ON ancestors.id = arch.section_id
                 WHERE arch.fullname LIKE %s;
-                """, [user.main_section.id, user.id, ilike_content])
+                """, [user.main_section.id, ilike_content])
 
 @final
 class SearchArchiveListReferencesView(SearchArchiveListView):
@@ -278,7 +274,7 @@ class ReferencesView(mixins.LoginRequiredMixin, TemplateView):
             .exclude(id__in=new_refs) \
             .values_list('id', flat=True)
         excluded_refs_list = list(excluded_refs)
-        if not excluded_refs_list:
+        if excluded_refs_list:
             arch.references.remove(excluded_refs_list)
         arch.references.add(new_refs)
         return HttpResponse("")
@@ -302,6 +298,7 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
     def post(self,request):
         data = request.POST
         markdown_ext = ".md"
+        user = cast(User,request.user)
 
         root_section_id = int(data.get("root_id") or 0)
         filename = (data.get("name") or "").strip()
@@ -311,21 +308,18 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
             return HttpResponse("No files provided", status = 400)
         if not filename:
             return HttpResponse("No name provided", status = 400)
-
-        user = request.user
+        
         root_section = user.main_section if not root_section_id else get_object_or_404(Section, pk=root_section_id)
 
         # add markdown suffix
         fullname = filename + markdown_ext
 
         with ContentFile(file_content, name=fullname) as content_file:
-            new_archive = Archive(
-                    fullname = fullname,
-                    name = filename,
-                    extension = markdown_ext,
-                    file=content_file,
-                    section = root_section
-                    ) 
-            new_archive.save()
+            root_section.create_child_archive(
+                content_file,
+                user,
+                'view_archive',
+                'delete_archive'
+            )
 
         return HttpResponse("Markdown text success", status = 200)
