@@ -60,7 +60,6 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         data = request.POST
         root_section = None
         user = cast(User, request.user)
-
         if not root_section_id:
             root_section = user.main_section
             if not root_section:
@@ -78,7 +77,6 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
                 name,
                 user,
                 "delete_section", 
-                "add_section",
                 "view_section"
             )
         res = render(

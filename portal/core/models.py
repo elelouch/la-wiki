@@ -4,6 +4,7 @@ from django.db import models
 from typing import final
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from .utils import flatten_perms
+from itertools import chain
 
 import os
 
@@ -21,9 +22,22 @@ class User(AbstractUser):
     def can_write_main_section(self):
         return self.main_section.find_permission(self, 'add_section')
 
-
+class PermissionHolder:
+    def all_permissions(self, user: User) -> list[Permission]:
+        assert user
+        return self.user_permissions(user) + self.group_permissions(user)
+    
+    def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
+        assert user and perm_strs
+        word_counter = {p:0 for p in perm_strs}
+        for perm in self.all_permissions(user):
+            codename = perm.codename 
+            if codename in word_counter:
+                word_counter[codename] += 1
+        return all(val > 0 for val in word_counter.values())
+    
 @final
-class Section(models.Model):
+class Section(models.Model, PermissionHolder):
     name = models.CharField(max_length=256, default="")
     description = models.CharField(max_length=256, default="")
     parent = models.ForeignKey(
@@ -37,7 +51,6 @@ class Section(models.Model):
         return self.name
 
     def create_children(self, name: str, user:User, *perms_str:list[str]):
-        pass
         assert len(name) and perms_str
         new_section = self.children.create(name = name)
         perm_entities = Permission.objects.filter(codename__in=perms_str)
@@ -137,7 +150,7 @@ class Section(models.Model):
 
 
 @final
-class Archive(models.Model):
+class Archive(models.Model, PermissionHolder):
     fullname = models.CharField(max_length=256, default="")
     name = models.CharField(max_length=256)
     references = models.ManyToManyField("self", symmetrical=False)
@@ -160,7 +173,7 @@ class GroupPermission(models.Model):
     group_perms = models.ManyToManyField(Permission, "group_perms")
     class Meta:
         abstract = True
-    def group_permissions(self, user: User) -> list[Permission]:
+    def groups_permissions(self, user: User) -> list[Permission]:
         assert user
         groups_perms = self.group_perms.filter(group__in=user.groups.all())
         return flatten_perms(groups_perms)
@@ -173,26 +186,20 @@ class UserPermission(models.Model):
     def user_permissions(self, user: User) -> list[Permission]:
         assert user
         user_perms = self.user_perms.filter(user=user) 
-        return flatten_perms(user_perms)
-
-class PermissionHolder(GroupPermission, UserPermission):
-    def all_permissions(self, user: User) -> list[Permission]:
-        assert user
-        return self.user_permissions(user) + self.group_permissions(user)
-
-    def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
-        assert user and perm_strs
-        word_counter = dict([(p,0) for p in perm_strs])
-        for perm in self.all_permissions(user):
-            codename = perm.codename 
-            if codename in word_counter:
-                word_counter[codename] += 1
-        return all(val > 0 for val in word_counter.values())
+        return list(*user_perms)
 
 @final
-class SectionPermission(PermissionHolder):
-    section = models.ForeignKey(Section, related_name="section_perms",on_delete=models.CASCADE)
+class SectionUserPermission(UserPermission):
+    section = models.ForeignKey(Section, related_name="group_perms",on_delete=models.CASCADE)
 
 @final
-class ArchivePermission(PermissionHolder):
-    archive = models.ForeignKey(Archive, related_name="archive_perms",on_delete=models.CASCADE)
+class SectionGroupPermission(GroupPermission):
+    section = models.ForeignKey(Section, related_name="user_perms",on_delete=models.CASCADE)
+
+@final
+class ArchiveUserPermission(UserPermission):
+    archive = models.ForeignKey(Archive, related_name="user_perms",on_delete=models.CASCADE)
+
+@final
+class ArchiveGroupPermission(GroupPermission):
+    archive = models.ForeignKey(Archive, related_name="group_perms",on_delete=models.CASCADE)
