@@ -1,7 +1,7 @@
 from django.db.models import SET_NULL, ForeignKey, QuerySet
 from functools import reduce
 from django.db import models
-from typing import final
+from typing import final, Iterator
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from itertools import chain
 
@@ -20,21 +20,23 @@ class User(AbstractUser):
     @property
     def can_write_main_section(self):
         return self.main_section.find_permission(self, 'add_section')
-
+    
 class PermissionHolder:
     def all_permissions(self, user: User) -> list[Permission]:
         assert user
-        return self.user_permissions(user) + self.group_permissions(user)
-    
+        a = self.user_permissions(user)
+        b = self.group_permissions(user)
+        print(*a,*b)
+        return list(chain(a,b))
+
     def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
-        assert user and perm_strs
         word_counter = {p:0 for p in perm_strs}
         for perm in self.all_permissions(user):
             codename = perm.codename 
             if codename in word_counter:
                 word_counter[codename] += 1
         return all(val > 0 for val in word_counter.values())
-    
+
 @final
 class Section(models.Model, PermissionHolder):
     name = models.CharField(max_length=256, default="")
@@ -53,7 +55,8 @@ class Section(models.Model, PermissionHolder):
         assert len(name) and perms_str
         new_section = self.children.create(name = name)
         perm_entities = Permission.objects.filter(codename__in=perms_str)
-        usp = new_section.user_perms.create(user=user)
+        usp = new_section.usersectionpermission_set \
+                .create(user=user)
         usp.permissions.set(perm_entities)
         return new_section
         
@@ -82,13 +85,8 @@ class Section(models.Model, PermissionHolder):
                 SELECT cs.*
                 FROM core_section cs, ancestors a 
                 WHERE cs.parent_id = a.id
-                AND cs.id NOT IN (
-                    SELECT nacc.section_id 
-                    FROM core_negativeaccess nacc
-                    WHERE nacc.user_id = %s
-                )
             ) SELECT * FROM ancestors;
-            """, [self.id, user.id])
+            """, [self.id])
 
     def all_children_map(self, user: User) -> tuple[dict,dict]:
         """
@@ -105,7 +103,6 @@ class Section(models.Model, PermissionHolder):
             - treemap, con pares (<id_seccion_padre>, [secciones_hijas])
             - archivesmap, con pares (<id_seccion_padre>, [archivos_hijos])
         """
-        assert user
         treemap = {}
         archivesmap = {}
         qs = self.all_children(user)
@@ -132,7 +129,6 @@ class Section(models.Model, PermissionHolder):
         """
         assert file is not None
         assert perms_str and user
-
         fullname = str(file.name)
         filename, extension = os.path.splitext(fullname)
         arch = self.archives.create(
@@ -142,17 +138,32 @@ class Section(models.Model, PermissionHolder):
                 file = file
             )
         perm_entities = Permission.objects.filter(codename__in=perms_str)
-        perm_holder = self.section_perms.create(user=user)
-        perm_holder.user_permissions.set(perm_entities)
+        uap = arch.userarchivepermission_set.create(user=user)
+        uap.permissions.set(perm_entities)
         return arch
 
+    def group_permissions(self, user: User) -> Iterator[Permission]:
+        assert user
+        groups_perms = self.groupsectionpermission_set \
+                .filter(group__in=user.groups.all())
+        for gp in groups_perms:
+            for perm in gp.permissions.all():
+                yield perm
+
+    def user_permissions(self, user: User) -> Iterator[Permission]:
+        assert user
+        user_perms = self.usersectionpermission_set \
+                .filter(user=user) 
+        for up in user_perms:
+            for perm in up.permissions.all():
+                yield perm
 
 @final
 class Archive(models.Model, PermissionHolder):
     fullname = models.CharField(max_length=256, default="")
     name = models.CharField(max_length=256)
-    references = models.ManyToManyField("self", symmetrical=False)
     description = models.CharField(max_length=256, default = "")
+    references = models.ManyToManyField("self", symmetrical=False)
     extension = models.CharField(max_length=12, default = "")
     last_time_modified = models.DateField(null=True)
     first_time_upload = models.DateField(auto_now_add=True)
@@ -165,39 +176,43 @@ class Archive(models.Model, PermissionHolder):
     # setup name if necessary through current_archive.file.name when saving
     file = models.FileField(upload_to="uploads/%Y/%m/%d", blank=True)
 
+    def group_permissions(self, user: User) -> Iterator[Permission]:
+        assert user
+        groups_perms = self.grouparchivepermission_set.filter(group__in=user.groups.all())
+        for gp in groups_perms:
+            for perm in gp.permissions.all():
+                yield perm
 
-class GroupPermission(models.Model):
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, default=None, null=True)
-    group_perms = models.ManyToManyField(Permission, "group_perms")
+    def user_permissions(self, user: User) -> Iterator[Permission]:
+        assert user
+        user_perms = self.userarchivepermission_set.filter(user=user) 
+        for gp in user_perms:
+            for perm in gp.permissions.all():
+                yield perm
+    
+class SectionPermission(models.Model):
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, default=None)
+    permissions = models.ManyToManyField(Permission)
     class Meta:
         abstract = True
-    def groups_permissions(self, user: User) -> list[Permission]:
-        assert user
-        groups_perms = self.group_perms.filter(group__in=user.groups.all())
-        return flatten_perms(groups_perms)
 
-class UserPermission(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, null=True)
-    user_perms = models.ManyToManyField(Permission,related_name="user_perms")
+class ArchivePermission(models.Model):
+    archive = models.ForeignKey(Archive, on_delete=models.CASCADE)
+    permissions = models.ManyToManyField(Permission)
     class Meta:
         abstract = True
-    def user_permissions(self, user: User) -> list[Permission]:
-        assert user
-        user_perms = self.user_perms.filter(user=user) 
-        return list(*user_perms)
+@final
+class GroupArchivePermission(ArchivePermission):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
 @final
-class SectionUserPermission(UserPermission):
-    section = models.ForeignKey(Section, related_name='section_user_permissions', on_delete=models.CASCADE)
+class UserArchivePermission(ArchivePermission):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 @final
-class SectionGroupPermission(GroupPermission):
-    section = models.ForeignKey(Section, related_name='section_group_permissions',on_delete=models.CASCADE)
+class GroupSectionPermission(SectionPermission):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
 @final
-class ArchiveUserPermission(UserPermission):
-    archive = models.ForeignKey(Archive, related_name='archive_user_permissions', on_delete=models.CASCADE)
-
-@final
-class ArchiveGroupPermission(GroupPermission):
-    archive = models.ForeignKey(Archive, related_name='archive_user_permissions', on_delete=models.CASCADE)
+class UserSectionPermission(SectionPermission):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)

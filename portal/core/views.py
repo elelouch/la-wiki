@@ -279,7 +279,7 @@ class ReferencesView(mixins.LoginRequiredMixin, TemplateView):
             .values_list('id', flat=True)
         excluded_refs_list = list(excluded_refs)
         if not excluded_refs_list:
-            arch.references.remove()
+            arch.references.remove(excluded_refs_list)
         arch.references.add(new_refs)
         return HttpResponse("")
 
