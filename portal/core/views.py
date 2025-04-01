@@ -17,7 +17,7 @@ import markdown as markdown_tool
 from .models import Section, Archive, User
 
 @final
-class ChildrenView (mixins.LoginRequiredMixin, TemplateView):
+class ChildrenView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_view.html"
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name = "login"
@@ -140,7 +140,7 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         return response
 
 @final
-class WikiView (mixins.LoginRequiredMixin, TemplateView):
+class WikiView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/main.html"
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name="login"
