@@ -105,20 +105,22 @@ Alternativamente se puede utilizar el script run.sh en el proyecto.
 ```
 
 ## Organizacion del proyecto
+```
 ./portal\
-├── core/\
-├── manage.py\
-├── media/\
-├── theme/\
-├── wiki/\
-└── wikiapp/\
+├── core/
+├── manage.py
+├── media/
+├── theme/
+├── wiki/
+└── wikiapp/
+```
 
 Este tiene por nombre generico "portal/wiki", se encuentra un directorio.
 El proyecto, de momento. Esta organizado en dos aplicaciones:
-    - wikiapp: Nombre generico de la aplicacion. Esta de momento, solo contiene la gestion de los menues. Estos menues son dinamicos y se pueden agregar al navbar agregando las entidad correspondientes. **Queda pendiente gestionar la visibilidad por permisos del grupo/usuario**.
-    - core: Implementacion base de la gestion de la wiki.
-    - theme: **Frontend**, principalmente. Posee contenido estatico
-    - media
+- wikiapp: Nombre generico de la aplicacion. Esta de momento, solo contiene la gestion de los menues. Estos menues son dinamicos y se pueden agregar al navbar agregando las entidad correspondientes. **Queda pendiente gestionar la visibilidad por permisos del grupo/usuario**.
+- core: Implementacion base de la gestion de la wiki.
+- theme: **Frontend**, principalmente. Posee contenido estatico
+- media
 A su vez, el proyecto posee 'portal' posee dos directorios mas. 
 Cada aplicacion, posee su conjunto de endpoints en los archivos **urls.py**. Por ejemplo, para el caso de 'core', tenemos core/urls.py, o para 'wikiapp', wikiapp/urls.py
 
