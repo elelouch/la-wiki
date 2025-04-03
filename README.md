@@ -15,8 +15,7 @@ Proyecto incompleto para organizar archivos internos.
 - [Tailwind](https://tailwindcss.com/docs/)
 
 ## Como encarar el proyecto
-El proyecto es intuitivo, se puede tomar si se posee algun conocimiento de desarrollo y 
-experiencia.
+El proyecto es intuitivo, se puede tomar si se posee algun conocimiento de desarrollo y experiencia.
 
 En caso contrario, se asume que el lector tiene una minima base de programacion y se sugiere:
 - Tener conceptos basicos de base de datos: 
@@ -36,7 +35,7 @@ En caso contrario, se asume que el lector tiene una minima base de programacion 
 - Tener conocimientos de Docker:
     - docker run
     - compose
-- Inspeccionar las tablas utilizando el [administrador de bases de datos (Adminer)](###Correr el proyecto).
+- Inspeccionar las tablas utilizando el [administrador de bases de datos (Adminer).](#runproyect)
 
 Todas estas herramientas fueron utilizadas durante el desarrollo y son parte del proyecto.
 Lo que no quiere decir que estas esten limitadas a esto (Django es un framework bastante extenso, la teoria de base de datos puede llevar conceptos como normalizacion, SQL tiene un millon de cosas para aprender, HTTP es muy extenso, etc).
@@ -61,10 +60,11 @@ donde URL\_PROXY generalmente tiene la forma
 
 ```
 Los administradores de paquetes generalmente utilizan esta variable antes de descargar todo.
+Puede llegar a tener algun problema al trabajar con WSL.
 
 
 ## Como correr el proyecto
-Se asume que DIRECTORIO\_REPOSITORIO 
+Se asume que DIRECTORIO\_REPOSITORIO es el directorio de este proyecto.
 ### Asegurarse de tener el entorno virtual con dependencias
 Esto se realiza mediante el siguiente comando.
 ```
@@ -73,31 +73,38 @@ Esto se realiza mediante el siguiente comando.
     source bin/activate
     pip install -r requirements.txt
 ```
+La lista de dependencias puede ser vista en el archivo requirements.txt.
+Ademas, si se necesitara actualizarla, tal vez luego de utilizar pip install con una libreria nueva.
+**RECORDAR QUE CADA pip install DEBERA SER EJECUTADO TENIENDO EL ENTORNO VIRTUAL ACTIVADO**, caso contrario, tal vez nisiquiera este disponible.
+
 ### Asegurarse que el frontend tenga sus dependencias
 ```
     cd DIRECTORIO_REPOSITORIO/theme/static_src
     npm i
 ```
 
-### Correr el proyecto
-1. En el directorio del proyecto, abrir una terminal y utilizar el siguiente comando
+### Correr el proyecto {#runproyect}
+En el directorio del proyecto, abrir una terminal y utilizar el siguiente comando
 ```
     docker compose -f ./pwd.yml up
 ```
 Esto levantara el servicio de base de datos(MariaDB) junto a un administrador de base de datos (Adminer).
-2. Abrir otra terminal, activar el entorno virtual (con source bin/activate, alternativamente, . bin/activate)
+Abrir otra terminal, activar el entorno virtual (con source bin/activate, alternativamente, . bin/activate)
 ```
     ./portal/manage.py runserver
 ```
-3. Abrir otra terminal con el entorno virtual
+Abrir otra terminal con el entorno virtual
 ```
     ./portal/manage.py tailwind start
 ```
+Esto comenzara el servidor de NodeJS encargado de gestionar tailwind.
+
+
 Alternativamente se puede utilizar el script run.sh en el proyecto.
 ```
     sh run.sh
 ```
 
 ## Ideas (Para alcanzar objetivos)
-- Las busqueda y organizacion de los archivos se pueden realizar mediante Elastic Search, esta herramienta es generalmente deployada utilizando contenedores y docker. Se maneja con un diseno RESTful por lo que 
+- Las busqueda y organizacion de los archivos se pueden realizar mediante Elastic Search, esta herramienta es generalmente deployada utilizando contenedores y docker. Posee un diseno RESTful por lo que se podria llegar a integrar a este proyecto.
 - Se pueden utilizar librerias como PyMUPdf para leer PDFs de manera eficiente, y PyTesseract para escaneado de PDFs.
