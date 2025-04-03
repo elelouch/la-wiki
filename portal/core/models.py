@@ -1,7 +1,7 @@
 from django.db.models import SET_NULL, ForeignKey, QuerySet
 from functools import reduce
 from django.db import models
-from typing import final, Iterator
+from typing import final, Generator
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from itertools import chain
 
@@ -16,12 +16,27 @@ class User(AbstractUser):
             on_delete=models.SET_NULL,
             null=True
             )
-    # Esto se puede llamar mas de una vez CUIDADO EN TEMAS DE COSTO
     @property
     def can_write_main_section(self):
+        """
+        Este metodo se puede llamar mas de una vez, y podria llegar a ser costoso
+        """
         return self.main_section.find_permission(self, 'add_section')
     
 class PermissionHolder:
+    """
+    Abstraccion encargada de gestionar los permisos por grupos y usuarios.
+    """
+
+    def user_permissions(self, user: User):
+        raise NotImplementedError
+
+    def group_permissions(self, user: User):
+        """
+        Obtiene todos los permisos del usuario segun los grupos en los que esta.
+        """
+        raise NotImplementedError
+    
     def all_permissions(self, user: User) -> list[Permission]:
         assert user
         a = self.user_permissions(user)
@@ -29,6 +44,9 @@ class PermissionHolder:
         return list(chain(a,b))
 
     def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
+        """
+        perm_strs es una tupla que contienen los codenames de los permisos.
+        """
         word_counter = {p:0 for p in perm_strs}
         for perm in self.all_permissions(user):
             codename = perm.codename 
@@ -53,7 +71,8 @@ class Section(models.Model, PermissionHolder):
     def create_child(self, name: str, user:User, *perms_str:tuple[str]):
         """
         Crea un hijo y asigna los permisos enviados en formatos string.
-        Estos permisos tienen que coincidir con el "codename" de la entidad Permission.
+        Estas strings tienen que coincidir con el "codename" de la entidad Permission.
+        Basicamente, si matchea el codename, asigna ese permiso.
         """
         assert len(name) and perms_str
         new_section = self.children.create(name = name)
@@ -146,7 +165,7 @@ class Section(models.Model, PermissionHolder):
         uap.permissions.set(perm_entities)
         return arch
 
-    def group_permissions(self, user: User) -> Iterator[Permission]:
+    def group_permissions(self, user: User) -> Generator[Permission]:
         assert user
         groups_perms = self.groupsectionpermission_set \
                 .filter(group__in=user.groups.all())
@@ -154,7 +173,7 @@ class Section(models.Model, PermissionHolder):
             for perm in gp.permissions.all():
                 yield perm
 
-    def user_permissions(self, user: User) -> Iterator[Permission]:
+    def user_permissions(self, user: User) -> Generator[Permission]:
         assert user
         user_perms = self.usersectionpermission_set \
                 .filter(user=user) 
@@ -179,14 +198,14 @@ class Archive(models.Model, PermissionHolder):
             )
     file = models.FileField(upload_to="uploads/%Y/%m/%d", blank=True)
 
-    def group_permissions(self, user: User) -> Iterator[Permission]:
+    def group_permissions(self, user: User) -> Generator[Permission]:
         assert user
         groups_perms = self.grouparchivepermission_set.filter(group__in=user.groups.all())
         for gp in groups_perms:
             for perm in gp.permissions.all():
                 yield perm
 
-    def user_permissions(self, user: User) -> Iterator[Permission]:
+    def user_permissions(self, user: User) -> Generator[Permission]:
         assert user
         user_perms = self.userarchivepermission_set.filter(user=user) 
         for gp in user_perms:

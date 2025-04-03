@@ -99,12 +99,30 @@ Abrir otra terminal con el entorno virtual
 ```
 Esto comenzara el servidor de NodeJS encargado de gestionar tailwind.
 
-
 Alternativamente se puede utilizar el script run.sh en el proyecto.
 ```
     sh run.sh
 ```
 
+## Organizacion del proyecto
+./portal
+├── core/
+├── manage.py
+├── media/
+├── theme/
+├── wiki/
+└── wikiapp/
+
+Este tiene por nombre generico "portal/wiki", se encuentra un directorio.
+El proyecto, de momento. Esta organizado en dos aplicaciones:
+    - wikiapp: Nombre generico de la aplicacion. Esta de momento, solo contiene la gestion de los menues. Estos menues son dinamicos y se pueden agregar al navbar agregando las entidad correspondientes. **Queda pendiente gestionar la visibilidad por permisos del grupo/usuario**.
+    - core: Implementacion base de la gestion de la wiki.
+    - theme: **Frontend**, principalmente. Posee contenido estatico
+    - media
+A su vez, el proyecto posee 'portal' posee dos directorios mas. 
+Cada aplicacion, posee su conjunto de endpoints en los archivos **urls.py**. Por ejemplo, para el caso de 'core', tenemos core/urls.py, o para 'wikiapp', wikiapp/urls.py
+
 ## Ideas (Para alcanzar objetivos)
-- Las busqueda y organizacion de los archivos se pueden realizar mediante Elastic Search, esta herramienta es generalmente deployada utilizando contenedores y docker. Posee un diseno RESTful por lo que se podria llegar a integrar a este proyecto.
-- Se pueden utilizar librerias como PyMUPdf para leer PDFs de manera eficiente, y PyTesseract para escaneado de PDFs.
+- El servicio del contenido estatico deberia ser delegada a un servidor http como NGINX o Apache.
+- La busqueda y organizacion de los archivos se pueden realizar mediante Elastic Search, esta herramienta es generalmente deployada utilizando contenedores y docker. Posee un diseno RESTful por lo que se podria llegar a integrar a este proyecto.
+- Se pueden utilizar librerias como PyMuPdf para leer PDFs de manera eficiente, y PyTesseract para escaneado de PDFs.
