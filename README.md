@@ -83,7 +83,7 @@ Ademas, si se necesitara actualizarla, tal vez luego de utilizar pip install con
     npm i
 ```
 
-### Correr el proyecto {#runproyect}
+### <a id="runproyect"></a>Correr el proyecto
 En el directorio del proyecto, abrir una terminal y utilizar el siguiente comando
 ```
     docker compose -f ./pwd.yml up
