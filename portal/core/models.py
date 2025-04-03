@@ -16,7 +16,7 @@ class User(AbstractUser):
             on_delete=models.SET_NULL,
             null=True
             )
-    # Esto se puede llamar mas de una vez CUIDADO 
+    # Esto se puede llamar mas de una vez CUIDADO EN TEMAS DE COSTO
     @property
     def can_write_main_section(self):
         return self.main_section.find_permission(self, 'add_section')
@@ -50,7 +50,11 @@ class Section(models.Model, PermissionHolder):
     def __str__(self):
         return self.name
 
-    def create_child(self, name: str, user:User, *perms_str:list[str]):
+    def create_child(self, name: str, user:User, *perms_str:tuple[str]):
+        """
+        Crea un hijo y asigna los permisos enviados en formatos string.
+        Estos permisos tienen que coincidir con el "codename" de la entidad Permission.
+        """
         assert len(name) and perms_str
         new_section = self.children.create(name = name)
         perm_entities = Permission.objects.filter(codename__in=perms_str)
@@ -173,7 +177,6 @@ class Archive(models.Model, PermissionHolder):
             null=True,
             related_name="archives"
             )
-    # setup name if necessary through current_archive.file.name when saving
     file = models.FileField(upload_to="uploads/%Y/%m/%d", blank=True)
 
     def group_permissions(self, user: User) -> Iterator[Permission]:

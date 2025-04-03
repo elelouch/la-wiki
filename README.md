@@ -1,0 +1,103 @@
+# La Wiki
+
+## Introduccion
+Proyecto incompleto para organizar archivos internos.
+
+### Objetivos del proyecto
+- Busqueda por PDF escaneados.
+- Busqueda por nombres de archivos.
+- Organizacion de la informacion por jerarquias.
+
+### Herramientas utilizadas
+- [Django](https://docs.djangoproject.com/en/dev/)
+- [HTMX](https://htmx.org/docs/)
+- [AlpineJS](https://alpinejs.dev/start-here/)
+- [Tailwind](https://tailwindcss.com/docs/)
+
+## Como encarar el proyecto
+El proyecto es intuitivo, se puede tomar si se posee algun conocimiento de desarrollo y 
+experiencia.
+
+En caso contrario, se asume que el lector tiene una minima base de programacion y se sugiere:
+- Tener conceptos basicos de base de datos: 
+    - Concepto de entidades.
+    - Relaciones: OneToMany (implementacion por tabla intermedia o foreign key), ManyToOne. Partes dominantes.
+    - Conocimiento de SQL: INNER y LEFT JOINS, Consultas recursivas.
+- Leer la documentacion de Django para entender algunos conceptos claves:
+    - Gestion del proyecto mediante ./manage.py
+    - Division de tareas mediante apps.
+    - Vistas basadas en clases (Class based views). 
+    - Mixins: clases auxiliares para extender la utilidad de las vistas.
+    - Modelos.
+    - Django ORM: Querysets (Realizar joins, busquedas sencillas por propiedad de una entidad), entender el parametro related\_name en una ForeignKey esto es, una lista de los registros que apuntan al lado no dominante.
+    - Ciclo de una request: Obtener parametros mediante el diccionario **request.METODO** donde METODO puede ser GET, POST, DELETE,... y envio de respuesta renderizando un **template** HTML con HttpResponse, render(...), etc.
+- Entender el protocolo HTTP.
+    - Cuando utilizar POST, GET, DELETE, PUT, etc...
+- Tener conocimientos de Docker:
+    - docker run
+    - compose
+- Inspeccionar las tablas utilizando el [administrador de bases de datos (Adminer)](###Correr el proyecto).
+
+Todas estas herramientas fueron utilizadas durante el desarrollo y son parte del proyecto.
+Lo que no quiere decir que estas esten limitadas a esto (Django es un framework bastante extenso, la teoria de base de datos puede llevar conceptos como normalizacion, SQL tiene un millon de cosas para aprender, HTTP es muy extenso, etc).
+
+## Prerequisitos
+- Docker
+- Interprete de Python >= 3.10.12
+- NodeJS
+- Modulo de entorno virtual (venv), en apt esto se puede descargar mediante
+```
+    apt install python3-venv
+```
+### Trabajo bajo proxy
+Al trabajar con algun derivado de Unix, solo es suficiente el siguiente comando.
+```
+    export http_proxy=URL_PROXY
+    export https_proxy=URL_PROXY
+```
+donde URL\_PROXY generalmente tiene la forma
+```
+    http://USUARIO:CONTRASENA@proxyespecial.svc.rosario.gov.ar:3128
+
+```
+Los administradores de paquetes generalmente utilizan esta variable antes de descargar todo.
+
+
+## Como correr el proyecto
+Se asume que DIRECTORIO\_REPOSITORIO 
+### Asegurarse de tener el entorno virtual con dependencias
+Esto se realiza mediante el siguiente comando.
+```
+    cd DIRECTORIO_REPOSITORIO
+    python3 -m venv .
+    source bin/activate
+    pip install -r requirements.txt
+```
+### Asegurarse que el frontend tenga sus dependencias
+```
+    cd DIRECTORIO_REPOSITORIO/theme/static_src
+    npm i
+```
+
+### Correr el proyecto
+1. En el directorio del proyecto, abrir una terminal y utilizar el siguiente comando
+```
+    docker compose -f ./pwd.yml up
+```
+Esto levantara el servicio de base de datos(MariaDB) junto a un administrador de base de datos (Adminer).
+2. Abrir otra terminal, activar el entorno virtual (con source bin/activate, alternativamente, . bin/activate)
+```
+    ./portal/manage.py runserver
+```
+3. Abrir otra terminal con el entorno virtual
+```
+    ./portal/manage.py tailwind start
+```
+Alternativamente se puede utilizar el script run.sh en el proyecto.
+```
+    sh run.sh
+```
+
+## Ideas (Para alcanzar objetivos)
+- Las busqueda y organizacion de los archivos se pueden realizar mediante Elastic Search, esta herramienta es generalmente deployada utilizando contenedores y docker. Se maneja con un diseno RESTful por lo que 
+- Se pueden utilizar librerias como PyMUPdf para leer PDFs de manera eficiente, y PyTesseract para escaneado de PDFs.
