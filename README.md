@@ -106,12 +106,12 @@ Alternativamente se puede utilizar el script run.sh en el proyecto.
 
 ## Organizacion del proyecto
 ./portal
-├── core/
-├── manage.py
-├── media/
-├── theme/
-├── wiki/
-└── wikiapp/
+├── core/\
+├── manage.py\
+├── media/\
+├── theme/\
+├── wiki/\
+└── wikiapp/\
 
 Este tiene por nombre generico "portal/wiki", se encuentra un directorio.
 El proyecto, de momento. Esta organizado en dos aplicaciones:
