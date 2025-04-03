@@ -105,7 +105,7 @@ Alternativamente se puede utilizar el script run.sh en el proyecto.
 ```
 
 ## Organizacion del proyecto
-./portal
+./portal\
 ├── core/\
 ├── manage.py\
 ├── media/\
