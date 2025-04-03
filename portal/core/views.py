@@ -95,6 +95,9 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
     extra_context = {"form": FileForm()}
 
     def get(self, request: HttpRequest, root_section_id: int):
+        """
+        Obtencion de formulario modal para subir archivo.
+        """
         assert self.template_name
         return render(
         	request,
@@ -104,7 +107,7 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
 
     def post(self, request: HttpRequest, root_section_id: int):
         """
-        Alta de archivos
+        Alta de archivos.
         """
         user = cast(User, request.user)
         files = request.FILES
@@ -295,7 +298,7 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
     extra_context = {"form": MarkdownForm()}
     login_url = reverse_lazy("wikiapp:login")
 
-    def post(self,request):
+    def post(self, request):
         data = request.POST
         markdown_ext = ".md"
         user = cast(User,request.user)

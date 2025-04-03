@@ -23,7 +23,7 @@ En caso contrario, se asume que el lector tiene una minima base de programacion 
     - Relaciones: OneToMany (implementacion por tabla intermedia o foreign key), ManyToOne. Partes dominantes.
     - Conocimiento de SQL: INNER y LEFT JOINS, Consultas recursivas.
 - Leer la documentacion de Django para entender algunos conceptos claves:
-    - Gestion del proyecto mediante ./manage.py
+    - Gestion del proyecto mediante ./manage.py (manage.py {shell,runserver,etc...}
     - Division de tareas mediante apps.
     - Vistas basadas en clases (Class based views). 
     - Mixins: clases auxiliares para extender la utilidad de las vistas.
@@ -88,7 +88,7 @@ En el directorio del proyecto, abrir una terminal y utilizar el siguiente comand
 ```
     docker compose -f ./pwd.yml up
 ```
-Esto levantara el servicio de base de datos(MariaDB) junto a un administrador de base de datos (Adminer).
+Esto levantara el servicio de base de datos(MariaDB)(:33060) junto a un administrador de base de datos (Adminer)(:8081).
 Abrir otra terminal, activar el entorno virtual (con source bin/activate, alternativamente, . bin/activate)
 ```
     ./portal/manage.py runserver
@@ -106,7 +106,7 @@ Alternativamente se puede utilizar el script run.sh en el proyecto.
 
 ## Organizacion del proyecto
 ```
-./portal\
+./portal
 ├── core/
 ├── manage.py
 ├── media/
@@ -115,11 +115,11 @@ Alternativamente se puede utilizar el script run.sh en el proyecto.
 └── wikiapp/
 ```
 
-Este tiene por nombre generico "portal/wiki", se encuentra un directorio.
-El proyecto, de momento. Esta organizado en dos aplicaciones:
+Este tiene por nombre generico "portal/wiki", este directorio contiene.
+El proyecto, de momento. Esta organizado en las siguientes aplicaciones:
 - wikiapp: Nombre generico de la aplicacion. Esta de momento, solo contiene la gestion de los menues. Estos menues son dinamicos y se pueden agregar al navbar agregando las entidad correspondientes. **Queda pendiente gestionar la visibilidad por permisos del grupo/usuario**.
 - core: Implementacion base de la gestion de la wiki.
-- theme: **Frontend**, principalmente. Posee contenido estatico
+- theme: **Frontend** principalmente. Posee contenido estatico
 - media
 A su vez, el proyecto posee 'portal' posee dos directorios mas. 
 Cada aplicacion, posee su conjunto de endpoints en los archivos **urls.py**. Por ejemplo, para el caso de 'core', tenemos core/urls.py, o para 'wikiapp', wikiapp/urls.py
@@ -128,3 +128,8 @@ Cada aplicacion, posee su conjunto de endpoints en los archivos **urls.py**. Por
 - El servicio del contenido estatico deberia ser delegada a un servidor http como NGINX o Apache.
 - La busqueda y organizacion de los archivos se pueden realizar mediante Elastic Search, esta herramienta es generalmente deployada utilizando contenedores y docker. Posee un diseno RESTful por lo que se podria llegar a integrar a este proyecto.
 - Se pueden utilizar librerias como PyMuPdf para leer PDFs de manera eficiente, y PyTesseract para escaneado de PDFs.
+
+## Que fue implementado
+- Jerarquia de secciones/archivos con ABMs modulares. Permisos por usuarios y grupos a cada instancia de la entidad.
+- Menues dinamicos (Se pueden ir agregando en la base de datos).
+- Frontend dinamico con HTMX y AlpineJS.
