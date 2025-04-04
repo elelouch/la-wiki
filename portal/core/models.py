@@ -1,7 +1,7 @@
 from django.db.models import SET_NULL, ForeignKey, QuerySet
 from functools import reduce
 from django.db import models
-from typing import final, Generator
+from typing import final, Iterator
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from itertools import chain
 
@@ -165,7 +165,7 @@ class Section(models.Model, PermissionHolder):
         uap.permissions.set(perm_entities)
         return arch
 
-    def group_permissions(self, user: User) -> Generator[Permission]:
+    def group_permissions(self, user: User) -> Iterator[Permission]:
         assert user
         groups_perms = self.groupsectionpermission_set \
                 .filter(group__in=user.groups.all())
@@ -173,7 +173,7 @@ class Section(models.Model, PermissionHolder):
             for perm in gp.permissions.all():
                 yield perm
 
-    def user_permissions(self, user: User) -> Generator[Permission]:
+    def user_permissions(self, user: User) -> Iterator[Permission]:
         assert user
         user_perms = self.usersectionpermission_set \
                 .filter(user=user) 
@@ -198,14 +198,14 @@ class Archive(models.Model, PermissionHolder):
             )
     file = models.FileField(upload_to="uploads/%Y/%m/%d", blank=True)
 
-    def group_permissions(self, user: User) -> Generator[Permission]:
+    def group_permissions(self, user: User) -> Iterator[Permission]:
         assert user
         groups_perms = self.grouparchivepermission_set.filter(group__in=user.groups.all())
         for gp in groups_perms:
             for perm in gp.permissions.all():
                 yield perm
 
-    def user_permissions(self, user: User) -> Generator[Permission]:
+    def user_permissions(self, user: User) -> Iterator[Permission]:
         assert user
         user_perms = self.userarchivepermission_set.filter(user=user) 
         for gp in user_perms:

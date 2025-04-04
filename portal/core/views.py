@@ -12,9 +12,9 @@ from .forms import MarkdownForm, SectionForm, FileForm, SearchForm
 from typing import cast, final
 from django.core.files.base import ContentFile
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-import markdown as markdown_tool
-
 from .models import Section, Archive, User
+
+import markdown as markdown_tool
 
 @final
 class ChildrenView(mixins.LoginRequiredMixin, TemplateView):
@@ -119,7 +119,6 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
                 return HttpResponse("Main section not assigned", status=400)
         else:
             root_section = get_object_or_404(Section, pk=root_section_id)
-        #root_section cannot be null at this point
         if not root_section.find_permission(user, 'add_section'):
             return HttpResponse("Unauthorized", status=401)
 
@@ -150,7 +149,7 @@ class WikiView(mixins.LoginRequiredMixin, TemplateView):
     redirect_field_name="login"
 
 @final
-class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
+class ArchiveView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/archive_view.html"
     markdown_template = "core/markdown_view.html"
     default_template = "core/archive_view_default.html"
@@ -167,18 +166,19 @@ class ArchiveView (mixins.LoginRequiredMixin, TemplateView):
             return HttpResponse("Unauthorized", status=401)
         if ".md" == arch.extension :
             text = arch.file.read()
-            html = markdown_tool.markdown(text.decode("utf-8"))
-            return render(request, self.markdown_template, {"archive": arch, "file": html})
+            ctx = {
+                    "archive": arch,
+                    "file": markdown_tool.markdown(text.decode('utf-8'))
+                    }
+            return render(request,self.markdown_template,ctx)
 
         if arch.extension in self.iframe_render:
-            return render(
-                request,
-                self.template_name,
-                {
+            ctx = {
                     "archive": arch,
                     "file": arch.file,
                     "date_str": arch.first_time_upload.strftime("%Y/%m/%d")
-                })
+                    } 
+            return render(request,self.template_name,ctx)
 
         return render(request, self.default_template, {"content":arch.file.read().decode("utf-8")})
 
@@ -295,28 +295,34 @@ class ChildrenViewTest(mixins.LoginRequiredMixin,ListView):
 @final
 class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
     template_name="core/markdown_form.html"
-    extra_context = {"form": MarkdownForm()}
+    markdown_template = "core/markdown_view.html"
     login_url = reverse_lazy("wikiapp:login")
 
-    def post(self, request):
+    def get(self, request: HttpRequest, root_section_id: int):
+        data = request.GET
+        if not root_section_id:
+            return HttpResponse("root id not provided", status = 400)
+        md_form = MarkdownForm()
+        ctx = {
+                "form": MarkdownForm(),
+                "root_id": root_section_id
+                }
+        return render(request, self.template_name, ctx)
+
+    def post(self, request: HttpRequest, root_section_id: int):
         data = request.POST
         markdown_ext = ".md"
         user = cast(User,request.user)
-
-        root_section_id = int(data.get("root_id") or 0)
         filename = (data.get("name") or "").strip()
         file_content = data.get("file")
-
+        if not root_section_id:
+            return HttpResponse("No root id provided", status = 400)
         if not file_content:
             return HttpResponse("No files provided", status = 400)
         if not filename:
             return HttpResponse("No name provided", status = 400)
-        
-        root_section = user.main_section if not root_section_id else get_object_or_404(Section, pk=root_section_id)
-
-        # add markdown suffix
+        root_section = get_object_or_404(Section, pk=root_section_id)
         fullname = filename + markdown_ext
-
         with ContentFile(file_content, name=fullname) as content_file:
             root_section.create_child_archive(
                 content_file,
@@ -324,5 +330,6 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
                 'view_archive',
                 'delete_archive'
             )
-
-        return HttpResponse("Markdown text success", status = 200)
+        
+        ctx = {"file":markdown_tool.markdown(file_content)}
+        return render(request, self.markdown_template, ctx)

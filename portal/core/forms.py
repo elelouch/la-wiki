@@ -54,7 +54,7 @@ class MarkdownForm(forms.Form):
             "placeholder":_("Markdown supported"),
             "class":"rounded-md"
             }),
-        max_length=4 * 1024 * 1024,
+        max_length=4 * 1024 * 1024, # esto es, 4MB
         required=True
     )
 
