@@ -139,17 +139,26 @@ En este ejemplo, se agrega el permiso para la seccion de id=1, para que el usuar
 mas secciones en este.
 
 ### Por usuario
-Para entender esto, es necesario entender que resultan las foreign keys del lado no dominante resultan en lista desde esta perspectiva.
+Para entender esto, es necesario entender que las foreign keys(ManyToOne) del lado no dominante resultan en una lista.
+Este seria el flujo si utilizariamos la herramienta (manage.py shell).
 ```
+from core.models import Section, User
+from django.contrib.auth.models import Permission
+
 admin = User.objects.get(username="admin01")
-add_section_perm = Permissions.objects.get(codename="add_section")
-user_perm = admin.usersectionpermission_set.create(user=user)
+section = Section.objects.get(id=1)
+add_section_perm = Permission.objects.get(codename="add_section")
+user_perm = admin.usersectionpermission_set.create(user=user,)
 user_perm.permissions.add(add_section_perm)
 ```
 ### Por grupo
 ```
+from core.models import Section, Group
+from django.contrib.auth.models import Permission
+
 group = Group.objects.get(name="admin")
+section = Section.objects.get(id=1)
 add_section_perm = Permissions.objects.get(codename="add_section")
-user_perm = group.groupsectionpermission_set.create(group=group)
+user_perm = group.groupsectionpermission_set.create(group=group, section=section)
 user_perm.permissions.add(add_section_perm)
 ```
