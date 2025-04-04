@@ -8,15 +8,13 @@ from django.utils.translation import gettext_lazy as _
 from core.models import User
 from . import forms
 
-# Create your views here.
-
 @final
 class LoginView(TemplateView):
     template_name = "wikiapp/login.html"
     extra_context = {"form": forms.LoginForm()}
 
     def post(self, request: HttpRequest):
-        assert self.template_name is not None
+        assert self.template_name
 
         form = forms.LoginForm(request.POST)
         if not form.is_valid():

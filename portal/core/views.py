@@ -57,8 +57,7 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         return HttpResponse("")
     
     def post(self, request: HttpRequest, root_section_id: int): 
-        data = request.POST
-        root_section = None
+        data = SectionForm(request.POST)
         user = cast(User, request.user)
         if not root_section_id:
             root_section = user.main_section
@@ -70,9 +69,12 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         if not root_section.find_permission(user, "add_section"):
             return HttpResponse("Unauthorized", status = 401)
 
-        name = (data.get("name") or "").strip()
-        if not name:
+        submitted_form = SectionForm(data)
+        if not submitted_form.is_valid():
             return HttpResponse("Invalid request", status=400)
+        cleaned_data = submitted_form.cleaned_data
+        print(cleaned_data)
+        new_name = cleaned_data.get("name")
         new_child = root_section.create_child(
                 name,
                 user,
@@ -121,7 +123,6 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
             root_section = get_object_or_404(Section, pk=root_section_id)
         if not root_section.find_permission(user, 'add_section'):
             return HttpResponse("Unauthorized", status=401)
-
         file = files.get("file")
         if not file: 
             return HttpResponse("File not uploaded", status=400)
