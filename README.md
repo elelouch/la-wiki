@@ -133,3 +133,23 @@ Cada aplicacion, posee su conjunto de endpoints en los archivos **urls.py**. Por
 - Jerarquia de secciones/archivos con ABMs modulares. Permisos por usuarios y grupos a cada instancia de la entidad.
 - Menues dinamicos (Se pueden ir agregando en la base de datos).
 - Frontend dinamico con HTMX y AlpineJS.
+
+## Como agregar permisos a cada seccion
+En este ejemplo, se agrega el permiso para la seccion de id=1, para que el usuario "admin01" pueda agregar
+mas secciones en este.
+
+### Por usuario
+Para entender esto, es necesario entender que resultan las foreign keys del lado no dominante resultan en lista desde esta perspectiva.
+```
+admin = User.objects.get(username="admin01")
+add_section_perm = Permissions.objects.get(codename="add_section")
+user_perm = admin.usersectionpermission_set.create(user=user)
+user_perm.permissions.add(add_section_perm)
+```
+### Por grupo
+```
+group = Group.objects.get(name="admin")
+add_section_perm = Permissions.objects.get(codename="add_section")
+user_perm = group.groupsectionpermission_set.create(group=group)
+user_perm.permissions.add(add_section_perm)
+```
