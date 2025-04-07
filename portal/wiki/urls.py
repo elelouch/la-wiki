@@ -24,7 +24,7 @@ urlpatterns = [
     path("__reload__", include("django_browser_reload.urls")),
     path("", include("wikiapp.urls", namespace = "wikiapp")),
     path("wiki/", include("core.urls", namespace = "core")),
-    path("user/", include("user_management.urls", namespace="user_management"))
+    path("user/", include("user_management.urls", namespace="users"))
 ]
 
 if settings.DEBUG:

@@ -5,7 +5,6 @@ from django.shortcuts import render, redirect
 from django.views.generic.base import TemplateView
 from django.contrib.auth import authenticate, login, views, mixins
 from django.utils.translation import gettext_lazy as _
-from core.models import User
 from . import forms
 
 @final

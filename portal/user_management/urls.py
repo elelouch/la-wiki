@@ -5,7 +5,7 @@ from . import views
 app_name = "core"
 
 urlpatterns = [
-        path("", views.WikiView.as_view(), name="wiki_read"),
+        path("<int:user_id>", views.ProfileView.as_view(), name="profile_view"),
     ]
 
 

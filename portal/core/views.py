@@ -76,7 +76,7 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
         print(cleaned_data)
         new_name = cleaned_data.get("name")
         new_child = root_section.create_child(
-                name,
+                new_name,
                 user,
                 "delete_section", 
                 "view_section",
@@ -104,7 +104,10 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         return render(
         	request,
         	self.template_name,
-        	{"root_id": root_section_id, "form":FileForm()}
+        	{
+                "root_id": root_section_id,
+                "form":FileForm()
+                }
         )
 
     def post(self, request: HttpRequest, root_section_id: int):
