@@ -1,4 +1,6 @@
-<div>
+<div hx-trigger="load"
+    hx-get="{% url 'core:references' archive.id %}"
+    hx-target="#references-div">
     {% autoescape off %}
         {{file}}
     {% endautoescape %}

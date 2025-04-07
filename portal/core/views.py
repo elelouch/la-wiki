@@ -179,7 +179,7 @@ class ArchiveView(mixins.LoginRequiredMixin, TemplateView):
                     "file": arch.file,
                     "date_str": arch.first_time_upload.strftime("%Y/%m/%d")
                     } 
-            return render(request,self.template_name,ctx)
+            return render(request, self.template_name, ctx)
 
         return render(request, self.default_template, {"content":arch.file.read().decode("utf-8")})
 
@@ -305,8 +305,8 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
             return HttpResponse("root id not provided", status = 400)
         md_form = MarkdownForm()
         ctx = {
-                "form": MarkdownForm(),
-                "root_id": root_section_id
+                "form": md_form,
+                "root_id": root_section_id,
                 }
         return render(request, self.template_name, ctx)
 
