@@ -20,10 +20,11 @@ from django.urls import include, path, re_path
 from django.views.static import serve
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
     path("__reload__", include("django_browser_reload.urls")),
     path("", include("wikiapp.urls", namespace = "wikiapp")),
-    path('wiki/', include("core.urls", namespace = "core")),
+    path("wiki/", include("core.urls", namespace = "core")),
+    path("user/", include("user_management.urls", namespace="user_management"))
 ]
 
 if settings.DEBUG:
