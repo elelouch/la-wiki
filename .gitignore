@@ -83,3 +83,4 @@ media
 # ignore media
 **/media/*
 include/
+fscrawler-compose.yml
