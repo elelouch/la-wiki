@@ -15,7 +15,7 @@ def hash_or_empty(h, key):
 @register.simple_tag
 def btn_get(url, target, trigger):
     attrs= """
-        hx-get={url}
+        hx-get="{url}"
         hx-target="{target}"
         hx-trigger="{trigger}"
         """

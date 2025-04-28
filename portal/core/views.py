@@ -102,6 +102,18 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
     archive_item_template = "core/archive_item.html"
     extra_context = {"form": FileForm()}
 
+    def get(self, request: HttpRequest):
+        assert self.template_name 
+        data = request.GET
+        root_id = int(data.get("root_id") or 0 )
+        form = FileForm(initial={"root_id": root_id})
+        
+        return render(
+            request, 
+            self.template_name,
+            {"form": form}
+        )
+
 @final
 class WikiView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/main.html"

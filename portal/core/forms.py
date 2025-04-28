@@ -19,6 +19,13 @@ class SectionForm(forms.Form):
 
 @final
 class FileForm(forms.Form):
+    root_id = forms.IntegerField(
+        widget=forms.NumberInput(
+            attrs={
+                "hidden": True
+            }
+        )
+    )
     file = forms.FileField(label="", required=True)
 
 @final
