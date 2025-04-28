@@ -13,6 +13,7 @@ from typing import cast, final
 from django.core.files.base import ContentFile
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from .models import Section, Archive, User
+from .service import ElasticSearchService
 
 import markdown as markdown_tool
 
@@ -46,7 +47,7 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
         return render(request, self.template_name, {
             "root_id": root_section_id,
             "form": SectionForm()
-            })
+        })
     
 
 class SectionView(mixins.LoginRequiredMixin, TemplateView):
@@ -59,92 +60,47 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
     def post(self, request: HttpRequest, root_section_id: int): 
         data = SectionForm(request.POST)
         user = cast(User, request.user)
-        if not root_section_id:
-            root_section = user.main_section
-            if not root_section:
-                return HttpResponse("Main section not assigned", status=400)
-        else:
-            root_section = get_object_or_404(Section, pk=root_section_id)
+        es_serv = ElasticSearchService()
 
-        if not root_section.find_permission(user, "add_section"):
-            return HttpResponse("Unauthorized", status = 401)
+        result = es_serv.test_service()
+        print(result)
+        return HttpResponse("tested")
+        # if not root_section_id:
+        #     root_section = user.main_section
+        #     if not root_section:
+        #         return HttpResponse("Main section not assigned", status=400)
+        # else:
+        #     root_section = get_object_or_404(Section, pk=root_section_id)
 
-        submitted_form = SectionForm(data)
-        if not submitted_form.is_valid():
-            return HttpResponse("Invalid request", status=400)
-        cleaned_data = submitted_form.cleaned_data
-        print(cleaned_data)
-        new_name = cleaned_data.get("name")
-        new_child = root_section.create_child(
-                new_name,
-                user,
-                "delete_section", 
-                "view_section",
-                "add_section"
-            )
-        res = render(
-                request,
-                self.template_section_item,
-                {"sec": new_child,"root": root_section}
-           )
-        res["HX-Trigger"] = "clearMainSection"
-        return res
+        # if not root_section.find_permission(user, "add_section"):
+        #     return HttpResponse("Unauthorized", status = 401)
+
+        # submitted_form = SectionForm(data)
+        # if not submitted_form.is_valid():
+        #     return HttpResponse("Invalid request", status=400)
+        # cleaned_data = submitted_form.cleaned_data
+        # print(cleaned_data)
+        # new_name = cleaned_data.get("name")
+        # new_child = root_section.create_child(
+        #         new_name,
+        #         user,
+        #         "delete_section", 
+        #         "view_section",
+        #         "add_section"
+        #     )
+        # res = render(
+        #         request,
+        #         self.template_section_item,
+        #         {"sec": new_child,"root": root_section}
+        #    )
+        # res["HX-Trigger"] = "clearMainSection"
+        # return res
 
 @final
 class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/file_modal_form.html"   
     archive_item_template = "core/archive_item.html"
     extra_context = {"form": FileForm()}
-
-    def get(self, request: HttpRequest, root_section_id: int):
-        """
-        Obtencion de formulario modal para subir archivo.
-        """
-        assert self.template_name
-        return render(
-        	request,
-        	self.template_name,
-        	{
-                "root_id": root_section_id,
-                "form":FileForm()
-                }
-        )
-
-    def post(self, request: HttpRequest, root_section_id: int):
-        """
-        Alta de archivos.
-        """
-        user = cast(User, request.user)
-        files = request.FILES
-        root_section = None
-
-        if not root_section_id:
-            root_section = user.main_section
-            if not root_section:
-                return HttpResponse("Main section not assigned", status=400)
-        else:
-            root_section = get_object_or_404(Section, pk=root_section_id)
-        if not root_section.find_permission(user, 'add_section'):
-            return HttpResponse("Unauthorized", status=401)
-        file = files.get("file")
-        if not file: 
-            return HttpResponse("File not uploaded", status=400)
-        new_archive = root_section.create_child_archive(
-                file,
-                user,
-                "delete_archive",
-                "view_archive",
-            )
-        response = render(
-            request,
-            self.archive_item_template,
-            {
-            	"root_id": root_section_id,
-            	"arch": new_archive
-            }
-        )
-        response["HX-Trigger"] = "clearMainSection"
-        return response
 
 @final
 class WikiView(mixins.LoginRequiredMixin, TemplateView):
@@ -201,6 +157,47 @@ class ArchiveView(mixins.LoginRequiredMixin, TemplateView):
         # agregamos header
         response["HX-Trigger"] = "clearMainSection"
         return response
+    
+    def post(self, request: HttpRequest, archive_id: int):
+        """
+        Alta/modificacion de archivos.
+        """
+        user = cast(User, request.user)
+
+        data = request.POST
+        root_section_id = int(data.get("root_id") or 0)
+
+        root_section = get_object_or_404(Section, pk=root_section_id)
+        add_archive_perm = root_section.find_permission(user, 'add_archive')
+
+        if not add_archive_perm:
+            return HttpResponse("Unauthorized", status=401)
+        files = request.FILES
+        file = files.get("file")
+        if not file: 
+            return HttpResponse("File not uploaded", status=400)
+        
+        if not archive_id:
+            new_archive = root_section.create_child_archive(
+                    file,
+                    user,
+                    "delete_archive",
+                    "view_archive",
+                )
+            response = render(
+                request,
+                self.archive_item_template,
+                {
+                    "root_id": root_section_id,
+                    "arch": new_archive
+                }
+            )
+            response["HX-Trigger"] = "clearMainSection"
+            return response
+        
+        archive = get_object_or_404(Archive, id=archive_id)
+        root_section.archives.add(archive)
+        return HttpResponse("Archive added correctly")
 
 class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
     template_name="core/archive_list.html"

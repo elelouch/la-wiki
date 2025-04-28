@@ -6,7 +6,7 @@
         style="z-index:-1">
     </div>
 
-    <form hx-post="{% url 'core:modal_archive' root_id %}"  
+    <form hx-post="{% url 'core:archive' 0 %}"  
           hx-target="#sec_{{root_id}} > div > .children-archives"
           hx-swap="beforeend" 
           enctype="multipart/form-data"

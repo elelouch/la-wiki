@@ -8,11 +8,13 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONBUFFERED=1
 
-RUN pip install --upgrade pip
-
 COPY requirements.txt /app/
 
-RUN pip install --no-cache -r requirements.txt
+RUN apt update && \
+	apt-get install pkg-config build-essential libmariadb-dev -y && \
+	pip install --upgrade pip && \
+	pip install --no-cache -r requirements.txt
+	
 
 # SND build
 FROM python:3.13.3-slim

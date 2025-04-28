@@ -1,3 +1,4 @@
+
 # Created by venv; see https://docs.python.org/3/library/venv.html
 lib
 lib64
@@ -84,5 +85,3 @@ media
 **/media/*
 include/
 fscrawler-compose.yml
-config/
-logs/
