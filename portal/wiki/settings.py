@@ -156,3 +156,19 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = "media/"
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+ELASTIC_KEY = env("ELASTIC_KEY", default="")
+
+ELASTIC_PASSWORD = env("ELASTIC_PASSWORD", default="")
+
+elastic_port= env("ES_PORT")
+elastic_host = env("ELASTIC_HOST")
+
+ELASTIC_URL = "http://{}:{}".format(elastic_host, elastic_port)
+
+FSCRAWLER_KEY = env("FSCRAWLER_KEY", default = "")
+
+fscrawler_port = env("FSCRAWLER_PORT")
+fscrawler_host = env("FSCRAWLER_HOST")
+
+FSCRAWLER_URL = "http://{}:{}".format(fscrawler_host, fscrawler_port)
