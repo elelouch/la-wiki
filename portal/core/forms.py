@@ -20,6 +20,7 @@ class SectionForm(forms.Form):
 @final
 class FileForm(forms.Form):
     root_id = forms.IntegerField(
+        label="",
         widget=forms.NumberInput(
             attrs={
                 "hidden": True

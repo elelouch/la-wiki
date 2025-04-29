@@ -10,8 +10,6 @@
         </button>
 
         <div class="h-200 flex flex-row justify-evenly basis-1/4" x-show="sectionSelected && currentSectionId === {{sec.id}}">
-            {% if user.can_write_main_section %}
-
             {% url 'core:modal_archive' sec.id as modal_arch_url %}
             {% btn_get modal_arch_url "#pivot-section" "click" as arch_attrs %}
             {% include "core/button/simple_button.html" with add_attrs=arch_attrs button_class="fa-solid fa-file" %}
@@ -23,8 +21,6 @@
             {% url 'core:section' sec.id as sec_url %}
             {% btn_delete sec_url "closest .section" "click" "delete" as del_sec_attrs %}
             {% include "core/button/simple_button.html" with add_attrs=del_sec_attrs button_class="fa-solid fa-xmark" add_class="bg-red-500 hover:bg-red-800" %}
-
-            {% endif %}
         </div>
     </div>
     <div class="pl-4 children transition-opacity delay-150 duration-300 ease-in-out" x-show="open" x-transition>

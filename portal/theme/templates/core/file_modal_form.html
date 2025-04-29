@@ -6,7 +6,8 @@
         style="z-index:-1">
     </div>
 
-    <form hx-post="{% url 'core:archive' 0 %}"  
+    <form hx-post="{% url 'core:archive' root_id %}"  
+	  hx-params="root_id={{root_id}}"
           hx-target="#sec_{{root_id}} > div > .children-archives"
           hx-swap="beforeend" 
           enctype="multipart/form-data"
@@ -27,7 +28,8 @@
         	@click="$refs.fileModal.remove()">
         	Cancel
         </button>
-	<button hx-trigger="click" hx-get="{% url 'core:markdown_text' root_id %}" 
+	<button hx-trigger="click" hx-get="{% url 'core:markdown_text' %}" 
+		hx-params="root_id={{root_id}}"
                 hx-target="#writable-section" hx-swap="innerHTML" id="markdownButton"
                 @click="$refs.fileModal.remove()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">
                 Write a plain text file

@@ -16,12 +16,6 @@ class User(AbstractUser):
             on_delete=models.SET_NULL,
             null=True
             )
-    @property
-    def can_write_main_section(self):
-        """
-        Este metodo se puede llamar mas de una vez, y podria llegar a ser costoso
-        """
-        return self.main_section.find_permission(self, 'add_section')
     
 class PermissionHolder:
     """

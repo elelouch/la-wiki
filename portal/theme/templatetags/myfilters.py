@@ -1,3 +1,4 @@
+from typing import Dict
 from django import template 
 
 register = template.Library()
@@ -19,6 +20,7 @@ def btn_get(url, target, trigger):
         hx-target="{target}"
         hx-trigger="{trigger}"
         """
+
     return attrs.format(
             url=url,
             target=target,

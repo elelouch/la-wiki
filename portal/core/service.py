@@ -1,4 +1,5 @@
 from typing import Dict
+from django.core.files import File
 import requests
 import json
 import logging
@@ -57,6 +58,14 @@ class FsCrawlerService:
 
     def test_service(self) -> Dict:
         res = self.session.get(self.url)
+        return json.loads(res.content)
+
+    def test_upload_file(self, file: File) -> Dict:
+        url = "{}/{}".format(self.url, "_document?debug=true&simulate=true")
+        filemap = {
+            "file": file.file
+        }
+        res = self.session.post(url, files=filemap)
         return json.loads(res.content)
 
 fscrawler_service = FsCrawlerService()

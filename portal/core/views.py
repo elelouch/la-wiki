@@ -95,18 +95,20 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
 class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/file_modal_form.html"   
     archive_item_template = "core/archive_item.html"
-    extra_context = {"form": FileForm()}
 
     def get(self, request: HttpRequest):
         assert self.template_name 
         data = request.GET
         root_id = int(data.get("root_id") or 0 )
         form = FileForm(initial={"root_id": root_id})
-        
+        context = {
+            "form": form,
+            "root_id": root_id
+        }
         return render(
             request, 
             self.template_name,
-            {"form": form}
+            context
         )
 
 @final
@@ -134,9 +136,9 @@ class ArchiveView(mixins.LoginRequiredMixin, TemplateView):
         if ".md" == arch.extension :
             text = arch.file.read()
             ctx = {
-                    "archive": arch,
-                    "file": markdown_tool.markdown(text.decode('utf-8'))
-                    }
+                "archive": arch,
+                "file": markdown_tool.markdown(text.decode('utf-8'))
+            }
             return render(request,self.markdown_template,ctx)
 
         if arch.extension in self.iframe_render:
@@ -183,11 +185,12 @@ class ArchiveView(mixins.LoginRequiredMixin, TemplateView):
 
         if not add_archive_perm:
             return HttpResponse("Unauthorized", status=401)
+        
         files = request.FILES
         file = files.get("file")
         if not file: 
             return HttpResponse("File not uploaded", status=400)
-        
+
         if not archive_id:
             new_archive = root_section.create_child_archive(
                 file,
@@ -195,6 +198,8 @@ class ArchiveView(mixins.LoginRequiredMixin, TemplateView):
                 "delete_archive",
                 "view_archive",
             )
+            fscrawler_res = fscrawler_service.test_upload_file(file)
+            print(fscrawler_res)
             response = render(
                 request,
                 self.archive_item_template,
@@ -310,8 +315,9 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
     markdown_template = "core/markdown_view.html"
     login_url = reverse_lazy("wikiapp:login")
 
-    def get(self, request: HttpRequest, root_section_id: int):
+    def get(self, request: HttpRequest):
         data = request.GET
+        root_section_id = int(data.get("root_id") or 0)
         if not root_section_id:
             return HttpResponse("root id not provided", status = 400)
         md_form = MarkdownForm()
@@ -321,12 +327,13 @@ class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
                 }
         return render(request, self.template_name, ctx)
 
-    def post(self, request: HttpRequest, root_section_id: int):
+    def post(self, request: HttpRequest):
         data = request.POST
         markdown_ext = ".md"
         user = cast(User,request.user)
         filename = (data.get("name") or "").strip()
         file_content = data.get("file")
+        root_section_id = int(data.get("root_id") or 0)
         if not root_section_id:
             return HttpResponse("No root id provided", status = 400)
         if not file_content:
