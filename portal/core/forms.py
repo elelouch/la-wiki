@@ -8,19 +8,16 @@ from django.core.validators import RegexValidator
 class SectionForm(forms.Form):
     root_id = forms.IntegerField(
         label="",
-        widget=forms.NumberInput(
-            attrs={
-                "hidden": True,
-                "x-ref": "rootId"
-            }
-        )
+        widget=forms.NumberInput(attrs={
+            "class":"hidden"
+        })
     )
     name = forms.CharField(
         label="",
         widget=forms.TextInput(attrs={
             "placeholder":_("Section Name"),
             "class":"rounded-md"
-            }),
+        }),
         validators=[RegexValidator(code="404", message=_("Name is not valid"))],
         max_length=200,
         required=True
@@ -30,11 +27,9 @@ class SectionForm(forms.Form):
 class FileForm(forms.Form):
     root_id = forms.IntegerField(
         label="",
-        widget=forms.NumberInput(
-            attrs={
-                "hidden": True
-            }
-        )
+        widget = forms.NumberInput(attrs={
+            "class": "hidden"
+        })
     )
     file = forms.FileField(label="", required=True)
 
@@ -47,7 +42,7 @@ class SearchForm(forms.Form):
             "placeholder":_("Search an archive"),
             "autocomplete":"off",
             "class":"rounded-md"
-            }),
+        }),
         validators=[RegexValidator(code="404", message=_("Name is not valid"))],
         max_length=200,
         required=True
@@ -60,7 +55,7 @@ class MarkdownForm(forms.Form):
         widget=forms.TextInput(attrs={
             "placeholder":_("File Name"),
             "class":"rounded-md"
-            }),
+        }),
         validators=[RegexValidator(code="404", message=_("Name is not valid"))],
         max_length=200,
         required=True
@@ -70,7 +65,7 @@ class MarkdownForm(forms.Form):
         widget=forms.Textarea(attrs={
             "placeholder":_("Markdown supported"),
             "class":"rounded-md"
-            }),
+        }),
         max_length=4 * 1024 * 1024, # esto es, 4MB
         required=True
     )

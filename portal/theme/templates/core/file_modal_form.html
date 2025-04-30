@@ -29,9 +29,9 @@
         	Cancel
         </button>
 	<button hx-trigger="click" hx-get="{% url 'core:markdown_text' %}" 
-		hx-params="root_id={{root_id}}"
                 hx-target="#writable-section" hx-swap="innerHTML" id="markdownButton"
-                @click="$refs.fileModal.remove()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">
+		class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full"
+		@click="$refs.fileModal.remove()">
                 Write a plain text file
         </button>
     </form>

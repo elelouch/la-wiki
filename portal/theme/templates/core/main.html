@@ -38,8 +38,7 @@ Wiki
                             {% url 'core:search' as search_url %}
                             {% btn_get search_url "#pivot-section" "click" as search_attrs %}
                             {% autoescape off %}
-                            <input {{search_attrs}} placeholder="Search" name="content" id="search" type="text">
-                            </input>
+                            <input {{search_attrs}} placeholder="Search" name="content" id="search" type="text"></input>
                             {% endautoescape %}
                         </div>
                     </div>
