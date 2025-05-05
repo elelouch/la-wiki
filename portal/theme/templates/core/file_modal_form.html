@@ -7,7 +7,6 @@
     </div>
 
     <form hx-post="{% url 'core:modal_archive' %}"  
-	  hx-params="root_id={{root_id}}"
           hx-target="#sec_{{root_id}} > div > .children-archives"
           hx-swap="beforeend" 
           enctype="multipart/form-data"
@@ -23,7 +22,9 @@
         {% csrf_token %}
         {{form}}
         <!-- form value available on the core/forms.py file -->
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Submit</button>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">
+		Submit
+	</button>
         <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full"
         	@click="$refs.fileModal.remove()">
         	Cancel

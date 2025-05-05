@@ -14,17 +14,19 @@ def hash_or_empty(h, key):
     return []
 
 @register.simple_tag
-def btn_get(url, target, trigger):
+def btn_get(url, target, trigger, params=""):
     attrs= """
         hx-get="{url}"
         hx-target="{target}"
         hx-trigger="{trigger}"
+        hx-vals='{params}'
         """
 
     return attrs.format(
             url=url,
             target=target,
             trigger=trigger,
+            params=params
         )
 
 @register.simple_tag

@@ -9,7 +9,7 @@ class SectionForm(forms.Form):
     root_id = forms.IntegerField(
         label="",
         widget=forms.NumberInput(attrs={
-            "class":"hidden"
+            "class":"hidden",
         })
     )
     name = forms.CharField(
@@ -28,8 +28,10 @@ class FileForm(forms.Form):
     root_id = forms.IntegerField(
         label="",
         widget = forms.NumberInput(attrs={
-            "class": "hidden"
-        })
+            "class": "hidden",
+            "x-ref": "fileParentId"
+        }),
+        required=True
     )
     file = forms.FileField(label="", required=True)
 

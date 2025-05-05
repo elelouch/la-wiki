@@ -25,8 +25,8 @@ Wiki
             <div class="flex justify-between w-full flex justify-around">
                 <div class="flex basis-1/4 h-24">
                     {% url "core:modal_archive" as modal_arch_url %}
-                    {% btn_get modal_arch_url "#pivot-section" "click" as arch_btn_attrs %}
-                    {% include "core/button/simple_button.html" with add_attrs=arch_btn_attrs button_class='fa-solid fa-file'%}
+                    {% btn_get modal_arch_url "#pivot-section" "click" "{\"root_id\":0}" as arch_btn_attrs %}
+                    {% include "core/button/simple_button.html" with add_attrs=arch_btn_attrs button_class='fa-solid fa-file' %}
 
                     {% url "core:modal_section" as modal_sec_url %}
                     {% btn_get modal_sec_url "#pivot-section" "click" as section_btn_attrs %}
@@ -34,7 +34,7 @@ Wiki
                 </div>
 
                 <div class="flex flex-col rounded-lg basis-3/4">
-                        <div>
+        		<div>
                             {% url 'core:search' as search_url %}
                             {% btn_get search_url "#pivot-section" "click" as search_attrs %}
                             {% autoescape off %}
@@ -60,8 +60,8 @@ Wiki
                     <i class="fa-solid fa-bookmark"></i>
                 </button>
             </div>
+	    <div x-ref="pivotsection" id="pivot-section"></div>
         </div>
-        <div x-ref="pivotsection" id="pivot-section"></div>
     </div>
 
     {% block scripts %}

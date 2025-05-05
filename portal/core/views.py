@@ -47,7 +47,6 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
     def post(self, request: HttpRequest): 
         data = SectionForm(request.POST)
         user = cast(User, request.user)
-
         if not data.is_valid():
             return HttpResponse("Form is not valid")
         if not root_section_id:
@@ -66,13 +65,12 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
             new_name,
             user,
             "delete_section", 
-            "view_section",
-            "add_section"
         )
+        ctx = {"sec": new_child,"root": root_section}
         res = render(
             request,
             self.template_section_item,
-            {"sec": new_child,"root": root_section}
+            ctx
         )
         res["HX-Trigger"] = "clearMainSection"
         return res
@@ -88,7 +86,26 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
 class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/file_modal_form.html"   
     archive_item_template = "core/archive_item.html"
-    extra_context = {"form": FileForm()}
+
+    def get(self, request: HttpRequest):
+        data = request.GET
+        user = cast(User, request.user)
+        root_id_val = data.get("root_id")
+        if not root_id_val:
+            return HttpResponse("root_id not sent", status=400)
+        root_id = int(root_id_val)
+        if not root_id:
+            if not user.main_section:
+                return HttpResponse("Main section not assigned", status = 400)
+            root_id = user.main_section.id
+        initial = {
+            "root_id": root_id
+        }
+        ctx = {
+            "form": FileForm(initial=initial),
+            "root_id": root_id
+        }
+        return render(request, self.template_name, ctx)
     
     def post(self, request: HttpRequest):
         """
@@ -99,11 +116,9 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         form = FileForm(data)
         if form.is_valid(): 
             return HttpResponse("Form is not valid", 400)
-        root_id = form.root_id
+        root_id = form.cleaned_data["root_id"]
         root_section = get_object_or_404(Section, pk=root_id)
-
         add_archive_perm = root_section.find_permission(user, 'add_archive')
-
         if not add_archive_perm:
             return HttpResponse("Unauthorized", status=401)
         files = request.FILES
@@ -118,6 +133,7 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
         )
         fscrawler_res = fscrawler_service.test_upload_file(file)
         ctx = { "arch": new_archive }
+
         response = render(request,self.archive_item_template, ctx)
         response["HX-Trigger"] = "clearMainSection"
         return response
@@ -142,7 +158,8 @@ class ArchiveView(mixins.LoginRequiredMixin, TemplateView):
         assert self.template_name
         arch = get_object_or_404(Archive, pk=int(archive_id))
         user = cast(User, request.user)
-        if not arch.find_permission(user, 'view_archive'):
+        can_view_archive = arch.find_permission(user, 'view_archive')
+        if not can_view_archive:
             return HttpResponse("Unauthorized", status=401)
         if ".md" == arch.extension :
             text = arch.file.read()
