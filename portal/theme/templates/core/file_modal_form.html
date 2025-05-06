@@ -6,11 +6,11 @@
         style="z-index:-1">
     </div>
 
-    <form hx-post="{% url 'core:modal_archive' %}"  
-          hx-target="#sec_{{root_id}} > div > .children-archives"
+    <form hx-post="{% url 'core:create_archive' %}"  
+          hx-target="{{ target }}"
           hx-swap="beforeend" 
           enctype="multipart/form-data"
-          style="position: fixed;top: 20%;left: 50%;transform: translate(-50%, -50%);"
+          style="position: fixed;top: 20%;left: 50%; transform: translate(-50%, -50%);"
           class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10" 
           tabindex="-1">
          

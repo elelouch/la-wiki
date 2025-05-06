@@ -4,8 +4,8 @@
       @click="$refs.sectionModal.remove()">
   </div>
   <!-- Modal body -->
-  <form hx-post="{% url 'core:modal_section' %}" 
-        hx-target="#sec_{{root_id}} .children-sections"
+  <form hx-post="{% url 'core:create_section' %}" 
+        hx-target="{{ target }}"
         hx-swap="beforeend"
         class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10"
         style="position:fixed;top: 20%;left: 50%;transform: translate(-50%, -50%);">
@@ -16,9 +16,7 @@
     </div>
     {% csrf_token %}
     {{ form }}
-    <button 
-	class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"
-	@click="$refs.rootId.value = currentSectionId">
+    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">
       Submit
     </button>
     <button @click="$refs.sectionModal.remove()"

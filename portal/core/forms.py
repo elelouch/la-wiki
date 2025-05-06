@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from typing import final
 from django import forms
 from django.urls import reverse_lazy
-from django.core.validators import RegexValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 
 @final
 class SectionForm(forms.Form):
@@ -10,7 +10,9 @@ class SectionForm(forms.Form):
         label="",
         widget=forms.NumberInput(attrs={
             "class":"hidden",
-        })
+        }),
+        validators=[MinValueValidator(1)],
+        required=True
     )
     name = forms.CharField(
         label="",
@@ -29,8 +31,8 @@ class FileForm(forms.Form):
         label="",
         widget = forms.NumberInput(attrs={
             "class": "hidden",
-            "x-ref": "fileParentId"
         }),
+        validators=[MinValueValidator(1)],
         required=True
     )
     file = forms.FileField(label="", required=True)

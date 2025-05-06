@@ -37,7 +37,7 @@ class PermissionHolder:
         b = self.group_permissions(user)
         return list(chain(a,b))
 
-    def find_permission(self, user: User, *perm_strs: tuple[str]) -> bool:
+    def find_permission(self, user: User, *perm_strs: str) -> bool:
         """
         perm_strs es una tupla que contienen los codenames de los permisos.
         """
@@ -62,7 +62,7 @@ class Section(models.Model, PermissionHolder):
     def __str__(self):
         return self.name
 
-    def create_child(self, name: str, user:User, *perms_str:tuple[str]):
+    def create_child(self, name: str, user:User, *perms_str: str):
         """
         Crea un hijo y asigna los permisos enviados en formatos string.
         Estas strings tienen que coincidir con el "codename" de la entidad Permission.
@@ -137,7 +137,7 @@ class Section(models.Model, PermissionHolder):
                 archivesmap[sec.id].append(arch)
         return (treemap, archivesmap)
 
-    def create_child_archive(self, file, user:User, *perms_str: tuple[str]) -> "Archive":
+    def create_child_archive(self, file, user:User, *perms_str: str) -> "Archive":
         """
         Crea un archivo hijo de la seccion actual, agregando solo
         accesos para el usuario que lo creo.
@@ -205,7 +205,7 @@ class Archive(models.Model, PermissionHolder):
         for gp in user_perms:
             for perm in gp.permissions.all():
                 yield perm
-    
+
 class SectionPermission(models.Model):
     section = models.ForeignKey(Section, on_delete=models.CASCADE, default=None)
     permissions = models.ManyToManyField(Permission)

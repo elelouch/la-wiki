@@ -24,11 +24,11 @@ Wiki
             @clear-main-section.window="$refs.pivotsection.innerHTML = ''" x-transition>
             <div class="flex justify-between w-full flex justify-around">
                 <div class="flex basis-1/4 h-24">
-                    {% url "core:modal_archive" as modal_arch_url %}
+                    {% url "core:modal_archive" root.id as modal_arch_url %}
                     {% btn_get modal_arch_url "#pivot-section" "click" "{\"root_id\":0}" as arch_btn_attrs %}
                     {% include "core/button/simple_button.html" with add_attrs=arch_btn_attrs button_class='fa-solid fa-file' %}
 
-                    {% url "core:modal_section" as modal_sec_url %}
+                    {% url "core:modal_section" root.id as modal_sec_url %}
                     {% btn_get modal_sec_url "#pivot-section" "click" as section_btn_attrs %}
                     {% include "core/button/simple_button.html" with add_attrs=section_btn_attrs button_class='fa-solid fa-plus'%}
                 </div>
@@ -70,9 +70,9 @@ Wiki
 
 {% endwith %}
 {% else %}
-    <div>
-        User does not have a main section assigned
-    </div>
+<div>
+    User does not have a main section assigned
+</div>
 {% endif %}
 
 {% endblock %}
