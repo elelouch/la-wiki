@@ -33,6 +33,35 @@ class ElasticSearchService:
         res = self.session.get(self.url)
         return json.loads(res.content)
 
+    def search_by_content(self, *, index: str, content: str, extra: dict):
+        resource = "{index_name}/_search".format(index_name=index)
+        url = "{url}/{resource}".format(url=self.url, resource=resource)
+        headers = {
+            "Content-Type": "application/json"
+        }
+
+        filters = []
+        ext = extra.get("extension")
+        if ext: 
+            filters.append({
+                "term": {
+                    "file.extension": ext
+                }
+            })
+
+        body = {
+            "query": {
+                "bool": {
+                    "must":{
+                        "match": { "content": content }
+                    },
+                    "filter": filters                
+                }
+            }
+        }
+        res = self.session.get(url, data=json.dumps(body), headers=headers)
+        return json.loads(res.content)
+
 elastic_service = ElasticSearchService()
 
 class FsCrawlerService:
@@ -67,5 +96,14 @@ class FsCrawlerService:
         }
         res = self.session.post(url, files=filemap)
         return json.loads(res.content)
+
+    def upload_file(self, *, file: File) -> Dict:
+        url = "{}/{}".format(self.url, "_document")
+        filemap = {
+            "file": file.file
+        }
+        res = self.session.post(url, files=filemap)
+        return json.loads(res.content)
+
 
 fscrawler_service = FsCrawlerService()

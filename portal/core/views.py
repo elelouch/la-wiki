@@ -142,12 +142,25 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
     def get_queryset(self):
         qs = super().get_queryset()
         data = self.request.GET
-        user = cast(User, self.request.user)
-        main_section = user.main_section
+        # hacer la busqueda, despues revisar si puedo acotar por usuario
         search_content = (data.get("name") or "").strip()
         if not search_content or len(search_content) <= 2 :
             return []
+
+        by_content = data.get("by_content")
+        if by_content == "true":
+            res = elastic_service.search_by_content(
+                index="idx",
+                content=search_content.strip(),
+                extra={}
+            )
+            hits = res["hits"]["hits"]
+            ids = [h for h in hits if int(h["id"])]
+
         ilike_content = "%{content}%".format(content=search_content)
+
+        user = cast(User, self.request.user)
+        main_section = user.main_section
         return qs.raw(
                 """
                 WITH RECURSIVE ancestors AS (
@@ -172,7 +185,7 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
                 INNER JOIN core_archive arch
                 ON ancestors.id = arch.section_id
                 WHERE arch.fullname LIKE %s;
-                """, [user.main_section.id, ilike_content])
+                """, [main_section.id, ilike_content])
 
 @final
 class SearchArchiveListReferencesView(SearchArchiveListView):
@@ -276,26 +289,35 @@ class CreateArchiveView(CreateView):
         """
         Alta/modificacion de archivos.
         """
-        user = cast(User, request.user)
         form = FileForm(request.POST, request.FILES)
         if not form.is_valid(): 
             return HttpResponse("Form is not valid", status=400)
 
         root_id = form.cleaned_data["root_id"]
-        file = form.cleaned_data["file"]
-
         root_section = get_object_or_404(Section, pk=root_id)
+
+        user = cast(User, request.user)
         add_archive_perm = root_section.find_permission(user, "add_archive")
         if not add_archive_perm:
             return HttpResponse("Unauthorized", status=401)
 
+        file = form.cleaned_data["file"]
+        fscrawler_res = fscrawler_service.upload_file(file=file)
+        res_ok = fscrawler_res["ok"]
+        if not res_ok:
+            return HttpResponse("Error during file indexing", status=400)
+
+        archive_uuid = cast(str, fscrawler_res["id"])
         new_archive = root_section.create_child_archive(
-            file,
-            user,
-            "delete_archive",
-            "view_archive",
+            file=file,
+            user=user,
+            perms=["delete_archive","view_archive"],
+            fields={
+                "uuid": archive_uuid
+            }
         )
-        fscrawler_res = fscrawler_service.test_upload_file(file)
+        new_archive.uuid = archive_uuid
+        new_archive.save()
         ctx = { "arch": new_archive }
         response = render(request, self.template_name, ctx)
         response["HX-Trigger"] = "clearMainSection"
@@ -307,24 +329,23 @@ class CreateSectionView(CreateView):
 
     def post(self, request: HttpRequest): 
         data = SectionForm(request.POST)
-        user = cast(User, request.user)
         if not data.is_valid():
             return HttpResponse("Form is not valid", status=400)
         root_id = data.cleaned_data["root_id"]
         root_section = get_object_or_404(Section, pk=root_id)
+
+        user = cast(User, request.user)
         can_add_section = root_section.find_permission(user, "add_section")
         if not can_add_section:
             return HttpResponse("Unauthorized", status = 401)
         cleaned_data = data.cleaned_data
         new_name = cast(str, cleaned_data.get("name"))
         new_child = root_section.create_child(
-            new_name,
-            user,
-            "delete_section", 
-            "view_section",
-            "add_archive"
+            name=new_name,
+            user=user,
+            perms=["delete_section", "view_section", "add_archive"]
         )
-        ctx = {"sec": new_child,"root": root_section}
+        ctx = {"sec": new_child, "root": root_section}
         res = render(request,self.template_name,ctx)
         res["HX-Trigger"] = "clearMainSection"
         return res

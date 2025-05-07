@@ -1,7 +1,8 @@
+from django.core.files import File
 from django.db.models import SET_NULL, ForeignKey, QuerySet
 from functools import reduce
 from django.db import models
-from typing import final, Iterator
+from typing import Dict, final, Iterator
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from itertools import chain
 
@@ -62,18 +63,17 @@ class Section(models.Model, PermissionHolder):
     def __str__(self):
         return self.name
 
-    def create_child(self, name: str, user:User, *perms_str: str):
+    def create_child(self, *, name: str, user:User, perms: list[str]):
         """
         Crea un hijo y asigna los permisos enviados en formatos string.
         Estas strings tienen que coincidir con el "codename" de la entidad Permission.
         Basicamente, si matchea el codename, asigna ese permiso.
         """
-        assert len(name) and perms_str
+        assert len(name) and perms
         new_section = self.children.create(name = name)
-        perm_entities = Permission.objects.filter(codename__in=perms_str)
+        perm_entities = Permission.objects.filter(codename__in=perms)
         
-        usp = new_section.usersectionpermission_set \
-                .create(user=user)
+        usp = new_section.usersectionpermission_set.create(user=user)
         usp.permissions.set(perm_entities)
         return new_section
         
@@ -137,7 +137,7 @@ class Section(models.Model, PermissionHolder):
                 archivesmap[sec.id].append(arch)
         return (treemap, archivesmap)
 
-    def create_child_archive(self, file, user:User, *perms_str: str) -> "Archive":
+    def create_child_archive(self, *, file: File, user:User, perms: list[str], fields: Dict[str, str | int]) -> "Archive":
         """
         Crea un archivo hijo de la seccion actual, agregando solo
         accesos para el usuario que lo creo.
@@ -145,16 +145,17 @@ class Section(models.Model, PermissionHolder):
         agregue los permisos a un archivo de manera grupal.
         """
         assert file is not None
-        assert perms_str and user
+        assert perms and user
         fullname = str(file.name)
         filename, extension = os.path.splitext(fullname)
         arch = self.archives.create(
                 fullname = file.name,
                 name = filename,
                 extension = extension,
-                file = file
+                file = file,
+                **fields
             )
-        perm_entities = Permission.objects.filter(codename__in=perms_str)
+        perm_entities = Permission.objects.filter(codename__in=perms)
         uap = arch.userarchivepermission_set.create(user=user)
         uap.permissions.set(perm_entities)
         return arch
@@ -191,6 +192,7 @@ class Archive(models.Model, PermissionHolder):
             related_name="archives"
             )
     file = models.FileField(upload_to="uploads/%Y/%m/%d", blank=True)
+    uuid = models.CharField(max_length=36)
 
     def group_permissions(self, user: User) -> Iterator[Permission]:
         assert user
