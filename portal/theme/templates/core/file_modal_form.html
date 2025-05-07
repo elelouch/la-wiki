@@ -1,7 +1,7 @@
 <!-- if x-data is not provided, x-ref doesn't work -->
 <div class="h-screen w-screen top-0 left-0 right-0 down-0 fixed z-1000 fixed bg-black/70" 
     x-init="htmx.process(htmx.find('#markdownButton'))" x-ref="fileModal">
-    <div @click="$refs.fileModal.remove()"
+    <div @click="$refs.fileModal.remove()" @keyup.escape.window="$refs.fileModal.remove()"
         class="h-screen w-screen top-0 left-0 right-0 down-0 absolute" 
         style="z-index:-1">
     </div>

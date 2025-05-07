@@ -192,7 +192,7 @@ class Archive(models.Model, PermissionHolder):
             related_name="archives"
             )
     file = models.FileField(upload_to="uploads/%Y/%m/%d", blank=True)
-    uuid = models.CharField(max_length=36)
+    uuid = models.CharField(max_length=36, default="")
 
     def group_permissions(self, user: User) -> Iterator[Permission]:
         assert user

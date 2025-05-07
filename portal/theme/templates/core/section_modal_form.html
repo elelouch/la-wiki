@@ -1,6 +1,7 @@
 <!-- if x-data is not provided, x-ref doesn't work -->
 <div class="h-screen w-screen top-0 left-0 right-0 down-0 fixed z-1000 fixed bg-black/70" x-ref="sectionModal">
   <div class="h-screen w-screen top-0 left-0 right-0 down-0 absolute" style="z-index:-1"
+      @keyup.escape.window="$refs.sectionModal.remove()"
       @click="$refs.sectionModal.remove()">
   </div>
   <!-- Modal body -->
