@@ -307,7 +307,7 @@ class CreateArchiveView(CreateView):
         if not res_ok:
             return HttpResponse("Error during file indexing", status=400)
 
-        archive_uuid = cast(str, fscrawler_res["id"])
+        archive_uuid = cast(str, fscrawler_res["_id"])
         new_archive = root_section.create_child_archive(
             file=file,
             user=user,
