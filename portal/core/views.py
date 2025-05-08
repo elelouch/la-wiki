@@ -140,13 +140,41 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
     login_url = reverse_lazy("wikiapp:login")
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        raw_qs_str = """
+            WITH RECURSIVE ancestors AS (
+                SELECT *
+                FROM core_section s 
+                WHERE s.id = %s
+                UNION ALL
+                SELECT cs.*
+                FROM core_section cs, ancestors a 
+                WHERE cs.parent_id = a.id
+            ) SELECT 
+                    arch.id, 
+                    arch.fullname, 
+                    arch.name,
+                    arch.description,
+                    arch.section_id,
+                    arch.first_time_upload,
+                    arch.last_time_modified,
+                    arch.extension,
+                    arch.file
+            FROM ancestors
+            INNER JOIN core_archive arch
+            ON ancestors.id = arch.section_id
+            WHERE arch.fullname LIKE %s
+        """
+
         data = self.request.GET
-        # hacer la busqueda, despues revisar si puedo acotar por usuario
         search_content = (data.get("name") or "").strip()
         if not search_content or len(search_content) <= 2 :
             return []
 
+        ilike_content = "%{content}%".format(content=search_content)
+
+        qs = super().get_queryset()
+        user = cast(User, self.request.user)
+        main_section = user.main_section
         by_content = data.get("by_content")
         if by_content == "true":
             res = elastic_service.search_by_content(
@@ -155,38 +183,13 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
                 extra={}
             )
             hits = res["hits"]["hits"]
-            ids = [h for h in hits if int(h["id"])]
+            uuids = [h for h in hits if h["_id"]]
+            raw_qs_str += "AND arch.uuid = ANY(%s)"
+            return qs.raw(raw_qs_str,[main_section.id, ilike_content, uuids])
 
-        ilike_content = "%{content}%".format(content=search_content)
+        return qs.raw(raw_qs_str,[main_section.id, ilike_content])
 
-        user = cast(User, self.request.user)
-        main_section = user.main_section
-        return qs.raw(
-                """
-                WITH RECURSIVE ancestors AS (
-                    SELECT *
-                    FROM core_section s 
-                    WHERE s.id = %s
-                    UNION ALL
-                    SELECT cs.*
-                    FROM core_section cs, ancestors a 
-                    WHERE cs.parent_id = a.id
-                ) SELECT 
-                        arch.id, 
-                        arch.fullname, 
-                        arch.name,
-                        arch.description,
-                        arch.section_id,
-                        arch.first_time_upload,
-                        arch.last_time_modified,
-                        arch.extension,
-                        arch.file
-                FROM ancestors
-                INNER JOIN core_archive arch
-                ON ancestors.id = arch.section_id
-                WHERE arch.fullname LIKE %s;
-                """, [main_section.id, ilike_content])
-
+        
 @final
 class SearchArchiveListReferencesView(SearchArchiveListView):
     template_name="core/archive_references_list.html"
@@ -300,24 +303,23 @@ class CreateArchiveView(CreateView):
         add_archive_perm = root_section.find_permission(user, "add_archive")
         if not add_archive_perm:
             return HttpResponse("Unauthorized", status=401)
-
         file = form.cleaned_data["file"]
         fscrawler_res = fscrawler_service.upload_file(file=file)
         res_ok = fscrawler_res["ok"]
         if not res_ok:
             return HttpResponse("Error during file indexing", status=400)
 
-        archive_uuid = cast(str, fscrawler_res["_id"])
+        # el ultimo elemento de una URL de elasticsearch es el UUID del documento
+        # ej: "http://elasticsearch:9200/idx/_doc/505e346f5c2990aff053966da5f3dc4"
+        url = fscrawler_res["url"] 
+        archive_uuid = cast(str, url.split("/")[-1])
+
         new_archive = root_section.create_child_archive(
             file=file,
             user=user,
             perms=["delete_archive","view_archive"],
-            fields={
-                "uuid": archive_uuid
-            }
+            fields={ "uuid": archive_uuid }
         )
-        new_archive.uuid = archive_uuid
-        new_archive.save()
         ctx = { "arch": new_archive }
         response = render(request, self.template_name, ctx)
         response["HX-Trigger"] = "clearMainSection"
@@ -333,7 +335,6 @@ class CreateSectionView(CreateView):
             return HttpResponse("Form is not valid", status=400)
         root_id = data.cleaned_data["root_id"]
         root_section = get_object_or_404(Section, pk=root_id)
-
         user = cast(User, request.user)
         can_add_section = root_section.find_permission(user, "add_section")
         if not can_add_section:

@@ -1,6 +1,4 @@
 from django.core.files import File
-from django.db.models import SET_NULL, ForeignKey, QuerySet
-from functools import reduce
 from django.db import models
 from typing import Dict, final, Iterator
 from django.contrib.auth.models import AbstractUser, Group, Permission
@@ -13,10 +11,10 @@ from django.db.models.query import RawQuerySet
 @final
 class User(AbstractUser):
     main_section = models.ForeignKey(
-            "Section",
-            on_delete=models.SET_NULL,
-            null=True
-            )
+        "Section",
+        on_delete=models.SET_NULL,
+        null=True
+    )
     
 class PermissionHolder:
     """
@@ -51,7 +49,7 @@ class PermissionHolder:
 
 @final
 class Section(models.Model, PermissionHolder):
-    name = models.CharField(max_length=256, default="")
+    name = models.CharField(max_length=256, null=False)
     description = models.CharField(max_length=256, default="")
     parent = models.ForeignKey(
             "self",
@@ -178,20 +176,20 @@ class Section(models.Model, PermissionHolder):
 
 @final
 class Archive(models.Model, PermissionHolder):
-    fullname = models.CharField(max_length=256, default="")
-    name = models.CharField(max_length=256)
+    fullname = models.CharField(max_length=256, null=False)
+    name = models.CharField(max_length=256, null=False)
     description = models.CharField(max_length=256, default = "")
     references = models.ManyToManyField("self", symmetrical=False)
     extension = models.CharField(max_length=12, default = "")
     last_time_modified = models.DateField(null=True)
     first_time_upload = models.DateField(auto_now_add=True)
     section = models.ForeignKey(
-            Section, 
-            on_delete=models.CASCADE,
-            null=True,
-            related_name="archives"
-            )
-    file = models.FileField(upload_to="uploads/%Y/%m/%d", blank=True)
+        Section, 
+        on_delete=models.CASCADE,
+        null=False,
+        related_name="archives"
+    )
+    file = models.FileField(upload_to="uploads/%Y/%m/%d", null=False)
     uuid = models.CharField(max_length=36, default="")
 
     def group_permissions(self, user: User) -> Iterator[Permission]:

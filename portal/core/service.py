@@ -5,7 +5,7 @@ import json
 import logging
 from django.conf import settings
 
-# Make a simpler service that can a Generic Rest Service 
+# Hacer una clase para abstraer ambos servicios
 
 class ElasticSearchService:
     def __init__(self):
@@ -97,13 +97,16 @@ class FsCrawlerService:
         res = self.session.post(url, files=filemap)
         return json.loads(res.content)
 
-    def upload_file(self, *, file: File) -> Dict:
+    def upload_file(self, *, file: File) -> str:
+        """
+        Carga un archivo a elasticsearch utilizando el servicio de FsCrawler 
+        para usar el OCR de Tika.
+        """
         url = "{}/{}".format(self.url, "_document")
         filemap = {
             "file": file.file
         }
         res = self.session.post(url, files=filemap)
         return json.loads(res.content)
-
 
 fscrawler_service = FsCrawlerService()
