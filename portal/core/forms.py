@@ -51,6 +51,7 @@ class SearchForm(forms.Form):
         max_length=200,
         required=True
     )
+    by_content = forms.BooleanField(required=False)
 
 @final
 class MarkdownForm(forms.Form):

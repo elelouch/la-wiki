@@ -7,7 +7,7 @@
     class="h-screen w-screen top-0 left-0 right-0 down-0 absolute"
     style="z-index: -1"
     @click="$refs.searchModal.remove()"
-    @keyup.esc.window="$refs.searchModal.remove()"
+    @keyup.escape.window="$refs.searchModal.remove()"
   ></div>
 
   <div
@@ -27,7 +27,8 @@
         class="bg-white rounded-lg shadow-sm dark:bg-gray-700 z-10"
         tabindex="-1"
       >
-        {% csrf_token %} {{form}}
+        {% csrf_token %} 
+        {{form}}
       </form>
     </header>
     <div id="list-files" class="h-24 bg-blue-700"></div>

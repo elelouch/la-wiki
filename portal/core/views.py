@@ -141,33 +141,35 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
 
     def get_queryset(self):
         raw_qs_str = """
-            WITH RECURSIVE ancestors AS (
-                SELECT *
-                FROM core_section s 
-                WHERE s.id = %s
-                UNION ALL
-                SELECT cs.*
-                FROM core_section cs, ancestors a 
-                WHERE cs.parent_id = a.id
-            ) SELECT 
-                    arch.id, 
-                    arch.fullname, 
-                    arch.name,
-                    arch.description,
-                    arch.section_id,
-                    arch.first_time_upload,
-                    arch.last_time_modified,
-                    arch.extension,
-                    arch.file
-            FROM ancestors
-            INNER JOIN core_archive arch
-            ON ancestors.id = arch.section_id
-            WHERE arch.fullname LIKE %s
+        WITH RECURSIVE ancestors AS (
+            SELECT *
+            FROM core_section s 
+            WHERE s.id = %s
+            UNION ALL
+            SELECT cs.*
+            FROM core_section cs, ancestors a 
+            WHERE cs.parent_id = a.id
+        ) SELECT 
+                arch.id, 
+                arch.fullname, 
+                arch.name,
+                arch.description,
+                arch.section_id,
+                arch.first_time_upload,
+                arch.last_time_modified,
+                arch.extension,
+                arch.file
+        FROM ancestors
+        INNER JOIN core_archive arch
+        ON ancestors.id = arch.section_id
+        WHERE arch.fullname LIKE %s
         """
+        form = SearchForm(self.request.GET)
+        if not form.is_valid():
+            return []
 
-        data = self.request.GET
-        search_content = (data.get("name") or "").strip()
-        if not search_content or len(search_content) <= 2 :
+        search_content = form.cleaned_data["name"]
+        if len(search_content) <= 2 :
             return []
 
         ilike_content = "%{content}%".format(content=search_content)
@@ -175,20 +177,26 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
         qs = super().get_queryset()
         user = cast(User, self.request.user)
         main_section = user.main_section
-        by_content = data.get("by_content")
-        if by_content == "true":
-            res = elastic_service.search_by_content(
-                index="idx",
-                content=search_content.strip(),
-                extra={}
-            )
-            hits = res["hits"]["hits"]
-            uuids = [h for h in hits if h["_id"]]
-            raw_qs_str += "AND arch.uuid = ANY(%s)"
-            return qs.raw(raw_qs_str,[main_section.id, ilike_content, uuids])
 
-        return qs.raw(raw_qs_str,[main_section.id, ilike_content])
+        by_content = form.cleaned_data["by_content"]
+        if not by_content:
+            return qs.raw(raw_qs_str,[main_section.id, ilike_content])
 
+        res = elastic_service.search_by_content(
+            index="idx",
+            content=search_content.strip(),
+            extra={}
+        )
+        hits = res["hits"]["hits"]
+        uuids = [h["_id"] for h in hits]
+
+        if not uuids:
+            return []
+
+        raw_qs_str += "AND arch.uuid in %s"
+        qs = qs.raw(raw_qs_str,[main_section.id, ilike_content, uuids])
+        print(qs.query)
+        return qs
         
 @final
 class SearchArchiveListReferencesView(SearchArchiveListView):
@@ -216,10 +224,10 @@ class ReferencesView(mixins.LoginRequiredMixin, TemplateView):
             ) 
 
     def post(self, request: HttpRequest, archive_id: int):
-        data = request.POST
         if not archive_id:
             return HttpResponse("Archive id is not valid", status=400)
         arch = get_object_or_404(Archive, pk=archive_id)
+        data = request.POST
         new_refs = data.get("refs")
         if not new_refs:
             arch.references.clear()
