@@ -51,16 +51,19 @@ class ElasticSearchService:
 
         body = {
             "query": {
-                "bool": {
-                    "must":{
-                        "match": { "content": content }
-                    },
-                    "filter": filters                
+                "query_string": {
+                    "query": content
                 }
             }
         }
         res = self.session.get(url, data=json.dumps(body), headers=headers)
         return json.loads(res.content)
+
+    def delete_document(self, *, index: str, doc_id: str):
+        resource = "{index_name}/_doc/{doc_id}".format(index_name=index, doc_id=doc_id)
+        url = "{url}/{resource}".format(url=self.url, resource=resource)
+        r = self.session.delete(url)
+        return json.loads(r.content)
 
 elastic_service = ElasticSearchService()
 

@@ -126,6 +126,15 @@ class ArchiveView(mixins.LoginRequiredMixin, TemplateView):
         if not archive.find_permission(user, "delete_archive"):
             return HttpResponse("Unauthorized", status=401)
 
+        archive_uuid = archive.uuid
+        if archive_uuid: 
+            res = elastic_service.delete_document(index="idx", doc_id=archive_uuid)
+            if res["result"] != "deleted":
+                return HttpResponse(
+                    "Document not found in ElasticSearch", 
+                    status=400
+                )
+
         archive.file.delete()
         archive.delete()
         response = HttpResponse("")
@@ -151,18 +160,10 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
             WHERE cs.parent_id = a.id
         ) SELECT 
                 arch.id, 
-                arch.fullname, 
-                arch.name,
-                arch.description,
-                arch.section_id,
-                arch.first_time_upload,
-                arch.last_time_modified,
-                arch.extension,
-                arch.file
+                arch.fullname
         FROM ancestors
         INNER JOIN core_archive arch
         ON ancestors.id = arch.section_id
-        WHERE arch.fullname LIKE %s
         """
         form = SearchForm(self.request.GET)
         if not form.is_valid():
@@ -172,15 +173,18 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
         if len(search_content) <= 2 :
             return []
 
-        ilike_content = "%{content}%".format(content=search_content)
-
         qs = super().get_queryset()
         user = cast(User, self.request.user)
         main_section = user.main_section
 
         by_content = form.cleaned_data["by_content"]
         if not by_content:
-            return qs.raw(raw_qs_str,[main_section.id, ilike_content])
+            like_archive_name = "%{content}%".format(content=search_content)
+            cond = "WHERE arch.fullname LIKE %s"
+            raw_qs_str += cond
+            qs = qs.raw(raw_qs_str,[main_section.id, like_archive_name])
+            print(qs)
+            return qs
 
         res = elastic_service.search_by_content(
             index="idx",
@@ -189,13 +193,12 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
         )
         hits = res["hits"]["hits"]
         uuids = [h["_id"] for h in hits]
-
         if not uuids:
             return []
-
-        raw_qs_str += "AND arch.uuid in %s"
-        qs = qs.raw(raw_qs_str,[main_section.id, ilike_content, uuids])
-        print(qs.query)
+        cond = "WHERE arch.uuid in %s"
+        raw_qs_str += cond
+        qs = qs.raw(raw_qs_str,[main_section.id, tuple(uuids)])
+        print(qs)
         return qs
         
 @final
@@ -322,6 +325,7 @@ class CreateArchiveView(CreateView):
         url = fscrawler_res["url"] 
         archive_uuid = cast(str, url.split("/")[-1])
 
+        print("archive uuid assigned", archive_uuid)
         new_archive = root_section.create_child_archive(
             file=file,
             user=user,
