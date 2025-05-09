@@ -92,20 +92,20 @@ class FsCrawlerService:
         res = self.session.get(self.url)
         return json.loads(res.content)
 
-    def test_upload_file(self, file: File) -> Dict:
-        url = "{}/{}".format(self.url, "_document?debug=true&simulate=true")
+    def test_upload_file(self, *, file: File) -> Dict:
+        url = "{}/{}".format(self.url, "_document?debug=true&simulate=true&id=_auto_")
         filemap = {
             "file": file.file
         }
         res = self.session.post(url, files=filemap)
         return json.loads(res.content)
 
-    def upload_file(self, *, file: File) -> str:
+    def upload_file(self, *, file: File) -> Dict:
         """
         Carga un archivo a elasticsearch utilizando el servicio de FsCrawler 
         para usar el OCR de Tika.
         """
-        url = "{}/{}".format(self.url, "_document")
+        url = "{}/{}".format(self.url, "_document?id=_auto_")
         filemap = {
             "file": file.file
         }

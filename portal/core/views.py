@@ -133,7 +133,7 @@ class ArchiveView(mixins.LoginRequiredMixin, TemplateView):
                 return HttpResponse(
                     "Document not found in ElasticSearch", 
                     status=400
-                )
+              )
 
         archive.file.delete()
         archive.delete()
@@ -183,7 +183,6 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
             cond = "WHERE arch.fullname LIKE %s"
             raw_qs_str += cond
             qs = qs.raw(raw_qs_str,[main_section.id, like_archive_name])
-            print(qs)
             return qs
 
         res = elastic_service.search_by_content(
@@ -198,7 +197,6 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
         cond = "WHERE arch.uuid in %s"
         raw_qs_str += cond
         qs = qs.raw(raw_qs_str,[main_section.id, tuple(uuids)])
-        print(qs)
         return qs
         
 @final
@@ -325,7 +323,6 @@ class CreateArchiveView(CreateView):
         url = fscrawler_res["url"] 
         archive_uuid = cast(str, url.split("/")[-1])
 
-        print("archive uuid assigned", archive_uuid)
         new_archive = root_section.create_child_archive(
             file=file,
             user=user,
