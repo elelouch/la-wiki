@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django.shortcuts import render, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.contrib.auth import mixins
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from .forms import MarkdownForm, SectionForm, FileForm, SearchForm
 from typing import cast, final
 from django.core.files.base import ContentFile
@@ -45,6 +45,7 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_modal_form.html"
 
     def get(self, request, root_id: int):
+        assert self.template_name
         target="#sec_{root_id} .children-sections"
         initial = { "root_id": root_id }
         form = SectionForm(initial=initial)
@@ -66,11 +67,15 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/file_modal_form.html"   
 
     def get(self, request, root_id: int):
+        assert self.template_name 
         target = "#sec_{root_id} > div > .children-archives"
         initial = { "root_id": root_id }
+        md_piv_url = reverse("core:markdown_text") + "?root_id={root_id}"
+        md_url = md_piv_url.format(root_id=root_id)
         ctx = {
             "target": target.format(root_id=root_id),
-            "form": FileForm(initial=initial)
+            "form": FileForm(initial=initial),
+            "markdown_url": md_url,
         }
         return render(request, self.template_name, ctx)
 
@@ -190,10 +195,12 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
             content=search_content.strip(),
             extra={}
         )
+
         hits = res["hits"]["hits"]
-        uuids = [h["_id"] for h in hits]
-        if not uuids:
+        if not hits:
             return []
+
+        uuids = [h["_id"] for h in hits]
         cond = "WHERE arch.uuid in %s"
         raw_qs_str += cond
         qs = qs.raw(raw_qs_str,[main_section.id, tuple(uuids)])
@@ -253,47 +260,48 @@ class ChildrenViewTest(mixins.LoginRequiredMixin,ListView):
     template_name = "core/section_view.html"
 
 @final
-class MarkdownTextView(mixins.LoginRequiredMixin,TemplateView):
+class MarkdownView(mixins.LoginRequiredMixin,TemplateView):
     template_name="core/markdown_form.html"
-    markdown_template = "core/markdown_view.html"
     login_url = reverse_lazy("wikiapp:login")
 
     def get(self, request: HttpRequest):
-        data = request.GET
-        root_section_id = int(data.get("root_id") or 0)
-        if not root_section_id:
-            return HttpResponse("root id not provided", status = 400)
-        md_form = MarkdownForm()
-        ctx = { "form": md_form, "root_id": root_section_id }
+        assert self.template_name
+        md_form = MarkdownForm(initial=request.GET)
+        ctx = { "form": md_form }
         return render(request, self.template_name, ctx)
 
     def post(self, request: HttpRequest):
-        data = request.POST
-        markdown_ext = ".md"
-        user = cast(User,request.user)
-        filename = (data.get("name") or "").strip()
-        file_content = data.get("file")
-        root_section_id = int(data.get("root_id") or 0)
-        if not root_section_id:
-            return HttpResponse("No root id provided", status = 400)
-        if not file_content:
-            return HttpResponse("No files provided", status = 400)
-        if not filename:
-            return HttpResponse("No name provided", status = 400)
-        root_section = get_object_or_404(Section, pk=root_section_id)
-        fullname = filename + markdown_ext
-        with ContentFile(file_content, name=fullname) as content_file:
+        assert self.template_name
+
+        md_form = MarkdownForm(request.POST)
+        if not md_form.is_valid():
+            return HttpResponse("Form is not valid")
+        cd = md_form.cleaned_data
+            
+        root_id = cd["root_id"]
+        root_section = get_object_or_404(Section, pk=root_id)
+
+        str_text_file = cd["file"]
+        filename = cd["name"] + ".md"
+        with ContentFile(str_text_file, name=filename) as content_file:
+            archive_uuid = fscrawler_service.upload_file_get_uuid(file=content_file)
+            if not archive_uuid: 
+                return HttpResponse(
+                    "Archive uuid not found in response",
+                    status=400
+                )
+            user = cast(User, request.user)
             root_section.create_child_archive(
-                content_file,
-                user,
-                'view_archive',
-                'delete_archive'
+                file=content_file,
+                user=user,
+                perms=['view_archive','delete_archive'],
+                fields={ "uuid": archive_uuid }
             )
         
-        ctx = {"file":markdown_tool.markdown(file_content)}
-        return render(request, self.markdown_template, ctx)
+        ctx = { "file": markdown_tool.markdown(str_text_file) }
+        return render(request, self.template_name, ctx)
 
-class CreateArchiveView(CreateView):
+class CreateArchiveView(mixins.LoginRequiredMixin, CreateView):
     http_method_names = ['post']
     template_name = "core/archive_item.html"
 
@@ -301,6 +309,7 @@ class CreateArchiveView(CreateView):
         """
         Alta/modificacion de archivos.
         """
+        assert self.template_name
         form = FileForm(request.POST, request.FILES)
         if not form.is_valid(): 
             return HttpResponse("Form is not valid", status=400)
@@ -312,17 +321,9 @@ class CreateArchiveView(CreateView):
         add_archive_perm = root_section.find_permission(user, "add_archive")
         if not add_archive_perm:
             return HttpResponse("Unauthorized", status=401)
+
         file = form.cleaned_data["file"]
-        fscrawler_res = fscrawler_service.upload_file(file=file)
-        res_ok = fscrawler_res["ok"]
-        if not res_ok:
-            return HttpResponse("Error during file indexing", status=400)
-
-        # el ultimo elemento de una URL de elasticsearch es el UUID del documento
-        # ej: "http://elasticsearch:9200/idx/_doc/505e346f5c2990aff053966da5f3dc4"
-        url = fscrawler_res["url"] 
-        archive_uuid = cast(str, url.split("/")[-1])
-
+        archive_uuid = fscrawler_service.upload_file_get_uuid(file=file)
         new_archive = root_section.create_child_archive(
             file=file,
             user=user,
@@ -334,11 +335,12 @@ class CreateArchiveView(CreateView):
         response["HX-Trigger"] = "clearMainSection"
         return response
 
-class CreateSectionView(CreateView):
+class CreateSectionView(mixins.LoginRequiredMixin, CreateView):
     http_method_names = ['post']
     template_name = "core/section_item.html"
 
     def post(self, request: HttpRequest): 
+        assert self.template_name
         data = SectionForm(request.POST)
         if not data.is_valid():
             return HttpResponse("Form is not valid", status=400)
@@ -359,3 +361,4 @@ class CreateSectionView(CreateView):
         res = render(request,self.template_name,ctx)
         res["HX-Trigger"] = "clearMainSection"
         return res
+

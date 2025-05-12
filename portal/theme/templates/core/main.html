@@ -25,7 +25,7 @@ Wiki
             <div class="flex justify-between w-full flex justify-around">
                 <div class="flex basis-1/4 h-24">
                     {% url "core:modal_archive" root.id as modal_arch_url %}
-                    {% btn_get modal_arch_url "#pivot-section" "click" "{\"root_id\":0}" as arch_btn_attrs %}
+                    {% btn_get modal_arch_url "#pivot-section" "click" as arch_btn_attrs %}
                     {% include "core/button/simple_button.html" with add_attrs=arch_btn_attrs button_class='fa-solid fa-file' %}
 
                     {% url "core:modal_section" root.id as modal_sec_url %}
@@ -43,7 +43,11 @@ Wiki
                         </div>
                     </div>
                 </div>
-                <div hx-trigger="load" hx-get="{% url 'core:children' %}" hx-target="find div" id="sec_{{root.id}}" class="rounded full-rounded">
+                <div hx-trigger="load" 
+                     hx-get="{% url 'core:children' %}" 
+                     hx-target="find div" 
+                     id="sec_{{root.id}}" 
+                     class="rounded full-rounded">
                     <div>
                     </div>
                 </div>

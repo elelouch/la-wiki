@@ -1,4 +1,4 @@
-<div x-init="htmx.process(htmx.find('#markdownForm'))" x-ref="markdownFormDiv">
+<div x-init="htmx.process(htmx.find('#markdownForm'))" x-ref="markdownFormDiv" x-data="">
     <form hx-post="{{request.path}}" id="markdownForm">
         {% csrf_token %}
         {{form}}

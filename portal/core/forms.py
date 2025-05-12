@@ -1,8 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from typing import final
 from django import forms
-from django.urls import reverse_lazy
-from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
+from django.core.validators import MaxLengthValidator, MinLengthValidator, MinValueValidator, RegexValidator
 
 @final
 class SectionForm(forms.Form):
@@ -55,6 +54,15 @@ class SearchForm(forms.Form):
 
 @final
 class MarkdownForm(forms.Form):
+    markdown_length = 4 * 1024 * 1024
+    root_id = forms.IntegerField(
+        label="",
+        widget = forms.NumberInput(attrs={
+            "class": "hidden",
+        }),
+        validators=[MinValueValidator(1)],
+        required=True
+    )
     name = forms.CharField(
         label="",
         widget=forms.TextInput(attrs={
@@ -71,7 +79,7 @@ class MarkdownForm(forms.Form):
             "placeholder":_("Markdown supported"),
             "class":"rounded-md"
         }),
-        max_length=4 * 1024 * 1024, # esto es, 4MB
+        validators = [MaxLengthValidator(markdown_length), MinLengthValidator(1)],
         required=True
     )
 
