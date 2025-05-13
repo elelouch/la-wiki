@@ -11,7 +11,6 @@ from django.conf import settings
 class ElasticSearchService:
     def __init__(self):
         logger = logging.getLogger(self.__class__.__name__)
-        logging.basicConfig(filename='myapp.log', level=logging.INFO)
         session = requests.Session()
         # setup CA/Cert
         # session.verify = "ca/cert/path"
@@ -58,17 +57,26 @@ class ElasticSearchService:
         return json.loads(res.content)
 
     def delete_document(self, *, index: str, doc_id: str):
-        resource = "{index_name}/_doc/{doc_id}".format(index_name=index, doc_id=doc_id)
-        url = "{url}/{resource}".format(url=self.url, resource=resource)
-        r = self.session.delete(url)
-        return json.loads(r.content)
+        if not doc_id:
+            return
+        try:
+            resource = "{index_name}/_doc/{doc_id}".format(index_name=index, doc_id=doc_id)
+            url = "{url}/{resource}".format(url=self.url, resource=resource)
+            r = self.session.delete(url)
+            res = json.loads(r.content)
+            if res["result"] == "not_found":
+                err_str = "Doc ID:{id} not found in elasticsearch"
+                err_str.format(id=doc_id)
+                self.logger.warning(err_str)
+        except requests.RequestException as exc:
+            self.logger.warning("Elasticsearch service might not be available.")
+            self.logger.warning(exc.strerror)
 
 elastic_service = ElasticSearchService()
 
 class FsCrawlerService:
     def __init__(self):
         logger = logging.getLogger(self.__class__.__name__)
-        logging.basicConfig(filename='myapp.log', level=logging.INFO)
         session = requests.Session()
         # setup CA/Cert
         # session.verify = "ca/cert/path"
@@ -102,7 +110,7 @@ class FsCrawlerService:
         res = self.session.post(url, files=filemap)
         return json.loads(res.content)
 
-    def upload_file(self, *, file: File) -> Dict:
+    def __upload_file(self, *, file: File) -> Dict:
         """
         Carga un archivo a elasticsearch utilizando el servicio de FsCrawler 
         para usar el OCR de Tika.
@@ -111,26 +119,23 @@ class FsCrawlerService:
         filemap = {
             "file": file.file
         }
-        try: 
-            res = self.session.post(url, files=filemap)
-        except requests.RequestException as re: 
-            self.logger.error(re.strerror)
-            raise
-
+        res = self.session.post(url, files=filemap)
         return json.loads(res.content)
 
-    def upload_file_get_uuid(self, *, file: File) -> str:
-        """
-        Retorna el UUID del documento subido a ElasticSearch
-        el ultimo elemento de una URL de elasticsearch es el UUID del documento
-        ej: "http://elasticsearch:9200/idx/_doc/505e346f5c2990aff053966da5f3dc4"
-        """
-        fsc_res = self.upload_file(file=file)
-        res_ok = fsc_res.get("ok")
-        if not res_ok: 
+    def upload_file(self, *, file: File) -> str:
+        try:
+            fsc_res = self.__upload_file(file=file)
+            if not fsc_res.get("ok"):
+                err = "Couldn't upload {doc} document to Elasticsearch through FsCrawler"
+                err.format(doc=file.name)
+                self.logger.info(err)
+                return ""
+            url = fsc_res["url"]
+            archive_uuid = url.split("/")[-1]
+            return archive_uuid
+        except requests.RequestException as err:
+            self.logger.warning("FsCrawler service not available")
+            self.logger.warning(err.strerror)
             return ""
-        url = fsc_res["url"]
-        archive_uuid = url.split("/")[-1]
-        return archive_uuid
 
 fscrawler_service = FsCrawlerService()

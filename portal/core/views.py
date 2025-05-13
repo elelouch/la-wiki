@@ -23,6 +23,7 @@ class ChildrenView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_view.html"
     login_url = reverse_lazy("wikiapp:login")
     redirect_field_name = "login"
+
     def get(self, request: HttpRequest):
         assert self.template_name
         user = cast(User,request.user)
@@ -45,7 +46,7 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_modal_form.html"
 
     def get(self, request, root_id: int):
-        assert self.template_name
+        assert self.template_name and root_id
         target="#sec_{root_id} .children-sections"
         initial = { "root_id": root_id }
         form = SectionForm(initial=initial)
@@ -67,7 +68,7 @@ class ModalArchiveView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/file_modal_form.html"   
 
     def get(self, request, root_id: int):
-        assert self.template_name 
+        assert self.template_name and root_id
         target = "#sec_{root_id} > div > .children-archives"
         initial = { "root_id": root_id }
         md_piv_url = reverse("core:markdown_text") + "?root_id={root_id}"
@@ -123,23 +124,16 @@ class ArchiveView(mixins.LoginRequiredMixin, TemplateView):
         return render(request, self.default_template, ctx)
 
     def delete(self, request: HttpRequest, archive_id: int):
-        if not archive_id:
-            return HttpResponse("Archive id not valid", status=400)
         user = cast(User, request.user)
-        archive = get_object_or_404(Archive, pk=int(archive_id))
+        archive = get_object_or_404(Archive, pk=archive_id)
 
         if not archive.find_permission(user, "delete_archive"):
             return HttpResponse("Unauthorized", status=401)
 
-        archive_uuid = archive.uuid
-        if archive_uuid: 
-            res = elastic_service.delete_document(index="idx", doc_id=archive_uuid)
-            if res["result"] != "deleted":
-                return HttpResponse(
-                    "Document not found in ElasticSearch", 
-                    status=400
-              )
-
+        elastic_service.delete_document(
+            index="idx",
+            doc_id=archive.uuid
+        )
         archive.file.delete()
         archive.delete()
         response = HttpResponse("")
@@ -216,24 +210,23 @@ class ReferencesView(mixins.LoginRequiredMixin, TemplateView):
 
     def get(self, request: HttpRequest, archive_id: int):
         assert self.template_name
-        if not archive_id :
-            return render(request, self.template_name, {}) 
+        if not archive_id:
+            return render(request, self.template_name) 
         arch = get_object_or_404(Archive, pk=archive_id)
         refs = arch.references
         return render(
-                request, 
-                self.template_name, 
-                {
-                    "arch": arch,
-                    "form": SearchForm(),
-                    "references": refs.all(),
-                    "ids": list(refs.values_list('id', flat=True))
-                }
-            ) 
+            request, 
+            self.template_name, 
+            {
+                "arch": arch,
+                "form": SearchForm(),
+                "references": refs.all(),
+                "ids": list(refs.values_list('id', flat=True))
+            }
+        ) 
 
     def post(self, request: HttpRequest, archive_id: int):
-        if not archive_id:
-            return HttpResponse("Archive id is not valid", status=400)
+        assert archive_id
         arch = get_object_or_404(Archive, pk=archive_id)
         data = request.POST
         new_refs = data.get("refs")
@@ -262,6 +255,7 @@ class ChildrenViewTest(mixins.LoginRequiredMixin,ListView):
 @final
 class MarkdownView(mixins.LoginRequiredMixin,TemplateView):
     template_name="core/markdown_form.html"
+    markdown_template="core/markdown_view.html"
     login_url = reverse_lazy("wikiapp:login")
 
     def get(self, request: HttpRequest):
@@ -284,22 +278,19 @@ class MarkdownView(mixins.LoginRequiredMixin,TemplateView):
         str_text_file = cd["file"]
         filename = cd["name"] + ".md"
         with ContentFile(str_text_file, name=filename) as content_file:
-            archive_uuid = fscrawler_service.upload_file_get_uuid(file=content_file)
-            if not archive_uuid: 
-                return HttpResponse(
-                    "Archive uuid not found in response",
-                    status=400
-                )
             user = cast(User, request.user)
-            root_section.create_child_archive(
+            archive_uuid = fscrawler_service.upload_file(file=content_file)
+            created_archive = root_section.create_child_archive(
                 file=content_file,
                 user=user,
-                perms=['view_archive','delete_archive'],
-                fields={ "uuid": archive_uuid }
+                perms=["view_archive","delete_archive"],
+                fields={"uuid": archive_uuid},
             )
-        
-        ctx = { "file": markdown_tool.markdown(str_text_file) }
-        return render(request, self.template_name, ctx)
+            ctx = { 
+               "file": markdown_tool.markdown(str_text_file),
+               "archive": created_archive,
+            }
+            return render(request, self.markdown_template, ctx)
 
 class CreateArchiveView(mixins.LoginRequiredMixin, CreateView):
     http_method_names = ['post']
@@ -323,12 +314,12 @@ class CreateArchiveView(mixins.LoginRequiredMixin, CreateView):
             return HttpResponse("Unauthorized", status=401)
 
         file = form.cleaned_data["file"]
-        archive_uuid = fscrawler_service.upload_file_get_uuid(file=file)
+        archive_uuid = fscrawler_service.upload_file(file=file)
         new_archive = root_section.create_child_archive(
             file=file,
             user=user,
             perms=["delete_archive","view_archive"],
-            fields={ "uuid": archive_uuid }
+            fields={"uuid": archive_uuid}
         )
         ctx = { "arch": new_archive }
         response = render(request, self.template_name, ctx)
@@ -344,21 +335,21 @@ class CreateSectionView(mixins.LoginRequiredMixin, CreateView):
         data = SectionForm(request.POST)
         if not data.is_valid():
             return HttpResponse("Form is not valid", status=400)
-        root_id = data.cleaned_data["root_id"]
+        cd = data.cleaned_data
+        root_id = cd["root_id"]
         root_section = get_object_or_404(Section, pk=root_id)
         user = cast(User, request.user)
         can_add_section = root_section.find_permission(user, "add_section")
         if not can_add_section:
             return HttpResponse("Unauthorized", status = 401)
-        cleaned_data = data.cleaned_data
-        new_name = cast(str, cleaned_data.get("name"))
+        new_name = cd["name"]
         new_child = root_section.create_child(
             name=new_name,
             user=user,
             perms=["delete_section", "view_section", "add_archive"]
         )
-        ctx = {"sec": new_child, "root": root_section}
-        res = render(request,self.template_name,ctx)
+        ctx = { "sec": new_child, "root": root_section }
+        res = render(request, self.template_name, ctx)
         res["HX-Trigger"] = "clearMainSection"
         return res
 
