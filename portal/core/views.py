@@ -286,9 +286,11 @@ class MarkdownView(mixins.LoginRequiredMixin,TemplateView):
                 perms=["view_archive","delete_archive"],
                 fields={"uuid": archive_uuid},
             )
+            target="#sec_{root_id} .children-sections"
             ctx = { 
-               "file": markdown_tool.markdown(str_text_file),
-               "archive": created_archive,
+                "file": markdown_tool.markdown(str_text_file),
+                "archive": created_archive,
+                "oob_target": target.format(root_id=created_archive.id)
             }
             return render(request, self.markdown_template, ctx)
 
@@ -318,7 +320,7 @@ class CreateArchiveView(mixins.LoginRequiredMixin, CreateView):
         new_archive = root_section.create_child_archive(
             file=file,
             user=user,
-            perms=["delete_archive","view_archive"],
+            perms=["delete_archive", "view_archive"],
             fields={"uuid": archive_uuid}
         )
         ctx = { "arch": new_archive }

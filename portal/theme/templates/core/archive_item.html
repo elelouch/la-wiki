@@ -8,9 +8,7 @@
     hx-get="{% url 'core:archive' arch_id %}"
     hx-target="#writable-section" hx-swap="innerHTML">
 
-    <span>
-        {{arch.fullname}}
-    </span>
+    <span>{{arch.fullname}}</span>
 
     <div class="flex basis-full"></div>
     <div :class="!sectionSelected && currentArchiveId === {{arch_id}} ? '' : 'hidden'">

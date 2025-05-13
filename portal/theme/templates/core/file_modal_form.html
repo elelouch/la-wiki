@@ -3,7 +3,7 @@
      x-data="{submitted: false}"
     x-init="htmx.process(htmx.find('#markdownButton'))" 
     x-ref="fileModal">
-    <div @click="$refs.fileModal.remove()" @keyup.escape.window="$refs.fileModal.remove()"
+    <div @click="!submitted && $refs.fileModal.remove()" @keyup.escape.window="!submitted && $refs.fileModal.remove()"
         class="h-screen w-screen top-0 left-0 right-0 down-0 absolute" 
         style="z-index:-1">
     </div>
@@ -37,13 +37,13 @@
             </button>
 
             <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full"
-                    @click="$refs.fileModal.remove()">
+                    @click="!submitted && $refs.fileModal.remove()">
                     Cancel
             </button>
             <button hx-trigger="click" hx-get="{{markdown_url}}" 
                     hx-target="#writable-section" hx-swap="innerHTML" id="markdownButton"
                     class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full"
-                    @click="$refs.fileModal.remove()">
+                    @click="!submitted && $refs.fileModal.remove()">
                 Write a plain text file
             </button>
         </div>
