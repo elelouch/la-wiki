@@ -67,7 +67,7 @@ class Section(models.Model, PermissionHolder):
         Estas strings tienen que coincidir con el "codename" de la entidad Permission.
         Basicamente, si matchea el codename, asigna ese permiso.
         """
-        assert len(name) and perms
+        assert name and perms
         new_section = self.children.create(name = name)
         perm_entities = Permission.objects.filter(codename__in=perms)
         
@@ -118,6 +118,7 @@ class Section(models.Model, PermissionHolder):
             - treemap, con pares (<id_seccion_padre>, [secciones_hijas])
             - archivesmap, con pares (<id_seccion_padre>, [archivos_hijos])
         """
+        assert user
         treemap = {}
         archivesmap = {}
         qs = self.all_children(user)
@@ -142,8 +143,7 @@ class Section(models.Model, PermissionHolder):
         No se toca nada de grupos, la intencion es que un administrador
         agregue los permisos a un archivo de manera grupal.
         """
-        assert file is not None
-        assert perms and user
+        assert file and user and perms
         fullname = str(file.name)
         filename, extension = os.path.splitext(fullname)
         arch = self.archives.create(

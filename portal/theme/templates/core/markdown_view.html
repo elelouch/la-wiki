@@ -4,9 +4,13 @@
     {% autoescape off %}
         {{file}}
     {% endautoescape %}
+
 </div>
+
 {% if oob_target %}
-<div id="{{oob_target}}" hx-swap-oob="true">
-    {% include "core/archive_item.html" with arch=archive %}
-</div>
+    {% autoescape off %}
+    <div hx-swap-oob="beforend:{{oob_target}}">
+        {% include "core/archive_item.html" with arch=archive %}
+    </div>
+    {% endautoescape %}
 {% endif %}

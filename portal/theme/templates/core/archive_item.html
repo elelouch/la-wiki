@@ -1,6 +1,5 @@
 {% load myfilters %}
 {% with arch_id=arch.id|stringformat:"s" %}
-
 <div class="flex flex-row cursor-pointer" id="arch_{{arch_id}}" 
     :class="!sectionSelected && currentArchiveId === {{arch_id}} && selectedclasses"
     @click="currentArchiveId = {{arch_id}}; sectionSelected=false" 
@@ -17,5 +16,4 @@
         {% include "core/button/simple_button.html" with add_attrs=del_arch_attrs button_class="fa-solid fa-xmark" add_class="bg-red-500 hover:bg-red-800" %}
     </div>
 </div>
-
 {% endwith %}

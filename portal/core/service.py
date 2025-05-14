@@ -1,5 +1,4 @@
-from os import strerror
-from typing import Dict, cast
+from typing import Dict
 from django.core.files import File
 import requests
 import json
@@ -34,6 +33,7 @@ class ElasticSearchService:
         return json.loads(res.content)
 
     def search_by_content(self, *, index: str, content: str, extra: dict):
+        assert str and content
         resource = "{index_name}/_search".format(index_name=index)
         url = "{url}/{resource}".format(url=self.url, resource=resource)
         headers = { "Content-Type": "application/json" }
@@ -57,6 +57,7 @@ class ElasticSearchService:
         return json.loads(res.content)
 
     def delete_document(self, *, index: str, doc_id: str):
+        assert index
         if not doc_id:
             return
         try:
@@ -115,6 +116,7 @@ class FsCrawlerService:
         Carga un archivo a elasticsearch utilizando el servicio de FsCrawler 
         para usar el OCR de Tika.
         """
+        assert file
         url = "{}/{}".format(self.url, "_document?id=_auto_")
         filemap = {
             "file": file.file
@@ -123,6 +125,7 @@ class FsCrawlerService:
         return json.loads(res.content)
 
     def upload_file(self, *, file: File) -> str:
+        assert file
         try:
             fsc_res = self.__upload_file(file=file)
             if not fsc_res.get("ok"):

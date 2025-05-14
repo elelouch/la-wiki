@@ -57,7 +57,7 @@ class ModalSectionView(mixins.LoginRequiredMixin, TemplateView):
         return render(request, self.template_name, ctx) 
 
 class SectionView(mixins.LoginRequiredMixin, TemplateView):
-    template_section_item = "core/section_item.html"
+    template_name = "core/section_item.html"
     def delete(self, request: HttpRequest, root_section_id: int): 
         root_section = get_object_or_404(Section, pk=int(root_section_id))
         root_section.delete()
@@ -286,11 +286,12 @@ class MarkdownView(mixins.LoginRequiredMixin,TemplateView):
                 perms=["view_archive","delete_archive"],
                 fields={"uuid": archive_uuid},
             )
-            target="#sec_{root_id} .children-sections"
+            target = "#sec_{root_id} > div > .children-archives"
+            oob_target = target.format(root_id=root_id)
             ctx = { 
                 "file": markdown_tool.markdown(str_text_file),
                 "archive": created_archive,
-                "oob_target": target.format(root_id=created_archive.id)
+                "oob_target": oob_target,
             }
             return render(request, self.markdown_template, ctx)
 
