@@ -1,9 +1,9 @@
 from django.core.files import File
 from django.db import models
+from django.conf import settings
 from typing import Dict, final, Iterator
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from itertools import chain
-
 import os
 
 from django.db.models.query import RawQuerySet
@@ -52,25 +52,35 @@ class Section(models.Model, PermissionHolder):
     name = models.CharField(max_length=256, null=False)
     description = models.CharField(max_length=256, default="")
     parent = models.ForeignKey(
-            "self",
-            on_delete=models.CASCADE,
-            null=True,
-            related_name="children"
-            )
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="children"
+    )
+    path = models.CharField(max_length=256, default="")
 
     def __str__(self):
         return self.name
 
-    def create_child(self, *, name: str, user:User, perms: list[str]):
+    def create_child(self, *, child_name: str, user:User, perms: list[str]):
         """
         Crea un hijo y asigna los permisos enviados en formatos string.
         Estas strings tienen que coincidir con el "codename" de la entidad Permission.
         Basicamente, si matchea el codename, asigna ese permiso.
         """
-        assert name and perms
-        new_section = self.children.create(name = name)
+        assert child_name and perms
+
+        new_path = os.path.join(self.path, child_name)
+        media_path = os.path.join(settings.MEDIA_ROOT, new_path)
+
+        if not os.path.exists(media_path):
+            os.makedirs(media_path)
+
+        new_section = self.children.create(
+            name = child_name,
+            path = new_path
+        )
         perm_entities = Permission.objects.filter(codename__in=perms)
-        
         usp = new_section.usersectionpermission_set.create(user=user)
         usp.permissions.set(perm_entities)
         return new_section
@@ -145,12 +155,14 @@ class Section(models.Model, PermissionHolder):
         """
         assert file and user and perms
         fullname = str(file.name)
+        newpath = os.path.join(self.path, fullname)
         filename, extension = os.path.splitext(fullname)
         arch = self.archives.create(
                 fullname = file.name,
                 name = filename,
                 extension = extension,
                 file = file,
+                path = newpath,
                 **fields
             )
         perm_entities = Permission.objects.filter(codename__in=perms)
@@ -174,6 +186,11 @@ class Section(models.Model, PermissionHolder):
             for perm in up.permissions.all():
                 yield perm
 
+def dynamic_path(instance: "Archive", filename: str):
+    parent_section_path = instance.section.path
+    path = os.path.join(parent_section_path, filename)
+    return path
+
 @final
 class Archive(models.Model, PermissionHolder):
     fullname = models.CharField(max_length=256, null=False)
@@ -181,16 +198,17 @@ class Archive(models.Model, PermissionHolder):
     description = models.CharField(max_length=256, default = "")
     references = models.ManyToManyField("self", symmetrical=False)
     extension = models.CharField(max_length=12, default = "")
-    last_time_modified = models.DateField(null=True)
-    first_time_upload = models.DateField(auto_now_add=True)
+    last_time_modified = models.DateField(auto_now_add=True, null=False)
+    first_time_upload = models.DateField(auto_now_add=True, null=False)
     section = models.ForeignKey(
         Section, 
         on_delete=models.CASCADE,
         null=False,
         related_name="archives"
     )
-    file = models.FileField(upload_to="uploads/%Y/%m/%d", null=False)
+    file = models.FileField(upload_to=dynamic_path, null=False)
     uuid = models.CharField(max_length=36, default="")
+    path = models.CharField(max_length=256, default="")
 
     def group_permissions(self, user: User) -> Iterator[Permission]:
         assert user

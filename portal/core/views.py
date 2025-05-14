@@ -338,20 +338,25 @@ class CreateSectionView(mixins.LoginRequiredMixin, CreateView):
         data = SectionForm(request.POST)
         if not data.is_valid():
             return HttpResponse("Form is not valid", status=400)
+
         cd = data.cleaned_data
+
         root_id = cd["root_id"]
         root_section = get_object_or_404(Section, pk=root_id)
+
         user = cast(User, request.user)
         can_add_section = root_section.find_permission(user, "add_section")
         if not can_add_section:
             return HttpResponse("Unauthorized", status = 401)
-        new_name = cd["name"]
-        new_child = root_section.create_child(
-            name=new_name,
+
+        child_name = cd["name"]
+        new_section = root_section.create_child(
+            child_name=child_name,
             user=user,
             perms=["delete_section", "view_section", "add_archive"]
         )
-        ctx = { "sec": new_child, "root": root_section }
+
+        ctx = { "sec": new_section, "root": root_section }
         res = render(request, self.template_name, ctx)
         res["HX-Trigger"] = "clearMainSection"
         return res

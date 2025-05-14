@@ -3,6 +3,6 @@
     hx-get="{% url 'core:references' archive.id %}"
     hx-target="#references-div">
     <iframe class="w-full h-full" title="Selected File" 
-            src="/media/uploads/{{date_str}}/{{ archive.name|add:archive.extension }}">
+          src="/media/uploads/{{archive.path}}">
     </iframe>
 </div>
