@@ -186,7 +186,7 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
 
         res = elastic_service.search_by_content(
             index="idx",
-            content=search_content.strip(),
+            content=search_content,
             extra={}
         )
 
