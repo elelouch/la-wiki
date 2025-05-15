@@ -1,10 +1,14 @@
 from django.core.files import File
 from django.db import models
 from django.conf import settings
-from typing import Dict, final, Iterator
+from typing import List, final, Iterator
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from itertools import chain
+from .utils import dynamic_path
+from .service import elastic_service, fscrawler_service
 import os
+import shutil
+from . import queries
 
 from django.db.models.query import RawQuerySet
 
@@ -146,7 +150,7 @@ class Section(models.Model, PermissionHolder):
                 archivesmap[sec.id].append(arch)
         return (treemap, archivesmap)
 
-    def create_child_archive(self, *, file: File, user:User, perms: list[str], fields: Dict[str, str | int]) -> "Archive":
+    def create_child_archive(self, *, file: File, user:User, perms: list[str]) -> "Archive":
         """
         Crea un archivo hijo de la seccion actual, agregando solo
         accesos para el usuario que lo creo.
@@ -157,13 +161,16 @@ class Section(models.Model, PermissionHolder):
         fullname = str(file.name)
         newpath = os.path.join(self.path, fullname)
         filename, extension = os.path.splitext(fullname)
+
+        archive_uuid = fscrawler_service.upload_file(file=file)
+
         arch = self.archives.create(
-                fullname = file.name,
+                fullname = fullname,
                 name = filename,
                 extension = extension,
                 file = file,
                 path = newpath,
-                **fields
+                uuid = archive_uuid
             )
         perm_entities = Permission.objects.filter(codename__in=perms)
         uap = arch.userarchivepermission_set.create(user=user)
@@ -186,11 +193,36 @@ class Section(models.Model, PermissionHolder):
             for perm in up.permissions.all():
                 yield perm
 
-def dynamic_path(instance: "Archive", filename: str):
-    parent_section_path = instance.section.path
-    path = os.path.join(parent_section_path, filename)
-    return path
+    def delete_section(self):
+        path = os.path.join(settings.MEDIA_ROOT, self.path)
+        # hacer un select de todos los hijos para obtener una lista de UUID a remover
+        # y armar un bulk_delete
+        shutil.rmtree(path)
+        self.delete()
 
+    def find_archive_by_name(self, *, name: str) -> RawQuerySet:
+        assert name
+        like_archive_name = "%{content}%".format(content=name)
+        raw_query = queries.sca(fields=["id", "fullname"])
+        cond = "WHERE arch.fullname LIKE %s"
+        raw_query += cond
+        qs = Archive.objects.raw(raw_query,[self.id, like_archive_name])
+        return qs
+
+    def find_archive_by_content(self, *, content: str) -> RawQuerySet:
+        res = elastic_service.search_by_content(
+            index="idx",
+            content=content,
+            extra={}
+        )
+        hits = res["hits"]["hits"]
+        if not hits:
+            return Archive.objects.none()
+        uuids = [h["_id"] for h in hits]
+        raw_query = queries.section_child_archives
+        cond = "WHERE arch.uuid in %s"
+        raw_query += cond
+        return Archive.objects.raw(raw_query,[self.id, tuple(uuids)])
 @final
 class Archive(models.Model, PermissionHolder):
     fullname = models.CharField(max_length=256, null=False)
@@ -223,6 +255,14 @@ class Archive(models.Model, PermissionHolder):
         for gp in user_perms:
             for perm in gp.permissions.all():
                 yield perm
+
+    def delete_archive(self):
+        elastic_service.delete_document(
+            index="idx",
+            doc_id=self.uuid
+        )
+        self.file.delete()
+        self.delete()
 
 class SectionPermission(models.Model):
     section = models.ForeignKey(Section, on_delete=models.CASCADE, default=None)

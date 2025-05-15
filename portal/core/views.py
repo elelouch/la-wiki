@@ -14,7 +14,6 @@ from django.core.files.base import ContentFile
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic.edit import CreateView
 from .models import Section, Archive, User
-from .service import elastic_service, fscrawler_service
 
 import markdown as markdown_tool
 
@@ -60,7 +59,7 @@ class SectionView(mixins.LoginRequiredMixin, TemplateView):
     template_name = "core/section_item.html"
     def delete(self, request: HttpRequest, root_section_id: int): 
         root_section = get_object_or_404(Section, pk=int(root_section_id))
-        root_section.delete()
+        root_section.delete_section()
         return HttpResponse("")
     
 @final
@@ -115,7 +114,6 @@ class ArchiveView(mixins.LoginRequiredMixin, TemplateView):
             ctx = {
                 "archive": arch,
                 "file": arch.file,
-                "date_str": arch.first_time_upload.strftime("%Y/%m/%d")
             } 
             return render(request, self.template_name, ctx)
 
@@ -129,15 +127,8 @@ class ArchiveView(mixins.LoginRequiredMixin, TemplateView):
 
         if not archive.find_permission(user, "delete_archive"):
             return HttpResponse("Unauthorized", status=401)
-
-        elastic_service.delete_document(
-            index="idx",
-            doc_id=archive.uuid
-        )
-        archive.file.delete()
-        archive.delete()
+        archive.delete_archive()
         response = HttpResponse("")
-        # agregamos header
         response["HX-Trigger"] = "clearMainSection"
         return response
 
@@ -148,22 +139,6 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
     login_url = reverse_lazy("wikiapp:login")
 
     def get_queryset(self):
-        raw_qs_str = """
-        WITH RECURSIVE ancestors AS (
-            SELECT *
-            FROM core_section s 
-            WHERE s.id = %s
-            UNION ALL
-            SELECT cs.*
-            FROM core_section cs, ancestors a 
-            WHERE cs.parent_id = a.id
-        ) SELECT 
-                arch.id, 
-                arch.fullname
-        FROM ancestors
-        INNER JOIN core_archive arch
-        ON ancestors.id = arch.section_id
-        """
         form = SearchForm(self.request.GET)
         if not form.is_valid():
             return []
@@ -172,33 +147,13 @@ class SearchArchiveListView(mixins.LoginRequiredMixin,ListView):
         if len(search_content) <= 2 :
             return []
 
-        qs = super().get_queryset()
+        by_content = form.cleaned_data["by_content"]
+
         user = cast(User, self.request.user)
         main_section = user.main_section
-
-        by_content = form.cleaned_data["by_content"]
         if not by_content:
-            like_archive_name = "%{content}%".format(content=search_content)
-            cond = "WHERE arch.fullname LIKE %s"
-            raw_qs_str += cond
-            qs = qs.raw(raw_qs_str,[main_section.id, like_archive_name])
-            return qs
-
-        res = elastic_service.search_by_content(
-            index="idx",
-            content=search_content,
-            extra={}
-        )
-
-        hits = res["hits"]["hits"]
-        if not hits:
-            return []
-
-        uuids = [h["_id"] for h in hits]
-        cond = "WHERE arch.uuid in %s"
-        raw_qs_str += cond
-        qs = qs.raw(raw_qs_str,[main_section.id, tuple(uuids)])
-        return qs
+            return main_section.find_archive_by_name(name=search_content)
+        return main_section.find_archive_by_content(content=search_content)
         
 @final
 class SearchArchiveListReferencesView(SearchArchiveListView):
@@ -279,12 +234,10 @@ class MarkdownView(mixins.LoginRequiredMixin,TemplateView):
         filename = cd["name"] + ".md"
         with ContentFile(str_text_file, name=filename) as content_file:
             user = cast(User, request.user)
-            archive_uuid = fscrawler_service.upload_file(file=content_file)
             created_archive = root_section.create_child_archive(
                 file=content_file,
                 user=user,
                 perms=["view_archive","delete_archive"],
-                fields={"uuid": archive_uuid},
             )
             target = "#sec_{root_id} > div > .children-archives"
             oob_target = target.format(root_id=root_id)
@@ -307,8 +260,9 @@ class CreateArchiveView(mixins.LoginRequiredMixin, CreateView):
         form = FileForm(request.POST, request.FILES)
         if not form.is_valid(): 
             return HttpResponse("Form is not valid", status=400)
+        cd = form.cleaned_data
 
-        root_id = form.cleaned_data["root_id"]
+        root_id = cd["root_id"]
         root_section = get_object_or_404(Section, pk=root_id)
 
         user = cast(User, request.user)
@@ -316,14 +270,13 @@ class CreateArchiveView(mixins.LoginRequiredMixin, CreateView):
         if not add_archive_perm:
             return HttpResponse("Unauthorized", status=401)
 
-        file = form.cleaned_data["file"]
-        archive_uuid = fscrawler_service.upload_file(file=file)
+        file = cd["file"]
         new_archive = root_section.create_child_archive(
             file=file,
             user=user,
             perms=["delete_archive", "view_archive"],
-            fields={"uuid": archive_uuid}
         )
+
         ctx = { "arch": new_archive }
         response = render(request, self.template_name, ctx)
         response["HX-Trigger"] = "clearMainSection"
@@ -353,7 +306,12 @@ class CreateSectionView(mixins.LoginRequiredMixin, CreateView):
         new_section = root_section.create_child(
             child_name=child_name,
             user=user,
-            perms=["delete_section", "view_section", "add_archive"]
+            perms=[
+                "delete_section",
+                "view_section",
+                "add_archive",
+                "add_section"
+            ]
         )
 
         ctx = { "sec": new_section, "root": root_section }

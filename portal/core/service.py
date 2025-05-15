@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 from django.core.files import File
 import requests
 import json
@@ -69,6 +69,26 @@ class ElasticSearchService:
                 err_str = "Doc ID:{id} not found in elasticsearch"
                 err_str.format(id=doc_id)
                 self.logger.warning(err_str)
+        except requests.RequestException as exc:
+            self.logger.warning("Elasticsearch service might not be available.")
+            self.logger.warning(exc.strerror)
+
+    def bulk_delete(self, *, index: str, docs_id: List[str]):
+        assert index
+        try:
+            resource = "bulk?pretty=true&filter_path=items.*.error"
+            url = "{url}/{resource}".format(url=self.url, resource=resource)
+            bulk = [{"delete": {"_index": index, "_id": id}} for id in docs_id]
+            headers = {"Content-Type": "application/json"}
+            bulk_str = "\n".join(json.dumps(item) for item in bulk) + "\n"
+            r = self.session.post(url, data=bulk_str, headers=headers)
+
+            if r.content:
+                err_str = "Errors during bulk delete, list used:{docs_id} "
+                err_str.format(docs_id=docs_id)
+                self.logger.warning(err_str)
+                self.logger.warning(r.content)
+
         except requests.RequestException as exc:
             self.logger.warning("Elasticsearch service might not be available.")
             self.logger.warning(exc.strerror)
