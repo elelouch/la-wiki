@@ -1,7 +1,7 @@
 from typing import List
 
 
-section_child_archives = """
+sca = """
 WITH RECURSIVE ancestors AS (
     SELECT *
     FROM core_section s 
@@ -28,16 +28,13 @@ WITH RECURSIVE ancestors AS (
     FROM core_section cs, ancestors a 
     WHERE cs.parent_id = a.id
 ) SELECT 
-        {fields}
+    {fields}
 FROM ancestors
 INNER JOIN core_archive arch
 ON ancestors.id = arch.section_id
 """
 
-def sca(*, fields: List[str]):
+def section_children_archives(*, fields: List[str]):
     assert fields
     fields_with_prefix = [ "arch." + f for f in fields ]
-    fs = section_child_archives.format(
-        '\n'.join(fields_with_prefix)
-    )
-    return sca_str.format(fields=fs)
+    return sca_str.format(fields = ','.join(fields_with_prefix))

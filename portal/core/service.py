@@ -74,21 +74,23 @@ class ElasticSearchService:
             self.logger.warning(exc.strerror)
 
     def bulk_delete(self, *, index: str, docs_id: List[str]):
+        """
+        filter_path=items.*.error muestra solo aquellos que tuvieron errores
+        """
         assert index
         try:
-            resource = "bulk?pretty=true&filter_path=items.*.error"
+            resource = "_bulk?pretty=true&filter_path=items.*.error"
             url = "{url}/{resource}".format(url=self.url, resource=resource)
             bulk = [{"delete": {"_index": index, "_id": id}} for id in docs_id]
             headers = {"Content-Type": "application/json"}
             bulk_str = "\n".join(json.dumps(item) for item in bulk) + "\n"
             r = self.session.post(url, data=bulk_str, headers=headers)
-
-            if r.content:
+            res = json.loads(r.content)
+            if res:
                 err_str = "Errors during bulk delete, list used:{docs_id} "
-                err_str.format(docs_id=docs_id)
-                self.logger.warning(err_str)
+                err_str_formatted = err_str.format(docs_id=docs_id)
+                self.logger.warning(err_str_formatted)
                 self.logger.warning(r.content)
-
         except requests.RequestException as exc:
             self.logger.warning("Elasticsearch service might not be available.")
             self.logger.warning(exc.strerror)

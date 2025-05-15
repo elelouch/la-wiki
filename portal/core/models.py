@@ -66,6 +66,10 @@ class Section(models.Model, PermissionHolder):
     def __str__(self):
         return self.name
 
+    def __all_children_archives(self, *, fields:List[str]) -> RawQuerySet:
+        raw_qs = queries.section_children_archives(fields=fields)
+        return Archive.objects.raw(raw_qs, [self.id])
+
     def create_child(self, *, child_name: str, user:User, perms: list[str]):
         """
         Crea un hijo y asigna los permisos enviados en formatos string.
@@ -195,6 +199,11 @@ class Section(models.Model, PermissionHolder):
 
     def delete_section(self):
         path = os.path.join(settings.MEDIA_ROOT, self.path)
+        all_children = self.__all_children_archives(fields=["id","uuid"])
+        elastic_service.bulk_delete(
+            index="idx",
+            docs_id=[arch.uuid for arch in all_children]
+        )
         # hacer un select de todos los hijos para obtener una lista de UUID a remover
         # y armar un bulk_delete
         shutil.rmtree(path)
@@ -203,7 +212,9 @@ class Section(models.Model, PermissionHolder):
     def find_archive_by_name(self, *, name: str) -> RawQuerySet:
         assert name
         like_archive_name = "%{content}%".format(content=name)
-        raw_query = queries.sca(fields=["id", "fullname"])
+        raw_query = queries.section_children_archives(
+            fields=["id", "uuid", "fullname"]
+        )
         cond = "WHERE arch.fullname LIKE %s"
         raw_query += cond
         qs = Archive.objects.raw(raw_query,[self.id, like_archive_name])
@@ -219,7 +230,9 @@ class Section(models.Model, PermissionHolder):
         if not hits:
             return Archive.objects.none()
         uuids = [h["_id"] for h in hits]
-        raw_query = queries.section_child_archives
+        raw_query = queries.section_children_archives(
+            fields=["id","fullname"]
+        )
         cond = "WHERE arch.uuid in %s"
         raw_query += cond
         return Archive.objects.raw(raw_query,[self.id, tuple(uuids)])
