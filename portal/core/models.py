@@ -66,9 +66,9 @@ class Section(models.Model, PermissionHolder):
     def __str__(self):
         return self.name
 
-    def __all_children_archives(self, *, fields:List[str]) -> RawQuerySet:
-        raw_qs = queries.section_children_archives(fields=fields)
-        return Archive.objects.raw(raw_qs, [self.id])
+    def __all_children_archives(self) -> RawQuerySet:
+        raw_qs = queries.section_children_archives
+        return Archive.objects.raw(raw_qs, {"root_id": self.id})
 
     def create_child(self, *, child_name: str, user:User, perms: list[str]):
         """
@@ -108,18 +108,8 @@ class Section(models.Model, PermissionHolder):
         de bases de datos que no permitan usar RECURSIVE.
         """
         assert user
-        return Section.objects.raw(
-            """
-            WITH RECURSIVE ancestors AS (
-                SELECT *
-                FROM core_section s 
-                WHERE s.id = %s
-                UNION ALL
-                SELECT cs.*
-                FROM core_section cs, ancestors a 
-                WHERE cs.parent_id = a.id
-            ) SELECT * FROM ancestors;
-            """, [self.id])
+        raw_q = queries.section_children
+        return Section.objects.raw(raw_q, [self.id])
 
     def all_children_map(self, user: User) -> tuple[dict,dict]:
         """
@@ -199,25 +189,22 @@ class Section(models.Model, PermissionHolder):
 
     def delete_section(self):
         path = os.path.join(settings.MEDIA_ROOT, self.path)
-        all_children = self.__all_children_archives(fields=["id","uuid"])
+        all_children = self.__all_children_archives()
         elastic_service.bulk_delete(
             index="idx",
             docs_id=[arch.uuid for arch in all_children]
         )
-        # hacer un select de todos los hijos para obtener una lista de UUID a remover
-        # y armar un bulk_delete
         shutil.rmtree(path)
         self.delete()
 
     def find_archive_by_name(self, *, name: str) -> RawQuerySet:
         assert name
-        like_archive_name = "%{content}%".format(content=name)
-        raw_query = queries.section_children_archives(
-            fields=["id", "uuid", "fullname"]
-        )
-        cond = "WHERE arch.fullname LIKE %s"
-        raw_query += cond
-        qs = Archive.objects.raw(raw_query,[self.id, like_archive_name])
+        raw_q = queries.section_children_archives_by_like_name
+        q_values = {
+            "root_id": self.id,
+            "like_name": "%" + name + "%"
+        }
+        qs = Archive.objects.raw(raw_q, q_values)
         return qs
 
     def find_archive_by_content(self, *, content: str) -> RawQuerySet:
@@ -229,13 +216,14 @@ class Section(models.Model, PermissionHolder):
         hits = res["hits"]["hits"]
         if not hits:
             return Archive.objects.none()
-        uuids = [h["_id"] for h in hits]
-        raw_query = queries.section_children_archives(
-            fields=["id","fullname"]
+        raw_query_cte_values = ",".join(
+            [str((h["_id"], h["_score"])) for h in hits]
         )
-        cond = "WHERE arch.uuid in %s"
-        raw_query += cond
-        return Archive.objects.raw(raw_query,[self.id, tuple(uuids)])
+        raw_q = queries \
+                .section_chidren_archives_orderby_cte \
+                .format(cte_values=raw_query_cte_values)
+        q_values = {"root_id": self.id}
+        return Archive.objects.raw(raw_q, q_values)
 @final
 class Archive(models.Model, PermissionHolder):
     fullname = models.CharField(max_length=256, null=False)

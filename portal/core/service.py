@@ -3,6 +3,7 @@ from django.core.files import File
 import requests
 import json
 import logging
+import re
 from django.conf import settings
 
 # Hacer una clase para abstraer ambos servicios
@@ -46,13 +47,16 @@ class ElasticSearchService:
                 }
             })
 
+        filtered_values = re.sub("[!&@><$#]", "", content)
+
         body = {
             "query": {
                 "query_string": {
-                    "query": content
+                    "query": filtered_values + "~"
                 }
             }
         }
+
         res = self.session.get(url, data=json.dumps(body), headers=headers)
         return json.loads(res.content)
 
